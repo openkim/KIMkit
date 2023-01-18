@@ -1,0 +1,28 @@
+#=============================================================================
+# directories and other locations
+#=============================================================================
+PIPELINE_DATA_DIRECTORY=/home/brendon/Documents/Work/LLNL/
+LOG_DIR=$PIPELINE_DATA_DIRECTORY/logs/
+
+LOCAL_REPOSITORY_PATH=$PIPELINE_DATA_DIRECTORY/repository
+
+
+#=============================================================================
+# global defines that are necessary to define interface to tests
+#=============================================================================
+OUTPUT_DIR=output
+TEST_EXECUTABLE=runner
+INPUT_FILE=pipeline.stdin.tpl
+TEMPLATE_FILE=results.edn.tpl
+CONFIG_FILE=kimspec.edn
+DEPENDENCY_FILE=dependencies.edn
+
+# files related to computations
+TEMP_INPUT_FILE=pipeline.stdin
+TEMP_INPUT_INFO_FILE=pipeline.stdin.info
+STDOUT_FILE=pipeline.stdout
+STDERR_FILE=pipeline.stderr
+KIMLOG_FILE=kim.log
+RESULT_FILE=results.edn
+EXCEPTION_FILE=pipeline.exception
+PIPELINESPEC_FILE=pipelinespec.edn
