@@ -101,6 +101,11 @@ class PortableModel(kimobjects.Model):
             where to place the exported model
         """
         src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+
+        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
+        highest_subversion = max(subdirs_ints)
+        src_dir = os.path.join(src_dir, str(highest_subversion))
+
         req_driver = ModelDriver(self.repository, kimcode=self.driver)
         req_driver.export(dest_dir, name=str(self.driver))
         util.create_tarball(src_dir, dest_dir, arcname=name)
@@ -188,6 +193,9 @@ class SimulatorModel(kimobjects.SimulatorModel):
             where to place the exported model
         """
         src_dir = kimcodes.kimcode_to_file_path(self.kim_code)
+        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
+        highest_subversion = max(subdirs_ints)
+        src_dir = os.path.join(src_dir, str(highest_subversion))
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
 
@@ -270,6 +278,9 @@ class ModelDriver(kimobjects.ModelDriver):
             name of the resulting .tar archive,
         """
         src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
+        highest_subversion = max(subdirs_ints)
+        src_dir = os.path.join(src_dir, str(highest_subversion))
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
 
