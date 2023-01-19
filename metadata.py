@@ -92,6 +92,7 @@ kimspec_order = [
     "training",
     "source-citations",
     "content-other-locations",
+    "date",
 ]
 
 
@@ -186,7 +187,7 @@ class MetaData:
             metadata_dict : dict
                 dictionary of all required and any optional metadata keys
             """
-            setattr(self, "date", datetime.datetime.now())
+            setattr(self, "date", str(datetime.datetime.now()))
             setattr(self, "extended-id", kimcode)
 
             try:
