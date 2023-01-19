@@ -74,11 +74,11 @@ class PortableModel(kimobjects.Model):
             if all((metadata_dict, name, source_dir, parameter_files)):
                 kimcode = prepare_install_dir(
                     name,
-                    metadata_dict["kim-item-type"],
                     source_dir,
                     repository,
                     metadata_dict,
-                    provenance_comments,
+                    event_type="initial-creation",
+                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
@@ -101,8 +101,8 @@ class PortableModel(kimobjects.Model):
             where to place the exported model
         """
         src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        driver = self.model_driver
-        ModelDriver(self.repository, kimcode=self.driver).export(dest_dir)
+        req_driver = ModelDriver(self.repository, kimcode=self.driver)
+        req_driver.export(dest_dir, name=str(self.driver))
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
 
@@ -162,11 +162,11 @@ class SimulatorModel(kimobjects.SimulatorModel):
             if all((metadata_dict, name, source_dir, parameter_files)):
                 kimcode = prepare_install_dir(
                     name,
-                    metadata_dict["kim-item-type"],
                     source_dir,
                     repository,
                     metadata_dict,
-                    provenance_comments,
+                    event_type="initial-creation",
+                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
@@ -242,11 +242,11 @@ class ModelDriver(kimobjects.ModelDriver):
             if all((metadata_dict, name, source_dir)):
                 kimcode = prepare_install_dir(
                     name,
-                    metadata_dict["kim-item-type"],
                     source_dir,
                     repository,
                     metadata_dict,
-                    provenance_comments,
+                    event_type="initial-creation",
+                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
@@ -275,12 +275,11 @@ class ModelDriver(kimobjects.ModelDriver):
 
 def prepare_install_dir(
     name,
-    item_type,
     source_dir,
     repository,
     metadata_dict,
+    event_type,
     provenance_comments=None,
-    event_type="initial-creation",
     kimcode=None,
 ):
     """Assign the item a kimcode, create a directory in the selected repository for
@@ -319,6 +318,8 @@ def prepare_install_dir(
     new_kimcode : str
         ID code of the item in KIMkit
     """
+    item_type = metadata_dict["kim-item-type"]
+
     if not kimcode:
         valid_kimcode = False
         while valid_kimcode == False:
