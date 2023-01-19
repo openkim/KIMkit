@@ -320,9 +320,16 @@ def prepare_install_dir(
         ID code of the item in KIMkit
     """
     if not kimcode:
-        new_kimcode = kimcodes.generate_kimcode(
-            name, item_type, include_subversion=True
-        )
+        valid_kimcode = False
+        while valid_kimcode == False:
+            new_kimcode = kimcodes.generate_kimcode(
+                name, item_type, include_subversion=True
+            )
+            tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+            # if the directory exists, an item of this type has already been assigned this ID number
+            # generate a new random ID number and check again to avoid collisions
+            if not os.path.exists(tmp_path):
+                valid_kimcode = True
     else:
         # increment version of current kimcode for version update
         if event_type == "version-update":
@@ -331,9 +338,16 @@ def prepare_install_dir(
             pass
         # assign version 0 of a new kimcode to the forked item
         elif event_type == "fork":
-            new_kimcode = kimcodes.generate_kimcode(
-                name, item_type, include_subversion=True
-            )
+            valid_kimcode = False
+            while valid_kimcode == False:
+                new_kimcode = kimcodes.generate_kimcode(
+                    name, item_type, include_subversion=True
+                )
+                tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+                # if the directory exists, an item of this type has already been assigned this ID number
+                # generate a new random ID number and check again to avoid collisions
+                if not os.path.exists(tmp_path):
+                    valid_kimcode = True
             # TODO copy metadta and provenance to new item
             # no new items need to be created, do nothing
         else:
