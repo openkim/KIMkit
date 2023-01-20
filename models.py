@@ -103,7 +103,7 @@ class PortableModel(kimobjects.Model):
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
 
-    def export(self, dest_dir, name=None):
+    def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
 
         Parameters
@@ -117,11 +117,13 @@ class PortableModel(kimobjects.Model):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
+            name = self.kimcode_subversion
         else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            name = self.kim_code
 
         req_driver = ModelDriver(self.repository, kimcode=self.driver)
-        req_driver.export(dest_dir, name=str(self.driver))
+        req_driver.export(dest_dir)
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
     def delete(self, kimcode):
@@ -132,6 +134,7 @@ class PortableModel(kimobjects.Model):
         kimcode : str
             kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
         """
+        # TODO handle UUIDs
         if kimcode == self.kimcode_subversion:
             del_path = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
@@ -229,22 +232,22 @@ class SimulatorModel(kimobjects.SimulatorModel):
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
 
-    def export(self, dest_dir, name=None):
+    def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
 
         Parameters
         ----------
         dest_dir : path like
             where to place the exported model
-        name : str, optional
-            name of the exported archive, defaults to the name of the enclosing directory
         """
         if hasattr(self, "kimcode_subversion"):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
+            name = self.kimcode_subversion
         else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            name = self.kim_code
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
@@ -348,22 +351,22 @@ class ModelDriver(kimobjects.ModelDriver):
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
 
-    def export(self, dest_dir, name=None):
+    def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
 
         Parameters
         ----------
         dest_dir : path like
             where to place the exported model
-        name : str, optional
-            name of the exported archive, defaults to the name of the enclosing directory
         """
         if hasattr(self, "kimcode_subversion"):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
+            name = self.kimcode_subversion
         else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            name = self.kim_code
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
