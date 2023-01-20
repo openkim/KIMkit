@@ -113,11 +113,11 @@ class PortableModel(kimobjects.Model):
         name : str, optional
             name of the exported archive, defaults to the name of the enclosing directory
         """
-        try:
+        if hasattr(self, "kimcode_subversion"):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-        except AttributeError:
+        else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
 
         req_driver = ModelDriver(self.repository, kimcode=self.driver)
@@ -239,11 +239,11 @@ class SimulatorModel(kimobjects.SimulatorModel):
         name : str, optional
             name of the exported archive, defaults to the name of the enclosing directory
         """
-        try:
+        if hasattr(self, "kimcode_subversion"):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-        except AttributeError:
+        else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
@@ -358,11 +358,11 @@ class ModelDriver(kimobjects.ModelDriver):
         name : str, optional
             name of the exported archive, defaults to the name of the enclosing directory
         """
-        try:
+        if hasattr(self, "kimcode_subversion"):
             src_dir = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-        except AttributeError:
+        else:
             src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
@@ -400,6 +400,8 @@ def prepare_install_dir(
     the item based on that kimcode, copy the item's files into it,
     generate needed metadata and provenance files, and store them with the item.
 
+    By default, when importing a new item it will be assigned major version 000.
+
     If updating or forking an existing item, call this function with the kimcode to
     create the new version/item's directory
 
@@ -423,9 +425,8 @@ def prepare_install_dir(
         reason for provenance update
         valid options include:"initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
     kimcode : str
-        id code of the item, if this is a new item a new kimcode will be assigned,
-        if performing a version-update the existing kimcode will have its version incremented
-        if performing a fork
+        ID code of the item, not needed if this is a new item, a new kimcode will be assigned.
+        If performing a version-update or a fork, the kimcode of the current version is needed.
 
     Returns
     -------
