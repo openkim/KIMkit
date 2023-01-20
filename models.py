@@ -85,9 +85,20 @@ class PortableModel(kimobjects.Model):
                     f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
                 )
         setattr(self, "repository", repository)
-        kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
+        # if this item has a subversion, intialize it
+        __, __, __, __, subversion = kimcodes.parse_kim_code(
+            kimcode, return_subversion=True
+        )
+        if subversion:
+            setattr(self, "kimcode_subversion", kimcode)
+            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
 
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+            diskPath = kimcodes.kimcode_to_file_path(
+                kimcode_without_subversion, self.repository
+            )
+        else:
+            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+            kimcode_without_subversion = kimcode
         super(PortableModel, self).__init__(
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
@@ -178,8 +189,20 @@ class SimulatorModel(kimobjects.SimulatorModel):
                     f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
                 )
         setattr(self, "repository", repository)
-        kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        # if this item has a subversion, intialize it
+        __, __, __, __, subversion = kimcodes.parse_kim_code(
+            kimcode, return_subversion=True
+        )
+        if subversion:
+            setattr(self, "kimcode_subversion", kimcode)
+            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
+
+            diskPath = kimcodes.kimcode_to_file_path(
+                kimcode_without_subversion, self.repository
+            )
+        else:
+            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+            kimcode_without_subversion = kimcode
         super(SimulatorModel, self).__init__(
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
@@ -261,8 +284,20 @@ class ModelDriver(kimobjects.ModelDriver):
                     f"A name, source directory, and dict of metadata are required to initialize a new Driver."
                 )
         setattr(self, "repository", repository)
-        kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        # if this item has a subversion, intialize it
+        __, __, __, __, subversion = kimcodes.parse_kim_code(
+            kimcode, return_subversion=True
+        )
+        if subversion:
+            setattr(self, "kimcode_subversion", kimcode)
+            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
+
+            diskPath = kimcodes.kimcode_to_file_path(
+                kimcode_without_subversion, self.repository
+            )
+        else:
+            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+            kimcode_without_subversion = kimcode
         super(ModelDriver, self).__init__(
             kimcode_without_subversion, abspath=diskPath, *args, **kwargs
         )
@@ -335,7 +370,7 @@ def prepare_install_dir(
         valid_kimcode = False
         while valid_kimcode == False:
             new_kimcode = kimcodes.generate_kimcode(
-                name, item_type, include_subversion=True
+                name, item_type, include_subversion=False
             )
             tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
             # if the directory exists, an item of this type has already been assigned this ID number
@@ -353,7 +388,7 @@ def prepare_install_dir(
             valid_kimcode = False
             while valid_kimcode == False:
                 new_kimcode = kimcodes.generate_kimcode(
-                    name, item_type, include_subversion=True
+                    name, item_type, include_subversion=False
                 )
                 tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
                 # if the directory exists, an item of this type has already been assigned this ID number
