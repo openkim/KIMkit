@@ -126,24 +126,22 @@ class PortableModel(kimobjects.Model):
         req_driver.export(dest_dir)
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
-    def delete(self, kimcode, UUID):
-        """delete a driver from the repository and all of its content
+    def delete(self, kimcode):
+        """delete a model from the repository and all of its content
 
         Parameters
         ----------
         kimcode : str
             kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
-        UUID: str
-            ID of the user deleting the item, must be in the approved list to delete
         """
         # TODO handle UUIDs
-        if kimcode == self.kimcode_subversion:
+        if kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        elif kimcode == self.kimcode_subversion:
             del_path = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-            shutil.rmtree(del_path)
-        elif kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
@@ -254,20 +252,20 @@ class SimulatorModel(kimobjects.SimulatorModel):
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
     def delete(self, kimcode):
-        """delete a driver from the repository and all of its content
+        """delete a simulator model from the repository and all of its content
 
         Parameters
         ----------
         kimcode : str
             kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
         """
-        if kimcode == self.kimcode_subversion:
+        if kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        elif kimcode == self.kimcode_subversion:
             del_path = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-            shutil.rmtree(del_path)
-        elif kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
@@ -380,13 +378,13 @@ class ModelDriver(kimobjects.ModelDriver):
         kimcode : str
             kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
         """
-        if kimcode == self.kimcode_subversion:
+        if kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        elif kimcode == self.kimcode_subversion:
             del_path = kimcodes.kimcode_to_file_path(
                 self.kimcode_subversion, self.repository
             )
-            shutil.rmtree(del_path)
-        elif kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
