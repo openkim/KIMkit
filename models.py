@@ -121,6 +121,25 @@ class PortableModel(kimobjects.Model):
         req_driver.export(dest_dir, name=str(self.driver))
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
+    def delete(self, kimcode):
+        """delete a driver from the repository and all of its content
+
+        Parameters
+        ----------
+        kimcode : str
+            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+        """
+        if kimcode == self.kimcode_subversion:
+            del_path = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+            shutil.rmtree(del_path)
+        elif kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        else:
+            raise AttributeError("kimcode does not match, aborting")
+
 
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
@@ -215,11 +234,30 @@ class SimulatorModel(kimobjects.SimulatorModel):
         dest_dir : path like
             where to place the exported model
         """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code)
+        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
         subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
         highest_subversion = max(subdirs_ints)
         src_dir = os.path.join(src_dir, str(highest_subversion))
         util.create_tarball(src_dir, dest_dir, arcname=name)
+
+    def delete(self, kimcode):
+        """delete a driver from the repository and all of its content
+
+        Parameters
+        ----------
+        kimcode : str
+            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+        """
+        if kimcode == self.kimcode_subversion:
+            del_path = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+            shutil.rmtree(del_path)
+        elif kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        else:
+            raise AttributeError("kimcode does not match, aborting")
 
 
 class ModelDriver(kimobjects.ModelDriver):
@@ -317,6 +355,25 @@ class ModelDriver(kimobjects.ModelDriver):
         highest_subversion = max(subdirs_ints)
         src_dir = os.path.join(src_dir, str(highest_subversion))
         util.create_tarball(src_dir, dest_dir, arcname=name)
+
+    def delete(self, kimcode):
+        """delete a driver from the repository and all of its content
+
+        Parameters
+        ----------
+        kimcode : str
+            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+        """
+        if kimcode == self.kimcode_subversion:
+            del_path = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+            shutil.rmtree(del_path)
+        elif kimcode == self.kim_code:
+            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+            shutil.rmtree(del_path)
+        else:
+            raise AttributeError("kimcode does not match, aborting")
 
 
 def prepare_install_dir(
