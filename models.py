@@ -110,12 +110,15 @@ class PortableModel(kimobjects.Model):
         ----------
         dest_dir : path like
             where to place the exported model
+        name : str, optional
+            name of the exported archive, defaults to the name of the enclosing directory
         """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-
-        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
-        highest_subversion = max(subdirs_ints)
-        src_dir = os.path.join(src_dir, str(highest_subversion))
+        try:
+            src_dir = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+        except AttributeError:
+            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
 
         req_driver = ModelDriver(self.repository, kimcode=self.driver)
         req_driver.export(dest_dir, name=str(self.driver))
@@ -233,11 +236,16 @@ class SimulatorModel(kimobjects.SimulatorModel):
         ----------
         dest_dir : path like
             where to place the exported model
+        name : str, optional
+            name of the exported archive, defaults to the name of the enclosing directory
         """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
-        highest_subversion = max(subdirs_ints)
-        src_dir = os.path.join(src_dir, str(highest_subversion))
+        try:
+            src_dir = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+        except AttributeError:
+            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
     def delete(self, kimcode):
@@ -348,12 +356,15 @@ class ModelDriver(kimobjects.ModelDriver):
         dest_dir : path like
             where to place the exported model
         name : str, optional
-            name of the resulting .tar archive,
+            name of the exported archive, defaults to the name of the enclosing directory
         """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        subdirs_ints = [int(f.name) for f in os.scandir(src_dir) if f.is_dir()]
-        highest_subversion = max(subdirs_ints)
-        src_dir = os.path.join(src_dir, str(highest_subversion))
+        try:
+            src_dir = kimcodes.kimcode_to_file_path(
+                self.kimcode_subversion, self.repository
+            )
+        except AttributeError:
+            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
     def delete(self, kimcode):
