@@ -146,6 +146,14 @@ class PortableModel(kimobjects.Model):
         else:
             raise AttributeError("kimcode does not match, aborting")
 
+        # if all versions of the item have been deleted, delete the enclosing folders
+        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+        with os.scandir(outer_dir) as it:
+            if not any(it):  # empty directory
+                # go 2 directory levels up to top level of item
+                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
+                shutil.rmtree(top_path)
+
 
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
@@ -270,6 +278,14 @@ class SimulatorModel(kimobjects.SimulatorModel):
         else:
             raise AttributeError("kimcode does not match, aborting")
 
+        # if all versions of the item have been deleted, delete the enclosing folders
+        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+        with os.scandir(outer_dir) as it:
+            if not any(it):  # empty directory
+                # go 2 directory levels up to top level of item
+                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
+                shutil.rmtree(top_path)
+
 
 class ModelDriver(kimobjects.ModelDriver):
     def __init__(
@@ -388,6 +404,14 @@ class ModelDriver(kimobjects.ModelDriver):
             shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
+
+        # if all versions of the item have been deleted, delete the enclosing folders
+        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+        with os.scandir(outer_dir) as it:
+            if not any(it):  # empty directory
+                # go 2 directory levels up to top level of item
+                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
+                shutil.rmtree(top_path)
 
 
 def prepare_install_dir(
