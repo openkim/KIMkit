@@ -126,13 +126,15 @@ class PortableModel(kimobjects.Model):
         req_driver.export(dest_dir)
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
-    def delete(self, kimcode):
+    def delete(self, kimcode, UUID):
         """delete a driver from the repository and all of its content
 
         Parameters
         ----------
         kimcode : str
             kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+        UUID: str
+            ID of the user deleting the item, must be in the approved list to delete
         """
         # TODO handle UUIDs
         if kimcode == self.kimcode_subversion:
