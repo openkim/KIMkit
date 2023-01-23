@@ -85,23 +85,8 @@ class PortableModel(kimobjects.Model):
                     f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
                 )
         setattr(self, "repository", repository)
-        # if this item has a subversion, intialize it
-        __, __, __, __, subversion = kimcodes.parse_kim_code(
-            kimcode, return_subversion=True
-        )
-        if subversion:
-            setattr(self, "kimcode_subversion", kimcode)
-            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
-
-            diskPath = kimcodes.kimcode_to_file_path(
-                kimcode_without_subversion, self.repository
-            )
-        else:
-            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-            kimcode_without_subversion = kimcode
-        super(PortableModel, self).__init__(
-            kimcode_without_subversion, abspath=diskPath, *args, **kwargs
-        )
+        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(PortableModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
     def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
@@ -113,14 +98,8 @@ class PortableModel(kimobjects.Model):
         name : str, optional
             name of the exported archive, defaults to the name of the enclosing directory
         """
-        if hasattr(self, "kimcode_subversion"):
-            src_dir = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            name = self.kimcode_subversion
-        else:
-            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            name = self.kim_code
+        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+        name = self.kim_code
 
         req_driver = ModelDriver(self.repository, kimcode=self.driver)
         req_driver.export(dest_dir)
@@ -132,27 +111,20 @@ class PortableModel(kimobjects.Model):
         Parameters
         ----------
         kimcode : str
-            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+            kimcode of the item, must match self.kim_code for the item to be deleted
         """
         # TODO handle UUIDs
         if kimcode == self.kim_code:
             del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
-        elif kimcode == self.kimcode_subversion:
-            del_path = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
 
-        # if all versions of the item have been deleted, delete the enclosing folders
+        # if all versions of the item have been deleted, delete its enclosing directory
         outer_dir = os.path.split(del_path)[0]  # one level up in the directory
         with os.scandir(outer_dir) as it:
             if not any(it):  # empty directory
-                # go 2 directory levels up to top level of item
-                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
-                shutil.rmtree(top_path)
+                shutil.rmtree(outer_dir)
 
 
 class SimulatorModel(kimobjects.SimulatorModel):
@@ -222,23 +194,8 @@ class SimulatorModel(kimobjects.SimulatorModel):
                     f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
                 )
         setattr(self, "repository", repository)
-        # if this item has a subversion, intialize it
-        __, __, __, __, subversion = kimcodes.parse_kim_code(
-            kimcode, return_subversion=True
-        )
-        if subversion:
-            setattr(self, "kimcode_subversion", kimcode)
-            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
-
-            diskPath = kimcodes.kimcode_to_file_path(
-                kimcode_without_subversion, self.repository
-            )
-        else:
-            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-            kimcode_without_subversion = kimcode
-        super(SimulatorModel, self).__init__(
-            kimcode_without_subversion, abspath=diskPath, *args, **kwargs
-        )
+        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(SimulatorModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
     def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
@@ -248,14 +205,8 @@ class SimulatorModel(kimobjects.SimulatorModel):
         dest_dir : path like
             where to place the exported model
         """
-        if hasattr(self, "kimcode_subversion"):
-            src_dir = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            name = self.kimcode_subversion
-        else:
-            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            name = self.kim_code
+        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+        name = self.kim_code
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
@@ -265,26 +216,19 @@ class SimulatorModel(kimobjects.SimulatorModel):
         Parameters
         ----------
         kimcode : str
-            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+            kimcode of the item, must match self.kim_code for the item to be deleted
         """
         if kimcode == self.kim_code:
             del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
-        elif kimcode == self.kimcode_subversion:
-            del_path = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
 
-        # if all versions of the item have been deleted, delete the enclosing folders
+        # if all versions of the item have been deleted, delete its enclosing directory
         outer_dir = os.path.split(del_path)[0]  # one level up in the directory
         with os.scandir(outer_dir) as it:
             if not any(it):  # empty directory
-                # go 2 directory levels up to top level of item
-                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
-                shutil.rmtree(top_path)
+                shutil.rmtree(outer_dir)
 
 
 class ModelDriver(kimobjects.ModelDriver):
@@ -349,23 +293,8 @@ class ModelDriver(kimobjects.ModelDriver):
                     f"A name, source directory, and dict of metadata are required to initialize a new Driver."
                 )
         setattr(self, "repository", repository)
-        # if this item has a subversion, intialize it
-        __, __, __, __, subversion = kimcodes.parse_kim_code(
-            kimcode, return_subversion=True
-        )
-        if subversion:
-            setattr(self, "kimcode_subversion", kimcode)
-            kimcode_without_subversion = kimcodes.strip_subversion(kimcode)
-
-            diskPath = kimcodes.kimcode_to_file_path(
-                kimcode_without_subversion, self.repository
-            )
-        else:
-            diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-            kimcode_without_subversion = kimcode
-        super(ModelDriver, self).__init__(
-            kimcode_without_subversion, abspath=diskPath, *args, **kwargs
-        )
+        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
     def export(self, dest_dir):
         """Export as a tar archive, with all needed dependancies for it to run
@@ -375,14 +304,8 @@ class ModelDriver(kimobjects.ModelDriver):
         dest_dir : path like
             where to place the exported model
         """
-        if hasattr(self, "kimcode_subversion"):
-            src_dir = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            name = self.kimcode_subversion
-        else:
-            src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            name = self.kim_code
+        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
+        name = self.kim_code
 
         util.create_tarball(src_dir, dest_dir, arcname=name)
 
@@ -392,26 +315,19 @@ class ModelDriver(kimobjects.ModelDriver):
         Parameters
         ----------
         kimcode : str
-            kimcode of the item, must match self.kim_code or self.kimcode_subversion for the item to be deleted
+            kimcode of the item, must match self.kim_code for the item to be deleted
         """
         if kimcode == self.kim_code:
             del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
             shutil.rmtree(del_path)
-        elif kimcode == self.kimcode_subversion:
-            del_path = kimcodes.kimcode_to_file_path(
-                self.kimcode_subversion, self.repository
-            )
-            shutil.rmtree(del_path)
         else:
             raise AttributeError("kimcode does not match, aborting")
 
-        # if all versions of the item have been deleted, delete the enclosing folders
+        # if all versions of the item have been deleted, delete its enclosing directory
         outer_dir = os.path.split(del_path)[0]  # one level up in the directory
         with os.scandir(outer_dir) as it:
             if not any(it):  # empty directory
-                # go 2 directory levels up to top level of item
-                top_path = os.path.split(os.path.split(outer_dir)[0])[0]
-                shutil.rmtree(top_path)
+                shutil.rmtree(outer_dir)
 
 
 def prepare_install_dir(
@@ -465,9 +381,7 @@ def prepare_install_dir(
     if not kimcode:
         valid_kimcode = False
         while valid_kimcode == False:
-            new_kimcode = kimcodes.generate_kimcode(
-                name, item_type, include_subversion=False
-            )
+            new_kimcode = kimcodes.generate_kimcode(name, item_type)
             tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
             # if the directory exists, an item of this type has already been assigned this ID number
             # generate a new random ID number and check again to avoid collisions
@@ -483,9 +397,7 @@ def prepare_install_dir(
         elif event_type == "fork":
             valid_kimcode = False
             while valid_kimcode == False:
-                new_kimcode = kimcodes.generate_kimcode(
-                    name, item_type, include_subversion=False
-                )
+                new_kimcode = kimcodes.generate_kimcode(name, item_type)
                 tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
                 # if the directory exists, an item of this type has already been assigned this ID number
                 # generate a new random ID number and check again to avoid collisions
