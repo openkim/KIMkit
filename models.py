@@ -29,7 +29,6 @@ class PortableModel(kimobjects.Model):
         source_dir=None,
         parameter_files=None,
         metadata_dict=None,
-        provenance_comments=None,
         *args,
         **kwargs,
     ):
@@ -59,8 +58,6 @@ class PortableModel(kimobjects.Model):
            names of files containing parameters for the PM, required if importing a new item, by default None
         metadata_dict : dict, optional
             dict of all required and any optional metadata fields, required if importing a new item, by default None
-        provenance_comments : str, optional
-            any comments for why the model was created, by default None
 
         Raises
         ------
@@ -78,7 +75,6 @@ class PortableModel(kimobjects.Model):
                     repository,
                     metadata_dict,
                     event_type="initial-creation",
-                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
@@ -138,7 +134,6 @@ class SimulatorModel(kimobjects.SimulatorModel):
         source_dir=None,
         parameter_files=None,
         metadata_dict=None,
-        provenance_comments=None,
         *args,
         **kwargs,
     ):
@@ -168,8 +163,6 @@ class SimulatorModel(kimobjects.SimulatorModel):
            names of files containing parameters for the PM, required if importing a new item, by default None
         metadata_dict : dict, optional
             dict of all required and any optional metadata fields, required if importing a new item, by default None
-        provenance_comments : str, optional
-            any comments for why the model was created, by default None
 
         Raises
         ------
@@ -187,7 +180,6 @@ class SimulatorModel(kimobjects.SimulatorModel):
                     repository,
                     metadata_dict,
                     event_type="initial-creation",
-                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
@@ -239,7 +231,6 @@ class ModelDriver(kimobjects.ModelDriver):
         name=None,
         source_dir=None,
         metadata_dict=None,
-        provenance_comments=None,
         *args,
         **kwargs,
     ):
@@ -267,8 +258,6 @@ class ModelDriver(kimobjects.ModelDriver):
             location of the item on disk, required if importing a new item, by default None
         metadata_dict : dict, optional
             dict of all required and any optional metadata fields, required if importing a new item, by default None
-        provenance_comments : str, optional
-            any comments for why the model was created, by default None
 
         Raises
         ------
@@ -286,7 +275,6 @@ class ModelDriver(kimobjects.ModelDriver):
                     repository,
                     metadata_dict,
                     event_type="initial-creation",
-                    provenance_comments=provenance_comments,
                 )
             else:
                 raise AttributeError(
