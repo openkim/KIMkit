@@ -84,23 +84,6 @@ class PortableModel(kimobjects.Model):
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(PortableModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
-    def export(self, dest_dir):
-        """Export as a tar archive, with all needed dependancies for it to run
-
-        Parameters
-        ----------
-        dest_dir : path like
-            where to place the exported model
-        name : str, optional
-            name of the exported archive, defaults to the name of the enclosing directory
-        """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        name = self.kim_code
-
-        req_driver = ModelDriver(self.repository, kimcode=self.driver)
-        req_driver.export(dest_dir)
-        util.create_tarball(src_dir, dest_dir, arcname=name)
-
     def delete(self, kimcode):
         """delete a model from the repository and all of its content
 
@@ -189,19 +172,6 @@ class SimulatorModel(kimobjects.SimulatorModel):
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(SimulatorModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
-    def export(self, dest_dir):
-        """Export as a tar archive, with all needed dependancies for it to run
-
-        Parameters
-        ----------
-        dest_dir : path like
-            where to place the exported model
-        """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        name = self.kim_code
-
-        util.create_tarball(src_dir, dest_dir, arcname=name)
-
     def delete(self, kimcode):
         """delete a simulator model from the repository and all of its content
 
@@ -283,19 +253,6 @@ class ModelDriver(kimobjects.ModelDriver):
         setattr(self, "repository", repository)
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
-
-    def export(self, dest_dir):
-        """Export as a tar archive, with all needed dependancies for it to run
-
-        Parameters
-        ----------
-        dest_dir : path like
-            where to place the exported model
-        """
-        src_dir = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-        name = self.kim_code
-
-        util.create_tarball(src_dir, dest_dir, arcname=name)
 
     def delete(self, kimcode):
         """delete a driver from the repository and all of its content
@@ -432,3 +389,25 @@ def save_to_repository(source_dir, kimcode, repository):
 
     else:
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
+
+
+def export(dest_dir, kimcode, repository):
+    """Export as a tar archive, with all needed dependancies for it to run
+
+    Parameters
+    ----------
+    dest_dir : path like
+        where to place the exported model
+    kimcode: str
+        id code of the item
+    repository : path like
+        root directory of the KIMkit repository containing the item
+    """
+    src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    name, leader, num, version = kimcodes.parse_kim_code(kimcode)
+
+    if leader == "MO":  # portable model
+        this_item = PortableModel(repository, kimcode=kimcode)
+        req_driver = this_item.driver
+        export(dest_dir, req_driver, repository)
+    util.create_tarball(src_dir, dest_dir, arcname=kimcode)
