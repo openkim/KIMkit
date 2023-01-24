@@ -84,27 +84,6 @@ class PortableModel(kimobjects.Model):
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(PortableModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
-    def delete(self, kimcode):
-        """delete a model from the repository and all of its content
-
-        Parameters
-        ----------
-        kimcode : str
-            kimcode of the item, must match self.kim_code for the item to be deleted
-        """
-        # TODO handle UUIDs
-        if kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            shutil.rmtree(del_path)
-        else:
-            raise AttributeError("kimcode does not match, aborting")
-
-        # if all versions of the item have been deleted, delete its enclosing directory
-        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-        with os.scandir(outer_dir) as it:
-            if not any(it):  # empty directory
-                shutil.rmtree(outer_dir)
-
 
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
@@ -172,26 +151,6 @@ class SimulatorModel(kimobjects.SimulatorModel):
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(SimulatorModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
-    def delete(self, kimcode):
-        """delete a simulator model from the repository and all of its content
-
-        Parameters
-        ----------
-        kimcode : str
-            kimcode of the item, must match self.kim_code for the item to be deleted
-        """
-        if kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            shutil.rmtree(del_path)
-        else:
-            raise AttributeError("kimcode does not match, aborting")
-
-        # if all versions of the item have been deleted, delete its enclosing directory
-        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-        with os.scandir(outer_dir) as it:
-            if not any(it):  # empty directory
-                shutil.rmtree(outer_dir)
-
 
 class ModelDriver(kimobjects.ModelDriver):
     def __init__(
@@ -253,26 +212,6 @@ class ModelDriver(kimobjects.ModelDriver):
         setattr(self, "repository", repository)
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
-
-    def delete(self, kimcode):
-        """delete a driver from the repository and all of its content
-
-        Parameters
-        ----------
-        kimcode : str
-            kimcode of the item, must match self.kim_code for the item to be deleted
-        """
-        if kimcode == self.kim_code:
-            del_path = kimcodes.kimcode_to_file_path(self.kim_code, self.repository)
-            shutil.rmtree(del_path)
-        else:
-            raise AttributeError("kimcode does not match, aborting")
-
-        # if all versions of the item have been deleted, delete its enclosing directory
-        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-        with os.scandir(outer_dir) as it:
-            if not any(it):  # empty directory
-                shutil.rmtree(outer_dir)
 
 
 def prepare_install_dir(
@@ -389,6 +328,27 @@ def save_to_repository(source_dir, kimcode, repository):
 
     else:
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
+
+
+def delete(kimcode, repository):
+    """delete an item from the repository and all of its content
+
+    Parameters
+    ----------
+    kimcode : str
+        kimcode of the item, must match self.kim_code for the item to be deleted
+    repository : path like
+        root directory of the KIMkit repo containing the item
+    """
+    # TODO handle UUIDs
+    del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+    shutil.rmtree(del_path)
+
+    # if all versions of the item have been deleted, delete its enclosing directory
+    outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+    with os.scandir(outer_dir) as it:
+        if not any(it):  # empty directory
+            shutil.rmtree(outer_dir)
 
 
 def export(dest_dir, kimcode, repository):
