@@ -10,11 +10,8 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 from kim_utils import kimobjects, kimcodes, util
 
-""" Base class items for KIMkit.
-
-Each must be initialized with either a dict of required metadata
-if the item is being newly initialized,
-XOR its kimcode if the item already exists in KIMkit.
+"""
+Base class items for KIMkit.
 """
 
 
@@ -24,11 +21,7 @@ class PortableModel(kimobjects.Model):
     def __init__(
         self,
         repository,
-        kimcode=None,
-        name=None,
-        source_dir=None,
-        parameter_files=None,
-        metadata_dict=None,
+        kimcode,
         *args,
         **kwargs,
     ):
@@ -38,9 +31,6 @@ class PortableModel(kimobjects.Model):
 
         Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
 
-        If no kimcode is supplied, a new model can be installed with a name, a list of parameter files,
-        a source_dir where the item's files are located, and dict of metadata fields.
-
         Parameters
         ----------
         repository : str
@@ -48,38 +38,8 @@ class PortableModel(kimobjects.Model):
         kimcode : str, optional
             ID code of the item. If not supplied assumne a new item is being imported,
             generate a new kimcode and assign it to the new item
-
-
-        name : str, optional
-            Name of the item, required if importing a new item, by default None
-        source_dir : path like, optional
-            location of the item on disk, required if importing a new item, by default None
-        parameter_files : list of str, optional
-           names of files containing parameters for the PM, required if importing a new item, by default None
-        metadata_dict : dict, optional
-            dict of all required and any optional metadata fields, required if importing a new item, by default None
-
-        Raises
-        ------
-        AttributeError
-            _description_
         """
 
-        # if no kimcode is supplied, assign a new one to the item
-        #  and initialize its directory in the selected repository
-        if not kimcode:
-            if all((metadata_dict, name, source_dir, parameter_files)):
-                kimcode = prepare_install_dir(
-                    name,
-                    source_dir,
-                    repository,
-                    metadata_dict,
-                    event_type="initial-creation",
-                )
-            else:
-                raise AttributeError(
-                    f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
-                )
         setattr(self, "repository", repository)
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(PortableModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
@@ -88,25 +48,12 @@ class PortableModel(kimobjects.Model):
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
 
-    def __init__(
-        self,
-        repository,
-        kimcode=None,
-        name=None,
-        source_dir=None,
-        parameter_files=None,
-        metadata_dict=None,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, repository, kimcode, *args, **kwargs):
         """Simulator Model Class
 
         Repository is always required in KIMkit.
 
         Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
-
-        If no kimcode is supplied, a new model can be installed with a name, a list of parameter files,
-        a source_dir where the item's files are located, and dict of metadata fields.
 
         Parameters
         ----------
@@ -115,38 +62,8 @@ class SimulatorModel(kimobjects.SimulatorModel):
         kimcode : str, optional
             ID code of the item. If not supplied assumne a new item is being imported,
             generate a new kimcode and assign it to the new item
-
-
-        name : str, optional
-            Name of the item, required if importing a new item, by default None
-        source_dir : path like, optional
-            location of the item on disk, required if importing a new item, by default None
-        parameter_files : list of str, optional
-           names of files containing parameters for the PM, required if importing a new item, by default None
-        metadata_dict : dict, optional
-            dict of all required and any optional metadata fields, required if importing a new item, by default None
-
-        Raises
-        ------
-        AttributeError
-            _description_
         """
 
-        # if no kimcode is supplied, assign a new one to the item
-        #  and initialize its directory in the selected repository
-        if not kimcode:
-            if all((metadata_dict, name, source_dir, parameter_files)):
-                kimcode = prepare_install_dir(
-                    name,
-                    source_dir,
-                    repository,
-                    metadata_dict,
-                    event_type="initial-creation",
-                )
-            else:
-                raise AttributeError(
-                    f"A name, source directory, list of parameter files, and dict of metadata are required to initialize a new item."
-                )
         setattr(self, "repository", repository)
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(SimulatorModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
@@ -169,9 +86,6 @@ class ModelDriver(kimobjects.ModelDriver):
 
         Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
 
-        If no kimcode is supplied, a new model can be installed with a name, a list of parameter files,
-        a source_dir where the item's files are located, and dict of metadata fields.
-
         Parameters
         ----------
         repository : str
@@ -179,50 +93,13 @@ class ModelDriver(kimobjects.ModelDriver):
         kimcode : str, optional
             ID code of the item. If not supplied assumne a new item is being imported,
             generate a new kimcode and assign it to the new item
-
-
-        name : str, optional
-            Name of the item, required if importing a new item, by default None
-        source_dir : path like, optional
-            location of the item on disk, required if importing a new item, by default None
-        metadata_dict : dict, optional
-            dict of all required and any optional metadata fields, required if importing a new item, by default None
-
-        Raises
-        ------
-        AttributeError
-            _description_
         """
-
-        # if no kimcode is supplied, assign a new one to the item
-        #  and initialize its directory in the selected repository
-        if not kimcode:
-            if all((metadata_dict, name, source_dir)):
-                kimcode = prepare_install_dir(
-                    name,
-                    source_dir,
-                    repository,
-                    metadata_dict,
-                    event_type="initial-creation",
-                )
-            else:
-                raise AttributeError(
-                    f"A name, source directory, and dict of metadata are required to initialize a new Driver."
-                )
         setattr(self, "repository", repository)
         diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
 
-def prepare_install_dir(
-    name,
-    source_dir,
-    repository,
-    metadata_dict,
-    event_type,
-    provenance_comments=None,
-    kimcode=None,
-):
+def import_item(name, source_dir, repository, metadata_dict):
     """Assign the item a kimcode, create a directory in the selected repository for
     the item based on that kimcode, copy the item's files into it,
     generate needed metadata and provenance files, and store them with the item.
@@ -238,74 +115,41 @@ def prepare_install_dir(
     ----------
     name : str
         a human-readable name prefix for the item
-    item_type : str
-        options include "simulator-model", "portable-model", and "model-driver"
     source_dir : path like
         location of the item's files on disk
     repository : path like
         path to collection to install into
     metadata_dict : dict
         dict of all required and any optional metadata key-value pairs
-    provenance_comments : str, optional
-        any comments on how/why the item was created, by default None
-    event_type : str
-        reason for provenance update
-        valid options include:"initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
-    kimcode : str
-        ID code of the item, not needed if this is a new item, a new kimcode will be assigned.
-        If performing a version-update or a fork, the kimcode of the current version is needed.
 
     Returns
     -------
     new_kimcode : str
         ID code of the item in KIMkit
     """
+
+    # TODO validate metadata before importing
     item_type = metadata_dict["kim-item-type"]
+    event_type = "initial-creation"
+    if all((name, item_type, source_dir, repository, metadata_dict)):
+        new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
+        save_to_repository(source_dir, new_kimcode, repository)
 
-    if not kimcode:
-        valid_kimcode = False
-        while valid_kimcode == False:
-            new_kimcode = kimcodes.generate_kimcode(name, item_type)
-            tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-            # if the directory exists, an item of this type has already been assigned this ID number
-            # generate a new random ID number and check again to avoid collisions
-            if not os.path.exists(tmp_path):
-                valid_kimcode = True
+        metadata.MetaData(repository, new_kimcode, metadata_dict)
+
+        provenance.Provenance(
+            new_kimcode,
+            repository,
+            event_type,
+            metadata_dict["contributor"][0],  # TODO parse list of UUIDs
+            comments=None,
+        )
+        return new_kimcode
     else:
-        # increment version of current kimcode for version update
-        if event_type == "version-update":
-            # TODO increment kimcode in new version format
-            # TODO copy metadta and provenance to new item
-            pass
-        # assign version 0 of a new kimcode to the forked item
-        elif event_type == "fork":
-            valid_kimcode = False
-            while valid_kimcode == False:
-                new_kimcode = kimcodes.generate_kimcode(name, item_type)
-                tmp_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-                # if the directory exists, an item of this type has already been assigned this ID number
-                # generate a new random ID number and check again to avoid collisions
-                if not os.path.exists(tmp_path):
-                    valid_kimcode = True
-            # TODO copy metadta and provenance to new item
-            # no new items need to be created, do nothing
-        else:
-            new_kimcode = kimcode
-            return new_kimcode
-
-    # TODO adjust logic for fork/update to copy when needed
-    save_to_repository(source_dir, new_kimcode, repository)
-
-    metadata.MetaData(repository, new_kimcode, metadata_dict)
-
-    provenance.Provenance(
-        new_kimcode,
-        repository,
-        event_type,
-        metadata_dict["contributor"][0],  # TODO parse list of UUIDs
-        comments=provenance_comments,
-    )
-    return new_kimcode
+        raise AttributeError(
+            f"""A name, source directory, KIMkit repository,
+             and dict of required metadata fields are required to initialize a new item."""
+        )
 
 
 def save_to_repository(source_dir, kimcode, repository):
