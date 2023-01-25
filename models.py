@@ -143,7 +143,7 @@ def import_item(name, source_dir, repository, metadata_dict):
             new_kimcode,
             repository,
             event_type,
-            metadata_dict["contributor"][0],  # TODO parse list of UUIDs
+            metadata_dict["contributor-id"],
             comments=None,
         )
         return new_kimcode
