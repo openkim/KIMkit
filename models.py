@@ -133,6 +133,8 @@ def import_item(name, source_dir, repository, metadata_dict):
     event_type = "initial-creation"
     if all((name, item_type, source_dir, repository, metadata_dict)):
         new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
+        metadata_dict["extended-id"] = new_kimcode
+        metadata.validate_metadata(metadata_dict)
         save_to_repository(source_dir, new_kimcode, repository)
 
         metadata.MetaData(repository, new_kimcode, metadata_dict)

@@ -13,6 +13,7 @@ sys.path.append(parent)
 from kim_utils import util, kimcodes
 
 import users
+import metadata_config as cfg
 
 SOURCE_CITATIONS_MATCH = re.compile(
     r"""
@@ -71,30 +72,6 @@ SPECIES_MATCH = re.compile(
 jedns = partial(json.dumps, separators=(" ", " "), indent=1, ensure_ascii=False)
 jedns_kimprov = partial(json.dumps, separators=(" ", " "), indent=2, ensure_ascii=False)
 
-kimspec_order = [
-    "extended-id",
-    "title",
-    "potential-type",
-    "license",
-    "kim-item-type",
-    "kim-api-version",
-    "species",
-    "developer",
-    "contributor",
-    "maintainer",
-    "model-driver",
-    "simulator",
-    "description",
-    "funding",
-    "doi",
-    "disclaimer",
-    "content-origin",
-    "training",
-    "source-citations",
-    "content-other-locations",
-    "date",
-]
-
 
 class MetaData:
     def __init__(self, repository, kimcode, metadata_dict=None):
@@ -112,175 +89,12 @@ class MetaData:
             required to initialize metadata for a new item
             if not suppied, metadata information is read from existing kimspec.edn
             raises exception if neither metadata dict nor kimspec.edn for the item is found
-
-            title : str
-                human readable title of the item
-            species : list of str
-                species the item supports
-            potential_type : str
-                type of IM potential
-            developer : list of str
-                UUIDs of the item's developers
-            contributor : list of str
-                UUIDs of the item's contributors
-            maintainer : list of str
-                UUIDs of the item's maintainers
-            license : str
-                license the item is released under
-            kim_item_type : str
-                options include "simulator-model", "portable-model", and "model-driver"
-            kim_api_version : str
-                version of the kim API the item is compatible with
-            description : str, optional
-                description of the item, by default None
-            funding : list of str, optional
-                souces of funding supporting development of the item, by default None
-            doi : str, optional
-                DOI of the item, by default None
-            disclaimer : str, optional
-                any disclaimer regarding the item, by default None
-            content_other_locations : list of str, optional
-                other locations the item is archived, by default None
-            content_origin : str, optional
-                initial origin of the item, by default None
-            source_citation : str, optional
-                citation for the origin of the item, by default None
-            training : str, optional
-                ID of the training dataset associated with the item, by default None
-            simulator : str, optional
-                simulator used to run an SM, by default None
         """
 
-        required_metadata_fields_strings = [
-            "title",
-            "license",
-            "kim-item-type",
-            "kim-api-version",
-        ]
+        setattr(self, "date", str(datetime.datetime.now()))
+        setattr(self, "extended-id", kimcode)
 
-        required_metadata_fields_lists = [
-            "developer",
-            "contributor",
-            "maintainer",
-        ]
-
-        optional_metadata_fields_strings = [
-            "description",
-            "funding",
-            "doi",
-            "disclaimer",
-            "content-origin",
-            "training",
-        ]
-
-        optional_metadata_fields_lists = [
-            "source-citations",
-            "content-other-locations",
-        ]
-
-        def validate_metadata(self, metadata_dict):
-            """check that all required metadata fields have valid entries,
-            and default optional metadata fields are of valid types
-
-            Parameters
-            ----------
-            metadata_dict : dict
-                dictionary of all required and any optional metadata keys
-            """
-            setattr(self, "date", str(datetime.datetime.now()))
-            setattr(self, "extended-id", kimcode)
-
-            try:
-                kim_item_type = metadata_dict["kim-item-type"]
-
-            except (KeyError):
-                raise KeyError(
-                    f"Required metadata field 'kim-item-type' not specified."
-                )
-
-            if kim_item_type == "portable-model":
-                required_metadata_fields_strings.append("model-driver")
-                required_metadata_fields_strings.append("potential-type")
-                required_metadata_fields_lists.append("species")
-
-            elif kim_item_type == "simulator-model":
-                required_metadata_fields_strings.append("simulator")
-                required_metadata_fields_strings.append("potential-type")
-                required_metadata_fields_lists.append("species")
-
-            elif kim_item_type == "model-driver":
-                pass  # do nothing for now
-
-            else:
-                raise (
-                    KeyError(
-                        f"""kim-item-type not recognized.
-                Valid item types include 'portable-model',
-                 'simulator-model', and 'model-driver'"""
-                    )
-                )
-
-            for field in required_metadata_fields_strings:
-                if metadata_dict[field]:
-
-                    if isinstance(metadata_dict[field], str):
-                        value = metadata_dict[field]
-                        setattr(self, field, value)
-
-                    else:
-                        raise (
-                            TypeError(
-                                f"Required metadata field {field} is of invalid type, must be str."
-                            )
-                        )
-
-                else:
-                    raise (KeyError(f"Required metadata field {field} not specified."))
-
-            for field in required_metadata_fields_lists:
-                if metadata_dict[field]:
-                    if isinstance(metadata_dict[field], list) and all(
-                        isinstance(item, str) for item in metadata_dict[field]
-                    ):
-                        value = metadata_dict[field]
-                        setattr(self, field, value)
-
-                    else:
-                        raise (
-                            TypeError(
-                                f"Required metadata field {field} is of invalid type, must be list of str."
-                            )
-                        )
-                else:
-                    raise (KeyError(f"Required metadata field {field} not specified."))
-
-            for field in optional_metadata_fields_strings:
-                if field in metadata_dict:
-                    if isinstance(metadata_dict[field], str):
-                        value = metadata_dict[field]
-                        setattr(self, field, value)
-
-                    else:
-                        raise (
-                            TypeError(
-                                f"Metadata field {field} is of invalid type, must be str."
-                            )
-                        )
-
-            for field in optional_metadata_fields_lists:
-                if field in metadata_dict:
-                    if isinstance(metadata_dict[field], list) and all(
-                        isinstance(item, str) for item in metadata_dict[field]
-                    ):
-                        value = metadata_dict[field]
-                        setattr(self, field, value)
-
-                    else:
-                        raise (
-                            TypeError(
-                                f"Metadata field {field} is of invalid type, must be list of str."
-                            )
-                        )
+        # TODO assign validated metadata to attributes
 
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
@@ -347,6 +161,105 @@ class MetaData:
             raise FileNotFoundError(
                 f"KIM item does not appear to exist in the selected repository {repository}"
             )
+
+
+def validate_metadata(metadata_dict):
+    """check that all required metadata fields have valid entries.
+
+    Parameters
+    ----------
+    metadata_dict : dict
+        dictionary of all required and any optional metadata fields
+    """
+    supported_item_types = ("portable-model", "simulator-model", "model-driver")
+
+    try:
+        kim_item_type = metadata_dict["kim-item-type"]
+
+    except (KeyError):
+        raise KeyError(f"Required metadata field 'kim-item-type' not specified.")
+
+    if kim_item_type not in supported_item_types:
+        raise ValueError(
+            f"""Item type {kim_item_type} not recognized.
+         Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
+        )
+
+    metadata_requirements = cfg.KIMkit_item_type_key_requirements[kim_item_type]
+
+    required_fields = metadata_requirements["required"]
+    optional_fields = metadata_requirements["optional"]
+
+    for field in required_fields:
+        try:
+            metadata_dict[field]
+        except KeyError:
+            raise KeyError(
+                f"Required metadata field '{field}' not specified, aborting"
+            ) from KeyError
+
+    for field in metadata_dict:
+        if field not in required_fields and field not in optional_fields:
+            metadata_dict.pop(field)
+            raise Warning(
+                f"Metadata field '{field}' not used for kim item type {kim_item_type}, ignoring."
+            )
+
+    check_metadata_types(metadata_dict)
+
+
+def check_metadata_types(metadata_dict):
+    """Check that all required and optional metadata fields are of the correct
+    type and structure.
+
+    Parameters
+    ----------
+    metadata_dict : dict
+        dict of any metadata fields
+    """
+    supported_item_types = ("portable-model", "simulator-model", "model-driver")
+
+    try:
+        kim_item_type = metadata_dict["kim-item-type"]
+
+    except (KeyError):
+        raise KeyError(
+            f"Required metadata field 'kim-item-type' not specified."
+        ) from KeyError
+
+    if kim_item_type not in supported_item_types:
+        raise ValueError(
+            f"""Item type '{kim_item_type}' not recognized.
+         Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
+        )
+
+    for field in metadata_dict:
+        if field in cfg.kimspec_strings:
+            if isinstance(metadata_dict[field], str):
+                pass
+            else:
+                raise TypeError(
+                    f"Required metadata field '{field}' is of incorrect type, must be str."
+                )
+        elif field in cfg.kimspec_arrays:
+            for item in metadata_dict[field]:
+                if isinstance(item, cfg.kimspec_arrays[field]):
+                    if cfg.kimspec_arrays[field] == dict:
+                        key_requirements = cfg.kimspec_arrays_dicts[field]
+                        for key in key_requirements:
+                            if key and isinstance(metadata_dict[field][key], str):
+                                pass
+                            else:
+                                raise KeyError(
+                                    f"Missing required key '{key}' in metadata field '{field}'."
+                                )
+                    # Not really needed, written for clarity, type already checked above
+                    elif cfg.kimspec_arrays[field] == str:
+                        pass
+                else:
+                    raise TypeError(
+                        f"Metadata field '{field}' is of invalid type, must be '{cfg.kimspec_arrays[field]}'."
+                    )
 
 
 def dumpedn_kimspec(o, f, allow_nils=True):

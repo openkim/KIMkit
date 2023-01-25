@@ -29,6 +29,7 @@ kimspec_order = (
 kimspec_strings = (
     "content-origin",
     "content-other-locations",
+    "contributor-id",
     "date",
     "description",
     "disclaimer",
@@ -37,6 +38,7 @@ kimspec_strings = (
     "extended-id",
     "kim-api-version",
     "kim-item-type",
+    "license",
     "maintainer-id",
     "model-driver",
     "potential-type",
@@ -56,20 +58,23 @@ kimspec_arrays = {
     "species": str,
     "training": str,
 }
-# TODO: copy crossref query from webapp?
-kimspec_funding_keys_required = {
-    "funder-name": True,
-    "award-number": False,
-    "award-uri": False,
-    "award-title": False,
-}
 
-kimspec_simulator_potential_compatibility_keys_required = {
-    "simulator-name": True,
-    "simulator-potential": True,
-    "compatibility": True,
-    "compatibility-notes": False,
+kimspec_arrays_dicts = {
+    "funding": {
+        "funder-name": True,
+        "award-number": False,
+        "award-uri": False,
+        "award-title": False,
+    },
+    "simulator-potential-compatibility": {
+        "simulator-name": True,
+        "simulator-potential": True,
+        "compatibility": True,
+        "compatibility-notes": False,
+    },
 }
+# TODO: copy crossref query from webapp?
+
 
 KIMkit_item_type_key_requirements = {
     "portable-model": {
@@ -79,6 +84,8 @@ KIMkit_item_type_key_requirements = {
             "extended-id",
             "implementer",
             "kim-api-version",
+            "kim-item-type",
+            "license",
             "potential-type",
             "species",
             "title",
@@ -106,6 +113,8 @@ KIMkit_item_type_key_requirements = {
             "extended-id",
             "implementer",
             "kim-api-version",
+            "kim-item-type",
+            "license",
             "potential-type",
             "species",
             "simulator-name",
@@ -134,6 +143,8 @@ KIMkit_item_type_key_requirements = {
             "extended-id",
             "implementer",
             "kim-api-version",
+            "kim-item-type",
+            "license",
             "title",
         ],
         "optional": [
