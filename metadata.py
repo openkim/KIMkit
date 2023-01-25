@@ -6,6 +6,7 @@ import json
 from functools import partial
 from collections import OrderedDict
 import codecs
+import warnings
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -197,13 +198,15 @@ def validate_metadata(metadata_dict):
             raise KeyError(
                 f"Required metadata field '{field}' not specified, aborting"
             ) from KeyError
-
+    fields_to_remove = []
     for field in metadata_dict:
         if field not in required_fields and field not in optional_fields:
-            metadata_dict.pop(field)
-            raise Warning(
+            fields_to_remove.append(field)
+            warnings.warn(
                 f"Metadata field '{field}' not used for kim item type {kim_item_type}, ignoring."
             )
+    for field in fields_to_remove:
+        metadata_dict.pop(field, None)
 
     check_metadata_types(metadata_dict)
 
