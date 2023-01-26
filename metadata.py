@@ -4,6 +4,7 @@ import sys
 import os
 import warnings
 import kim_edn
+from collections import OrderedDict
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -81,12 +82,20 @@ class MetaData:
             repository the item is stored within
         """
 
+        metadata_dict = vars(self)
+
+        metadata_dict_sorted = OrderedDict()
+
+        for field in cfg.kimspec_order:
+            if field in metadata_dict:
+                metadata_dict_sorted[field] = metadata_dict[field]
+
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
         if os.path.exists(dest_path):
             dest_file = os.path.join(dest_path, "kimspec.edn")
             with open(dest_file, "w") as outfile:
-                kim_edn.dump(vars(self), outfile, indent=4)
+                kim_edn.dump(metadata_dict_sorted, outfile, indent=4)
 
         else:
             raise FileNotFoundError(

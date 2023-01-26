@@ -1,4 +1,4 @@
-kimspec_order = (
+kimspec_order = [
     "content-origin",
     "content-other-locations",
     "contributor-id",
@@ -25,9 +25,9 @@ kimspec_order = (
     "species",
     "title",
     "training",
-)
+]
 
-kimspec_strings = (
+kimspec_strings = [
     "content-origin",
     "content-other-locations",
     "contributor-id",
@@ -46,7 +46,7 @@ kimspec_strings = (
     "simulator-name",
     "simulator-potential",
     "title",
-)
+]
 
 # The type specified in these dicts is what the inner type of the kimspec array should be
 kimspec_arrays = {
