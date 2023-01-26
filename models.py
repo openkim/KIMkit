@@ -99,7 +99,7 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
 
-def import_item(name, source_dir, repository, metadata_dict):
+def import_item(name, source_dir, repository, metadata_dict, UUID):
     """Assign the item a kimcode, create a directory in the selected repository for
     the item based on that kimcode, copy the item's files into it,
     generate needed metadata and provenance files, and store them with the item.
@@ -133,15 +133,26 @@ def import_item(name, source_dir, repository, metadata_dict):
     if all((name, item_type, source_dir, repository, metadata_dict)):
         new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
         metadata_dict["extended-id"] = new_kimcode
-        save_to_repository(source_dir, new_kimcode, repository)
+        executables = []
+        for file in os.listdir(source_dir):
+            if os.path.isfile(file):
+                executable = os.access(file, os.X_OK)
+                if executable:
+                    executables.append(os.path.split(file)[-1])
+        if executables:
+            metadata_dict["executables"] = executables
 
-        new_metadata = metadata.create_metadata(repository, new_kimcode, metadata_dict)
+        _save_to_repository(source_dir, new_kimcode, repository)
+
+        new_metadata = metadata.create_metadata(
+            repository, new_kimcode, metadata_dict, UUID
+        )
 
         provenance.Provenance(
             new_kimcode,
             repository,
             event_type,
-            metadata_dict["contributor-id"],
+            UUID,
             comments=None,
         )
         return new_kimcode
@@ -152,7 +163,7 @@ def import_item(name, source_dir, repository, metadata_dict):
         )
 
 
-def save_to_repository(source_dir, kimcode, repository):
+def _save_to_repository(source_dir, kimcode, repository):
     """Take an item that's been imported and had a kimcode
     generated and save it in the relevant repository.
 
@@ -174,7 +185,7 @@ def save_to_repository(source_dir, kimcode, repository):
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
 
 
-def delete(kimcode, repository):
+def delete(kimcode, repository, UUID):
     """delete an item from the repository and all of its content
 
     Parameters
@@ -262,9 +273,13 @@ def version_update(
     new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
     if metadata_update_dict:
         metadata.check_metadata_types(metadata_update_dict, kim_item_type)
-    save_to_repository(src_dir, new_kimcode, repository)
+    _save_to_repository(src_dir, new_kimcode, repository)
     metadata.create_new_metadata_from_existing(
-        repository, kimcode, new_kimcode, metadata_update_dict=metadata_update_dict
+        repository,
+        kimcode,
+        new_kimcode,
+        UUID,
+        metadata_update_dict=metadata_update_dict,
     )
     old_provenance = os.path.join(
         kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"

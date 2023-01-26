@@ -66,7 +66,7 @@ class MetaData:
         )
 
 
-def create_metadata(repository, kimcode, metadata_dict):
+def create_metadata(repository, kimcode, metadata_dict, UUID):
     """Create a kimspec.edn metadata file for an item without one.
 
 
@@ -78,13 +78,18 @@ def create_metadata(repository, kimcode, metadata_dict):
         id code of the item for which metadata is being created
     metadata_dict : dict
         dict of all required and any optional metadata keys
+    UUID : str
+        id number of the entity requesting the item's creation
     """
+    metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
+    metadata_dict["contributor-id"] = UUID
+    if not "maintainer-id" in metadata_dict:
+        metadata_dict["maintainer-id"] = UUID
+    metadata_dict["domain"] = "KIMkit"
+
+    # TODO: assign DOI and executables
 
     valid_metadata_dict = validate_metadata(metadata_dict)
-    # TODO: assign other optional at creation time attibutes
-    valid_metadata_dict["date"] = datetime.datetime.now(central).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
 
     _write_metadata_to_file(repository, kimcode, valid_metadata_dict)
 
@@ -230,7 +235,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
 
 
 def create_new_metadata_from_existing(
-    repository, old_kimcode, new_kimcode, metadata_update_dict=None
+    repository, old_kimcode, new_kimcode, UUID, metadata_update_dict=None
 ):
     """Create a new metadata object from an existing kimspec.edn, and any modifications
 
@@ -245,6 +250,8 @@ def create_new_metadata_from_existing(
         kimcode of the parent item
     new_kimcode : str
         kimcode of the newly created item
+    UUID : str
+        id number of the entity making the update
     metadata_update_dict : dict, optional
         dict of any metadata fields to be changed/assigned, by default None
     """
@@ -258,6 +265,7 @@ def create_new_metadata_from_existing(
         new_metadata_dict[key] = old_metadata_dict[key]
 
     new_metadata_dict["extended-id"] = new_kimcode
+    new_metadata_dict["contributor-id"] = UUID
 
     if metadata_update_dict:
         for key in metadata_update_dict:
