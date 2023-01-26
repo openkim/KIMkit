@@ -133,16 +133,15 @@ def import_item(name, source_dir, repository, metadata_dict):
     if all((name, item_type, source_dir, repository, metadata_dict)):
         new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
         metadata_dict["extended-id"] = new_kimcode
-        validated_metadata_dict = metadata.validate_metadata(metadata_dict)
         save_to_repository(source_dir, new_kimcode, repository)
 
-        metadata.MetaData(repository, new_kimcode, validated_metadata_dict)
+        new_metadata = metadata.create_metadata(repository, new_kimcode, metadata_dict)
 
         provenance.Provenance(
             new_kimcode,
             repository,
             event_type,
-            validated_metadata_dict["contributor-id"],
+            metadata_dict["contributor-id"],
             comments=None,
         )
         return new_kimcode

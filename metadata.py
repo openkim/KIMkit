@@ -18,7 +18,7 @@ central = timezone("US/Central")
 
 
 class MetaData:
-    def __init__(self, repository, kimcode, metadata_dict=None):
+    def __init__(self, repository, kimcode):
         """Default metadata class for KIMkit items
 
         _extended_summary_
@@ -47,14 +47,8 @@ class MetaData:
             existing_metadata = kim_edn.load(dest_file)
             for key in existing_metadata:
                 setattr(self, key, existing_metadata[key])
-
-        # update metadata with any new fields provided
-        if metadata_dict:
-            for field in metadata_dict:
-                setattr(self, field, metadata_dict[field])
-
-            # write a kimspec.edn if any metadata fields have been modified
-            self._write_metadata_to_file(kimcode, repository)
+        else:
+            raise FileNotFoundError(f"No kimspec.edn found at {dest_path}")
 
     def add_metadata_key(self, key, value):
         pass
@@ -71,36 +65,58 @@ class MetaData:
     def _update_provenance_after_metadata_change(self, kimcode):
         pass
 
-    def _write_metadata_to_file(self, kimcode, repository):
-        """generate and write the kimspec.edn metadata file for a new KIM item
 
-        Parameters
-        ----------
-        kimcode : str
+def create_metadata(repository, kimcode, metadata_dict):
+    """Create a kimspec.edn metadata file for an item without one.
 
-        repository : pathlike
-            repository the item is stored within
-        """
 
-        metadata_dict = vars(self)
+    Parameters
+    ----------
+    repository : path like
+        root directory of the KIMkit repository where the item is stored
+    kimcode : str
+        id code of the item for which metadata is being created
+    metadata_dict : dict
+        dict of all required and any optional metadata keys
+    """
 
-        metadata_dict_sorted = OrderedDict()
+    valid_metadata_dict = validate_metadata(metadata_dict)
 
-        for field in cfg.kimspec_order:
-            if field in metadata_dict:
-                metadata_dict_sorted[field] = metadata_dict[field]
+    _write_metadata_to_file(repository, kimcode, valid_metadata_dict)
 
-        dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+    new_metadata = MetaData(repository, kimcode)
 
-        if os.path.exists(dest_path):
-            dest_file = os.path.join(dest_path, "kimspec.edn")
-            with open(dest_file, "w") as outfile:
-                kim_edn.dump(metadata_dict_sorted, outfile, indent=4)
+    return new_metadata
 
-        else:
-            raise FileNotFoundError(
-                f"KIM item does not appear to exist in the selected repository {repository}"
-            )
+
+def _write_metadata_to_file(repository, kimcode, metadata_dict):
+    """generate and write the kimspec.edn metadata file for a new KIM item
+
+    Parameters
+    ----------
+    kimcode : str
+        id code of the item associated with this metadata
+    repository : pathlike
+        root directory of the KIMkit repository the item is stored within
+    """
+
+    metadata_dict_sorted = OrderedDict()
+
+    for field in cfg.kimspec_order:
+        if field in metadata_dict:
+            metadata_dict_sorted[field] = metadata_dict[field]
+
+    dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+
+    if os.path.exists(dest_path):
+        dest_file = os.path.join(dest_path, "kimspec.edn")
+        with open(dest_file, "w") as outfile:
+            kim_edn.dump(metadata_dict_sorted, outfile, indent=4)
+
+    else:
+        raise FileNotFoundError(
+            f"KIM item does not appear to exist in the selected repository {repository}"
+        )
 
 
 def validate_metadata(metadata_dict):
@@ -241,6 +257,7 @@ def create_new_metadata_from_existing(
         for key in metadata_update_dict:
             new_metadata_dict[key] = metadata_update_dict[key]
 
-    validate_metadata(new_metadata_dict)
-    new_metadata = MetaData(repository, new_kimcode, metadata_dict=new_metadata_dict)
+    valid_metadata = validate_metadata(new_metadata_dict)
+    _write_metadata_to_file(repository, new_kimcode, valid_metadata)
+    new_metadata = MetaData(repository, new_kimcode)
     return new_metadata
