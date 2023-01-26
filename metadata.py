@@ -1,4 +1,5 @@
 import datetime
+from pytz import timezone
 import sys
 import os
 import warnings
@@ -11,6 +12,8 @@ from kim_utils import util, kimcodes
 
 import users
 import metadata_config as cfg
+
+central = timezone("US/Central")
 
 
 class MetaData:
@@ -30,8 +33,9 @@ class MetaData:
             All required fields for the item type must be specified to initialize metadata for a new item.
             If not suppied, metadata information is read from existing kimspec.edn
         """
-
-        setattr(self, "date", str(datetime.datetime.now()))
+        setattr(
+            self, "date", datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
+        )
 
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
