@@ -34,10 +34,10 @@ class MetaData:
             All required fields for the item type must be specified to initialize metadata for a new item.
             If not suppied, metadata information is read from existing kimspec.edn
         """
-        setattr(
-            self, "date", datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
-        )
-
+        # setattr(
+        #     self, "date", datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
+        # )
+        setattr(self, "repository", repository)
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
         dest_file = os.path.join(dest_path, "kimspec.edn")
@@ -50,20 +50,20 @@ class MetaData:
         else:
             raise FileNotFoundError(f"No kimspec.edn found at {dest_path}")
 
-    def add_metadata_key(self, key, value):
-        pass
-
-    def delete_metadata_key(self, key):
-        pass
+    def get_metadata_fields(self):
+        metadata_dict = vars(self)
+        return metadata_dict
 
     def edit_metadata_value(self, key, new_value):
-        pass
+        if key not in cfg.kimspec_order:
+            raise KeyError(f"metadata field {key} not recognized, aborting.")
+        metadata_dict = vars(self)
 
-    def _fork_metadata(self, existing_kimcode, new_kimcode):
-        pass
+        metadata_dict[key] = new_value
 
-    def _update_provenance_after_metadata_change(self, kimcode):
-        pass
+        _write_metadata_to_file(
+            self.repository, metadata_dict["extended-id"], metadata_dict
+        )
 
 
 def create_metadata(repository, kimcode, metadata_dict):
@@ -81,6 +81,10 @@ def create_metadata(repository, kimcode, metadata_dict):
     """
 
     valid_metadata_dict = validate_metadata(metadata_dict)
+    # TODO: assign other optional at creation time attibutes
+    valid_metadata_dict["date"] = datetime.datetime.now(central).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
     _write_metadata_to_file(repository, kimcode, valid_metadata_dict)
 
@@ -253,6 +257,8 @@ def create_new_metadata_from_existing(
     for key in old_metadata_dict:
         new_metadata_dict[key] = old_metadata_dict[key]
 
+    new_metadata_dict["extended-id"] = new_kimcode
+
     if metadata_update_dict:
         for key in metadata_update_dict:
             new_metadata_dict[key] = metadata_update_dict[key]
@@ -261,3 +267,11 @@ def create_new_metadata_from_existing(
     _write_metadata_to_file(repository, new_kimcode, valid_metadata)
     new_metadata = MetaData(repository, new_kimcode)
     return new_metadata
+
+
+def add_metadata_key(self, key, value):
+    pass
+
+
+def delete_metadata_key(self, key):
+    pass
