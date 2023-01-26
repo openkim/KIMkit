@@ -6,10 +6,9 @@ import subprocess
 import hashlib
 import codecs
 import re
-import json
-from functools import partial
 from collections import OrderedDict
 from pytz import timezone
+import kim_edn
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -34,8 +33,6 @@ CHECKSUMS_LINE_MATCH = re.compile(
     flags=re.VERBOSE,
 )
 
-jedns = partial(json.dumps, separators=(" ", " "), indent=1, ensure_ascii=False)
-jedns_kimprov = partial(json.dumps, separators=(" ", " "), indent=2, ensure_ascii=False)
 
 kimprovenance_order = [
     "checksums",
@@ -87,57 +84,6 @@ class Provenance:
         path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
         add_kimprovenance_entry(path, self.UUID, self.event_type, self.comments)
-
-
-def format_kimprovenance(kimprov_as_str):
-    # First replace the checksums section
-    tmp = CHECKSUMS_MATCH.findall(kimprov_as_str)
-    if len(tmp) == 0:
-        raise Exception("Failed to match any checksums instances!!! Exiting...")
-
-    new_kimprov_as_str = kimprov_as_str
-
-    for checksums_instance in tmp:
-        checksums_section = '"checksums" {'
-
-        checksums_lines = checksums_instance.splitlines()
-
-        if len(checksums_lines) == 0:
-            raise Exception(
-                "Failed to match any lines in checksums instance!!! Exiting..."
-            )
-
-        checksums_section += '"{}" "{}"\n'.format(
-            *CHECKSUMS_LINE_MATCH.search(checksums_lines[1]).groups()
-        )
-
-        for ind, line in enumerate(checksums_lines[2:-2]):
-            checksums_section += " " * 15 + '"{}" "{}"\n'.format(
-                *CHECKSUMS_LINE_MATCH.search(line).groups()
-            )
-
-        checksums_section += " " * 15 + '"{}" "{}"'.format(
-            *CHECKSUMS_LINE_MATCH.search(checksums_lines[-2]).groups()
-        )
-        checksums_section += "}"
-
-        new_kimprov_as_str = new_kimprov_as_str.replace(
-            checksums_instance, checksums_section
-        )
-
-    # Now fix up the rest of the file
-    new_kimprov_as_str = new_kimprov_as_str.replace("[\n  {", "[{")
-    new_kimprov_as_str = new_kimprov_as_str.replace(
-        '{\n    "checksums"', '{"checksums"'
-    )
-    new_kimprov_as_str = re.sub(
-        '^  {"checksums"', ' {"checksums"', new_kimprov_as_str, flags=re.MULTILINE
-    )
-    new_kimprov_as_str = re.sub('^    "', '  "', new_kimprov_as_str, flags=re.MULTILINE)
-    new_kimprov_as_str = re.sub('"$\n  }', '"}', new_kimprov_as_str, flags=re.MULTILINE)
-    new_kimprov_as_str = re.sub("}$\n]", "}]", new_kimprov_as_str, flags=re.MULTILINE)
-
-    return new_kimprov_as_str
 
 
 def add_kimprovenance_entry(path, user_id, event_type, comment):
@@ -307,7 +253,8 @@ def write_provenance(o, f, allow_nils=True):
 
     # Custom formatting for kimprovenance
     if "kimprovenance.edn" in flobj.name:
-        final_object_as_string = jedns_kimprov(final_object)
+        # final_object_as_string = jedns_kimprov(final_object)
+        final_object_as_string = kim_edn.dumps(final_object, indent=1)
         final_object_as_string = format_kimprovenance(final_object_as_string)
     else:
         # Dump to string
@@ -322,3 +269,54 @@ def write_provenance(o, f, allow_nils=True):
     flobj.write("\n")
 
     flobj.close()
+
+
+def format_kimprovenance(kimprov_as_str):
+    # First replace the checksums section
+    tmp = CHECKSUMS_MATCH.findall(kimprov_as_str)
+    if len(tmp) == 0:
+        raise Exception("Failed to match any checksums instances!!! Exiting...")
+
+    new_kimprov_as_str = kimprov_as_str
+
+    for checksums_instance in tmp:
+        checksums_section = '"checksums" {'
+
+        checksums_lines = checksums_instance.splitlines()
+
+        if len(checksums_lines) == 0:
+            raise Exception(
+                "Failed to match any lines in checksums instance!!! Exiting..."
+            )
+
+        checksums_section += '"{}" "{}"\n'.format(
+            *CHECKSUMS_LINE_MATCH.search(checksums_lines[1]).groups()
+        )
+
+        for ind, line in enumerate(checksums_lines[2:-2]):
+            checksums_section += " " * 15 + '"{}" "{}"\n'.format(
+                *CHECKSUMS_LINE_MATCH.search(line).groups()
+            )
+
+        checksums_section += " " * 15 + '"{}" "{}"'.format(
+            *CHECKSUMS_LINE_MATCH.search(checksums_lines[-2]).groups()
+        )
+        checksums_section += "}"
+
+        new_kimprov_as_str = new_kimprov_as_str.replace(
+            checksums_instance, checksums_section
+        )
+
+    # Now fix up the rest of the file
+    new_kimprov_as_str = new_kimprov_as_str.replace("[\n  {", "[{")
+    new_kimprov_as_str = new_kimprov_as_str.replace(
+        '{\n    "checksums"', '{"checksums"'
+    )
+    new_kimprov_as_str = re.sub(
+        '^  {"checksums"', ' {"checksums"', new_kimprov_as_str, flags=re.MULTILINE
+    )
+    new_kimprov_as_str = re.sub('^    "', '  "', new_kimprov_as_str, flags=re.MULTILINE)
+    new_kimprov_as_str = re.sub('"$\n  }', '"}', new_kimprov_as_str, flags=re.MULTILINE)
+    new_kimprov_as_str = re.sub("}$\n]", "}]", new_kimprov_as_str, flags=re.MULTILINE)
+
+    return new_kimprov_as_str
