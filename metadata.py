@@ -87,7 +87,7 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
         metadata_dict["maintainer-id"] = UUID
     metadata_dict["domain"] = "KIMkit"
 
-    # TODO: assign DOI and executables
+    # TODO: assign DOI?
 
     valid_metadata_dict = validate_metadata(metadata_dict)
 
