@@ -1,11 +1,6 @@
 import datetime
 import sys
 import os
-import re
-import json
-from functools import partial
-from collections import OrderedDict
-import codecs
 import warnings
 import kim_edn
 
@@ -140,9 +135,10 @@ def validate_metadata(metadata_dict):
         metadata_dict.pop(field, None)
 
     check_metadata_types(metadata_dict)
+    return metadata_dict
 
 
-def check_metadata_types(metadata_dict):
+def check_metadata_types(metadata_dict, kim_item_type=None):
     """Check that all required and optional metadata fields are of the correct
     type and structure.
 
@@ -150,16 +146,20 @@ def check_metadata_types(metadata_dict):
     ----------
     metadata_dict : dict
         dict of any metadata fields
+    kim_item_type : str, optional
+        can pass in kim_item_type as a parameter if not included in the metadata dict
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
-    try:
-        kim_item_type = metadata_dict["kim-item-type"]
+    if not kim_item_type:
 
-    except (KeyError):
-        raise KeyError(
-            f"Required metadata field 'kim-item-type' not specified."
-        ) from KeyError
+        try:
+            kim_item_type = metadata_dict["kim-item-type"]
+
+        except (KeyError):
+            raise KeyError(
+                f"Required metadata field 'kim-item-type' not specified."
+            ) from KeyError
 
     if kim_item_type not in supported_item_types:
         raise ValueError(
@@ -194,3 +194,40 @@ def check_metadata_types(metadata_dict):
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{cfg.kimspec_arrays[field]}'."
                     )
+
+
+def create_new_metadata_from_existing(
+    repository, old_kimcode, new_kimcode, metadata_update_dict=None
+):
+    """Create a new metadata object from an existing kimspec.edn, and any modifications
+
+    Reads an existing kimspec.edn, creates a new metadata object for a new item based on it,
+    incorporating any edits specified in metadata_dict.
+
+    Parameters
+    ----------
+    repository : str
+        root directory of the KIMkit repository containing the item
+    old_kimcode : str
+        kimcode of the parent item
+    new_kimcode : str
+        kimcode of the newly created item
+    metadata_update_dict : dict, optional
+        dict of any metadata fields to be changed/assigned, by default None
+    """
+
+    old_metadata = MetaData(repository, old_kimcode)
+    old_metadata_dict = vars(old_metadata)
+
+    new_metadata_dict = {}
+
+    for key in old_metadata_dict:
+        new_metadata_dict[key] = old_metadata_dict[key]
+
+    if metadata_update_dict:
+        for key in metadata_update_dict:
+            new_metadata_dict[key] = metadata_update_dict[key]
+
+    validate_metadata(new_metadata_dict)
+    new_metadata = MetaData(repository, new_kimcode, metadata_dict=new_metadata_dict)
+    return new_metadata

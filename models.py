@@ -128,22 +128,21 @@ def import_item(name, source_dir, repository, metadata_dict):
         ID code of the item in KIMkit
     """
 
-    # TODO validate metadata before importing
     item_type = metadata_dict["kim-item-type"]
     event_type = "initial-creation"
     if all((name, item_type, source_dir, repository, metadata_dict)):
         new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
         metadata_dict["extended-id"] = new_kimcode
-        metadata.validate_metadata(metadata_dict)
+        validated_metadata_dict = metadata.validate_metadata(metadata_dict)
         save_to_repository(source_dir, new_kimcode, repository)
 
-        metadata.MetaData(repository, new_kimcode, metadata_dict)
+        metadata.MetaData(repository, new_kimcode, validated_metadata_dict)
 
         provenance.Provenance(
             new_kimcode,
             repository,
             event_type,
-            metadata_dict["contributor-id"],
+            validated_metadata_dict["contributor-id"],
             comments=None,
         )
         return new_kimcode
@@ -217,3 +216,63 @@ def export(dest_dir, kimcode, repository):
         req_driver = this_item.driver
         export(dest_dir, req_driver, repository)
     util.create_tarball(src_dir, dest_dir, arcname=kimcode)
+
+
+def version_update(
+    repository,
+    kimcode,
+    src_dir,
+    UUID,
+    metadata_update_dict=None,
+    provenance_comments=None,
+):
+    """Create a new version of the item with new content and possibly new metadata
+
+    _extended_summary_
+
+    Parameters
+    ----------
+    repository : str
+        root directory of the KIMkit repository containing the item
+    kimcode : str
+        id code of the item to be updated
+    src_dir : path_like
+        location on disk of the new item's content
+    UUID : str
+        id number of the user requesting the update
+    metadata_update_dict : dict, optional
+        dict of any metadata keys to be changed in the new version, by default None
+    provenance_comments : str, optional
+        any comments about how/why this version was created, by default None
+    """
+    event_type = "revised-version-creation"
+    name, leader, num, old_version = kimcodes.parse_kim_code(kimcode)
+    if leader == "MO":
+        kim_item_type = "portable-model"
+    elif leader == "SM":
+        kim_item_type = "simulator-model"
+    elif leader == "MD":
+        kim_item_type = "model-driver"
+    # this shouldn't ever happen...
+    else:
+        raise ValueError(f"Kim item type {leader} not recognized.")
+    new_version = str(int(old_version) + 1)
+    new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
+    if metadata_update_dict:
+        metadata.check_metadata_types(metadata_update_dict, kim_item_type)
+    save_to_repository(src_dir, new_kimcode, repository)
+    metadata.create_new_metadata_from_existing(
+        repository, kimcode, new_kimcode, metadata_update_dict=metadata_update_dict
+    )
+    old_provenance = os.path.join(
+        kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
+    )
+    new_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+    shutil.copy(old_provenance, new_dir)
+
+    provenance.add_kimprovenance_entry(
+        new_dir,
+        user_id=UUID,
+        event_type=event_type,
+        comment=provenance_comments,
+    )

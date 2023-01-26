@@ -203,7 +203,8 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
     # Finally, make a kimprovenance.edn entry for this update
     this_kimprovenance_entry = OrderedDict([])
     this_kimprovenance_entry["checksums"] = OrderedDict([])
-    this_kimprovenance_entry["comments"] = comment
+    if comment != None:
+        this_kimprovenance_entry["comments"] = comment
     this_kimprovenance_entry["event-type"] = event_type
     this_kimprovenance_entry["extended-id"] = extended_id
     this_kimprovenance_entry["timestamp"] = datetime.datetime.now(central).strftime(
