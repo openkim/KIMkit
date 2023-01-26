@@ -221,44 +221,30 @@ def write_provenance(o, f, allow_nils=True):
     else:
         flobj = f
 
-    if "kimprovenance.edn" in flobj.name:
-        if not isinstance(o, list):
-            raise Exception(
-                "Attempted to dump kimprovenance object of type %r. All kimprovenance objects "
-                " must be lists." % type(o)
-            )
+    if not isinstance(o, list):
+        raise Exception(
+            "Attempted to dump kimprovenance object of type %r. All kimprovenance objects "
+            " must be lists." % type(o)
+        )
 
-        kimprovenance_new = []
-        for entry in o:
-            entry_new = OrderedDict([])
-            # First sort the entries in 'checksums' and add it to this entry
-            entry_new["checksums"] = OrderedDict([])
-            for filesum in sorted(entry["checksums"]):
-                entry_new["checksums"][filesum] = entry["checksums"][filesum]
-            # Now all keys other than 'checksums'
-            for key in kimprovenance_order[1:]:
-                # if entry.get(key) or key == "comments":
-                #    try:
-                #        entry_new[key] = entry[key]
-                #    except KeyError:
-                #        entry_new["comments"] = ""
-                if key in entry:
-                    entry_new[key] = entry[key]
-            kimprovenance_new.append(entry_new)
+    kimprovenance_new = []
+    for entry in o:
+        entry_new = OrderedDict([])
+        # First sort the entries in 'checksums' and add it to this entry
+        entry_new["checksums"] = OrderedDict([])
+        for filesum in sorted(entry["checksums"]):
+            entry_new["checksums"][filesum] = entry["checksums"][filesum]
+        # Now all keys other than 'checksums'
+        for key in kimprovenance_order[1:]:
+            if key in entry:
+                entry_new[key] = entry[key]
+        kimprovenance_new.append(entry_new)
 
-        final_object = kimprovenance_new
-
-    else:
-        final_object = o
+    final_object = kimprovenance_new
 
     # Custom formatting for kimprovenance
-    if "kimprovenance.edn" in flobj.name:
-        # final_object_as_string = jedns_kimprov(final_object)
-        final_object_as_string = kim_edn.dumps(final_object, indent=1)
-        final_object_as_string = format_kimprovenance(final_object_as_string)
-    else:
-        # Dump to string
-        final_object_as_string = jedns(final_object)
+    final_object_as_string = kim_edn.dumps(final_object, indent=1)
+    final_object_as_string = format_kimprovenance(final_object_as_string)
 
     # Remove trailing spaces
     final_object_stripped = ("\n").join(
