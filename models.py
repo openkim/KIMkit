@@ -245,6 +245,9 @@ def version_update(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
+    current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if not os.path.exists(current_dir):
+        raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
     event_type = "revised-version-creation"
     name, leader, num, old_version = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
