@@ -12,6 +12,7 @@ sys.path.append(parent)
 from kim_utils import util, kimcodes
 
 import users
+import provenance
 import metadata_config as cfg
 
 central = timezone("US/Central")
@@ -54,7 +55,23 @@ class MetaData:
         metadata_dict = vars(self)
         return metadata_dict
 
-    def edit_metadata_value(self, key, new_value):
+    def edit_metadata_value(self, key, new_value, UUID, provenance_comments=None):
+        """edit a metadata field of an existing item
+
+        Parameters
+        ----------
+        key : str
+            name of the metadata field to be updated
+        new_value : str, array, see metadata_config
+            new value to be set for the metadata field
+        provenance_comments : str, optional
+            any comments about how/why the item was edited, by default None
+
+        Raises
+        ------
+        KeyError
+            if the metadata key is not specified in metadata_config
+        """
         if key not in cfg.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
         metadata_dict = vars(self)
@@ -63,6 +80,14 @@ class MetaData:
 
         _write_metadata_to_file(
             self.repository, metadata_dict["extended-id"], metadata_dict
+        )
+        event_type = "metadata-update"
+        provenance.Provenance(
+            metadata_dict["extended-id"],
+            self.repository,
+            event_type,
+            UUID,
+            comments=provenance_comments,
         )
 
 
