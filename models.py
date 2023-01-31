@@ -293,3 +293,78 @@ def version_update(
         event_type=event_type,
         comment=provenance_comments,
     )
+
+
+def fork(
+    repository,
+    kimcode,
+    src_dir,
+    UUID,
+    new_name=None,
+    metadata_update_dict=None,
+    provenance_comments=None,
+):
+    """Create a new item, based off a fork of an existing one,
+    with new content and possibly new metadata
+
+
+    Parameters
+    ----------
+    repository : str
+        root directory of the KIMkit repository containing the item
+    kimcode : str
+        id code of the item to be updated
+    src_dir : path_like
+        location on disk of the new item's content
+    UUID : str
+        id number of the user requesting the update
+    new_name : str, optional
+        human readable prefix of the items kimcode,
+        if not specified, the name of the existing item is used, by default None
+    metadata_update_dict : dict, optional
+        dict of any metadata keys to be changed in the new version, by default None
+    provenance_comments : str, optional
+        any comments about how/why this version was created, by default None
+    """
+    current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if not os.path.exists(current_dir):
+        raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+    event_type = "fork"
+    name, leader, __, __ = kimcodes.parse_kim_code(kimcode)
+    if leader == "MO":
+        kim_item_type = "portable-model"
+    elif leader == "SM":
+        kim_item_type = "simulator-model"
+    elif leader == "MD":
+        kim_item_type = "model-driver"
+    # this shouldn't ever happen...
+    else:
+        raise ValueError(f"Kim item type {leader} not recognized.")
+
+    if new_name:
+        name = new_name
+
+    new_kimcode = kimcodes.generate_kimcode(name, kim_item_type, repository)
+
+    if metadata_update_dict:
+        metadata.check_metadata_types(metadata_update_dict, kim_item_type)
+    _save_to_repository(src_dir, new_kimcode, repository)
+    metadata.create_new_metadata_from_existing(
+        repository,
+        kimcode,
+        new_kimcode,
+        UUID,
+        metadata_update_dict=metadata_update_dict,
+    )
+    old_provenance = os.path.join(
+        kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
+    )
+    new_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+    shutil.copy(old_provenance, new_dir)
+
+    provenance.add_kimprovenance_entry(
+        new_dir,
+        user_id=UUID,
+        event_type=event_type,
+        comment=provenance_comments,
+    )
