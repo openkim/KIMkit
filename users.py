@@ -124,9 +124,13 @@ def is_user(user_id):
     True if the uuid is in the list of verified users
     """
 
-    with open("user_data.edn", "r") as file:
-        user_data_dict = kim_edn.load(file)
-    if user_id in user_data_dict:
-        return True
+    if is_valid_uuid4(user_id):
+
+        with open("user_data.edn", "r") as file:
+            user_data_dict = kim_edn.load(file)
+        if user_id in user_data_dict:
+            return True
+        else:
+            return False
     else:
-        return False
+        raise TypeError(f"user id {user_id} is not a valid UUID4")
