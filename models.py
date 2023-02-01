@@ -4,6 +4,7 @@ import shutil
 
 import metadata
 import provenance
+import users
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -128,6 +129,9 @@ def import_item(name, source_dir, repository, metadata_dict, UUID):
         ID code of the item in KIMkit
     """
 
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
     item_type = metadata_dict["kim-item-type"]
     event_type = "initial-creation"
     if all((name, item_type, source_dir, repository, metadata_dict)):
@@ -195,7 +199,9 @@ def delete(kimcode, repository, UUID):
     repository : path like
         root directory of the KIMkit repo containing the item
     """
-    # TODO handle UUIDs
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
     shutil.rmtree(del_path)
 
@@ -255,6 +261,9 @@ def version_update(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
@@ -326,6 +335,9 @@ def fork(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")

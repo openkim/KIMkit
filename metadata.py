@@ -72,6 +72,9 @@ class MetaData:
         KeyError
             if the metadata key is not specified in metadata_config
         """
+        if not users.is_user(UUID):
+            raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
         if key not in cfg.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
         metadata_dict = vars(self)
@@ -106,6 +109,9 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     UUID : str
         id number of the entity requesting the item's creation
     """
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
     metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
     metadata_dict["contributor-id"] = UUID
     if not "maintainer-id" in metadata_dict:
@@ -280,6 +286,8 @@ def create_new_metadata_from_existing(
     metadata_update_dict : dict, optional
         dict of any metadata fields to be changed/assigned, by default None
     """
+    if not users.is_user(UUID):
+        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
     old_metadata = MetaData(repository, old_kimcode)
     old_metadata_dict = vars(old_metadata)

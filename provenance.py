@@ -1,6 +1,5 @@
 import os
 import sys
-import uuid
 import datetime
 import subprocess
 import hashlib
@@ -9,6 +8,7 @@ import re
 from collections import OrderedDict
 from pytz import timezone
 import kim_edn
+import users
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -76,6 +76,8 @@ class Provenance:
         comments : str, optional
             comments about why and how the item was updated, by default None
         """
+        if not users.is_user(UUID):
+            raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
         self.kimcode = kimcode
         self.event_type = event_type
         self.UUID = UUID
@@ -107,6 +109,9 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
     e
     RuntimeError
     """
+    if not users.is_user(user_id):
+        raise ValueError(f"UUID {user_id} not recognized as a KIMkit user.")
+
     assert event_type in [
         "initial-creation",
         "metadata-update",
@@ -120,12 +125,6 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
         kimspec = util.loadedn(f)
 
     extended_id = kimspec["extended-id"]
-
-    # Verify this is a valid uuid4
-    try:
-        assert user_id.replace("-", "") == uuid.UUID(user_id, version=4).hex
-    except AssertionError as e:
-        raise e("User id entered is not a valid v4 uuid")
 
     if event_type != "initial-creation":
 
