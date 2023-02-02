@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import tarfile
 
 import metadata
 import provenance
@@ -23,6 +24,7 @@ class PortableModel(kimobjects.Model):
         self,
         repository,
         kimcode,
+        abspath=None,
         *args,
         **kwargs,
     ):
@@ -42,14 +44,15 @@ class PortableModel(kimobjects.Model):
         """
 
         setattr(self, "repository", repository)
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-        super(PortableModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(PortableModel, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
 
-    def __init__(self, repository, kimcode, *args, **kwargs):
+    def __init__(self, repository, kimcode, abspath=None, *args, **kwargs):
         """Simulator Model Class
 
         Repository is always required in KIMkit.
@@ -66,18 +69,17 @@ class SimulatorModel(kimobjects.SimulatorModel):
         """
 
         setattr(self, "repository", repository)
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-        super(SimulatorModel, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(SimulatorModel, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
 class ModelDriver(kimobjects.ModelDriver):
     def __init__(
         self,
         repository,
-        kimcode=None,
-        name=None,
-        source_dir=None,
-        metadata_dict=None,
+        kimcode,
+        abspath=None,
         *args,
         **kwargs,
     ):
@@ -96,8 +98,9 @@ class ModelDriver(kimobjects.ModelDriver):
             generate a new kimcode and assign it to the new item
         """
         setattr(self, "repository", repository)
-        diskPath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-        super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
 def import_item(name, source_dir, repository, metadata_dict, UUID):
@@ -380,3 +383,40 @@ def fork(
         event_type=event_type,
         comment=provenance_comments,
     )
+
+
+def install(repository, kimcode, install_dir):
+
+    export(install_dir, kimcode, repository)
+
+    # extract the item from its tar archive, along with any dependencies (e.g. drivers)
+    for file in os.listdir(install_dir):
+        if file.endswith(".tgz"):
+            flobj = os.path.join(install_dir, file)
+            tar = tarfile.open(flobj)
+            tar.extractall(path=install_dir)
+            tar.close()
+
+    # go into the extracted archives, create relevant objects in memory, and call their make methods
+    for file in os.listdir(install_dir):
+        d = os.path.join(install_dir, file)
+        if os.path.isdir(d):
+            obj_kimcode = os.path.basename(d)
+            __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
+            if leader == "MO":
+                obj = PortableModel(
+                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                )
+            elif leader == "SM":
+                obj = SimulatorModel(
+                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                )
+            elif leader == "MD":
+                obj = ModelDriver(
+                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                )
+            # this shouldn't ever happen...
+            else:
+                raise ValueError(f"Kim item type {leader} not recognized.")
+
+            obj.make()

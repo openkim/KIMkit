@@ -1,7 +1,7 @@
 #=============================================================================
 # directories and other locations
 #=============================================================================
-PIPELINE_DATA_DIRECTORY=/home/brendon/Documents/Work/LLNL/
+PIPELINE_DATA_DIRECTORY=/home/brendon/Documents/Work/LLNL/KIMkit
 LOG_DIR=$PIPELINE_DATA_DIRECTORY/logs/
 
 LOCAL_REPOSITORY_PATH=$PIPELINE_DATA_DIRECTORY/repository
