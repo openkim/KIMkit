@@ -1,0 +1,15 @@
+*.pyc
+logs/*
+pipeline/logs/*
+*.tmp
+kim.log
+*.swp
+docs/_build
+stupid.*
+.ropeproject
+venv
+pipeline-env
+__pycache__
+*.bak
+*vscode*
+*.edn
