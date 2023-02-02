@@ -9,7 +9,7 @@ from collections import OrderedDict
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
-from kim_utils import util, kimcodes
+from kim_utils import kimcodes
 
 import users
 import provenance
@@ -120,9 +120,7 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
 
     # TODO: assign DOI?
 
-    valid_metadata_dict = validate_metadata(metadata_dict)
-
-    _write_metadata_to_file(repository, kimcode, valid_metadata_dict)
+    _write_metadata_to_file(repository, kimcode, metadata_dict)
 
     new_metadata = MetaData(repository, kimcode)
 

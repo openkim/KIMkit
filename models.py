@@ -100,15 +100,10 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=diskPath, *args, **kwargs)
 
 
-def import_item(name, source_dir, repository, metadata_dict, UUID):
-    """Assign the item a kimcode, create a directory in the selected repository for
-    the item based on that kimcode, copy the item's files into it,
-    generate needed metadata and provenance files, and store them with the item.
-
-    By default, when importing a new item it will be assigned major version 000.
-
-    If updating or forking an existing item, call this function with the kimcode to
-    create the new version/item's directory
+def import_item(source_dir, repository, kimcode, metadata_dict, UUID):
+    """Create a directory in the selected repository for the item based on its kimcode,
+    copy the item's files into it, generate needed metadata and provenance files,
+    and store them with the item.
 
     If no new items/directories need to be created, returns the kimcode and exits.
 
@@ -132,34 +127,41 @@ def import_item(name, source_dir, repository, metadata_dict, UUID):
     if not users.is_user(UUID):
         raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
-    item_type = metadata_dict["kim-item-type"]
-    event_type = "initial-creation"
-    if all((name, item_type, source_dir, repository, metadata_dict)):
-        new_kimcode = kimcodes.generate_kimcode(name, item_type, repository)
-        metadata_dict["extended-id"] = new_kimcode
-        executables = []
-        for file in os.listdir(source_dir):
-            if os.path.isfile(file):
-                executable = os.access(file, os.X_OK)
-                if executable:
-                    executables.append(os.path.split(file)[-1])
-        if executables:
-            metadata_dict["executables"] = executables
+    if not kimcodes.is_kimcode_available(repository, kimcode):
+        raise ValueError(f"kimcode {kimcode} is already in use, please select another.")
 
-        _save_to_repository(source_dir, new_kimcode, repository)
+    metadata_dict["extended-id"] = kimcode
+
+    executables = []
+    for file in os.listdir(source_dir):
+        if os.path.isfile(file):
+            executable = os.access(file, os.X_OK)
+            if executable:
+                executables.append(os.path.split(file)[-1])
+    if executables:
+        metadata_dict["executables"] = executables
+
+    try:
+        metadata_dict = metadata.validate_metadata(metadata_dict)
+    except (ValueError, KeyError) as e:
+        raise e("Supplied dictionary of metadata does not comply with KIMkit standard.")
+
+    event_type = "initial-creation"
+    if all((source_dir, repository, kimcode, metadata_dict)):
+        _save_to_repository(source_dir, kimcode, repository)
 
         new_metadata = metadata.create_metadata(
-            repository, new_kimcode, metadata_dict, UUID
+            repository, kimcode, metadata_dict, UUID
         )
 
         provenance.Provenance(
-            new_kimcode,
+            kimcode,
             repository,
             event_type,
             UUID,
             comments=None,
         )
-        return new_kimcode
+        return kimcode
     else:
         raise AttributeError(
             f"""A name, source directory, KIMkit repository,
