@@ -103,28 +103,25 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
-def import_item(source_dir, repository, kimcode, metadata_dict, UUID):
+def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
     """Create a directory in the selected repository for the item based on its kimcode,
     copy the item's files into it, generate needed metadata and provenance files,
     and store them with the item.
 
-    If no new items/directories need to be created, returns the kimcode and exits.
+    Expects the item to be passed in as a tarfile.Tarfile object.
 
     Parameters
     ----------
-    name : str
-        a human-readable name prefix for the item
-    source_dir : path like
-        location of the item's files on disk
+    tarfile_obj : tarfile.TarFile
+        tarfile object containing item files
+    kimcode : str
+        id code of the item
     repository : path like
         path to collection to install into
     metadata_dict : dict
         dict of all required and any optional metadata key-value pairs
-
-    Returns
-    -------
-    new_kimcode : str
-        ID code of the item in KIMkit
+    UUID : str
+        user id of the entity importing the item
     """
 
     if not users.is_user(UUID):
@@ -135,23 +132,41 @@ def import_item(source_dir, repository, kimcode, metadata_dict, UUID):
 
     metadata_dict["extended-id"] = kimcode
 
-    executables = []
-    for file in os.listdir(source_dir):
-        if os.path.isfile(file):
-            executable = os.access(file, os.X_OK)
-            if executable:
-                executables.append(os.path.split(file)[-1])
-    if executables:
-        metadata_dict["executables"] = executables
-
-    try:
-        metadata_dict = metadata.validate_metadata(metadata_dict)
-    except (ValueError, KeyError) as e:
-        raise e("Supplied dictionary of metadata does not comply with KIMkit standard.")
-
     event_type = "initial-creation"
-    if all((source_dir, repository, kimcode, metadata_dict)):
-        _save_to_repository(source_dir, kimcode, repository)
+    if all((tarfile_obj, repository, kimcode, metadata_dict)):
+
+        tmp_dir = os.path.join(repository, kimcode)
+        tarfile_obj.extractall(path=tmp_dir)
+        contents = os.listdir(tmp_dir)
+        # if the contents of the item are enclosed in a directory, copy them out
+        # then delete the directory
+        if len(contents) == 1:
+            inner_dir = os.path.join(tmp_dir, contents[0])
+            if os.path.isdir(inner_dir):
+                inner_contents = os.listdir(inner_dir)
+                for item in inner_contents:
+                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                shutil.rmtree(inner_dir)
+
+        executables = []
+        for file in os.listdir(tmp_dir):
+            if os.path.isfile(file):
+                executable = os.access(file, os.X_OK)
+                if executable:
+                    executables.append(os.path.split(file)[-1])
+        if executables:
+            metadata_dict["executables"] = executables
+
+        try:
+            metadata_dict = metadata.validate_metadata(metadata_dict)
+        except (ValueError, KeyError) as e:
+            raise e(
+                "Supplied dictionary of metadata does not comply with KIMkit standard."
+            )
+
+        dest_dir = _create_install_dir(kimcode, repository)
+
+        _save_to_repository(tmp_dir, dest_dir)
 
         new_metadata = metadata.create_metadata(
             repository, kimcode, metadata_dict, UUID
@@ -164,7 +179,7 @@ def import_item(source_dir, repository, kimcode, metadata_dict, UUID):
             UUID,
             comments=None,
         )
-        return kimcode
+        shutil.rmtree(tmp_dir)
     else:
         raise AttributeError(
             f"""A name, source directory, KIMkit repository,
@@ -172,23 +187,19 @@ def import_item(source_dir, repository, kimcode, metadata_dict, UUID):
         )
 
 
-def _save_to_repository(source_dir, kimcode, repository):
-    """Take an item that's been imported and had a kimcode
-    generated and save it in the relevant repository.
+def _create_install_dir(kimcode, repository):
 
-    Parameters
-    ----------
-    source_dir : str or path
-        directory where the item is currently stored
-    kimcode : str
-        kimcode of the item
-    repository : str or path
-        repository in which to save the item
-    """
+    dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+
+    os.makedirs(dest_path)
+
+    return dest_path
+
+
+def _save_to_repository(source_dir, dest_dir):
 
     if os.path.isdir(source_dir):
-        dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
-        shutil.copytree(source_dir, dest_dir)
+        shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
 
     else:
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
@@ -407,15 +418,21 @@ def install(repository, kimcode, install_dir):
             __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
             if leader == "MO":
                 obj = PortableModel(
-                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                    repository=None,
+                    kimcode=obj_kimcode,
+                    abspath=os.path.join(install_dir, kimcode),
                 )
             elif leader == "SM":
                 obj = SimulatorModel(
-                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                    repository=None,
+                    kimcode=obj_kimcode,
+                    abspath=os.path.join(install_dir, kimcode),
                 )
             elif leader == "MD":
                 obj = ModelDriver(
-                    repository=None, kimcode=obj_kimcode, abspath=os.path.join(install_dir, kimcode)
+                    repository=None,
+                    kimcode=obj_kimcode,
+                    abspath=os.path.join(install_dir, kimcode),
                 )
             # this shouldn't ever happen...
             else:
