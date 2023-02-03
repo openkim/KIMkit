@@ -228,26 +228,50 @@ def delete(kimcode, repository, UUID):
             shutil.rmtree(outer_dir)
 
 
-def export(dest_dir, kimcode, repository):
+def _make_tarfile(output_filename, source_dir):
+
+    with tarfile.open(output_filename, "w:xz") as tar:
+        for fn in os.listdir(source_dir):
+            p = os.path.join(source_dir, fn)
+            tar.add(p, arcname=fn)
+
+
+def export(kimcode, repository):
     """Export as a tar archive, with all needed dependancies for it to run
 
     Parameters
     ----------
-    dest_dir : path like
-        where to place the exported model
     kimcode: str
         id code of the item
     repository : path like
         root directory of the KIMkit repository containing the item
+
+    Returns
+    -------
+    tarfile_objs : list of tarfile.Tarfile objects
+        list of tarfile object containing the contents of the item
+        and its dependencies (if any).
     """
     src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
-    name, leader, num, version = kimcodes.parse_kim_code(kimcode)
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
         req_driver = this_item.driver
-        export(dest_dir, req_driver, repository)
-    util.create_tarball(src_dir, dest_dir, arcname=kimcode)
+        export(req_driver, repository)
+        _make_tarfile(
+            os.path.join(src_dir, req_driver + ".txz"),
+            kimcodes.kimcode_to_file_path(req_driver, repository),
+        )
+    _make_tarfile(os.path.join(src_dir, kimcode + ".txz"), src_dir)
+    contents = os.listdir(src_dir)
+    tarfile_objs = []
+    for item in contents:
+        if ".txz" in item:
+            tarfile_obj = tarfile.open(os.path.join(src_dir, item))
+            tarfile_objs.append(tarfile_obj)
+            os.remove(os.path.join(src_dir, item))
+    return tarfile_objs
 
 
 def version_update(
