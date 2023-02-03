@@ -258,14 +258,8 @@ def export(kimcode, repository):
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
         req_driver = this_item.driver
-        # export(req_driver, repository)
-        # _make_tarfile(
-        #     os.path.join(src_dir, req_driver + ".txz"),
-        #     kimcodes.kimcode_to_file_path(req_driver, repository),
-        # )
         with tarfile.open(os.path.join(src_dir, req_driver + ".txz"), "w:xz") as tar:
             tar.add(src_dir, arcname=req_driver)
-    # _make_tarfile(os.path.join(src_dir, kimcode + ".txz"), src_dir)
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
     contents = os.listdir(src_dir)
@@ -274,7 +268,7 @@ def export(kimcode, repository):
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_objs.append(tarfile_obj)
-            # os.remove(os.path.join(src_dir, item))
+            os.remove(os.path.join(src_dir, item))
     return tarfile_objs
 
 
