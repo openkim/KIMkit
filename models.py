@@ -228,12 +228,12 @@ def delete(kimcode, repository, UUID):
             shutil.rmtree(outer_dir)
 
 
-def _make_tarfile(output_filename, source_dir):
+# def _make_tarfile(output_filename, source_dir):
 
-    with tarfile.open(output_filename, "w:xz") as tar:
-        for fn in os.listdir(source_dir):
-            p = os.path.join(source_dir, fn)
-            tar.add(p, arcname=fn)
+#     with tarfile.open(output_filename, "w:xz") as tar:
+#         for fn in os.listdir(source_dir):
+#             p = os.path.join(source_dir, fn)
+#             tar.add(p, arcname=fn)
 
 
 def export(kimcode, repository):
@@ -258,19 +258,23 @@ def export(kimcode, repository):
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
         req_driver = this_item.driver
-        export(req_driver, repository)
-        _make_tarfile(
-            os.path.join(src_dir, req_driver + ".txz"),
-            kimcodes.kimcode_to_file_path(req_driver, repository),
-        )
-    _make_tarfile(os.path.join(src_dir, kimcode + ".txz"), src_dir)
+        # export(req_driver, repository)
+        # _make_tarfile(
+        #     os.path.join(src_dir, req_driver + ".txz"),
+        #     kimcodes.kimcode_to_file_path(req_driver, repository),
+        # )
+        with tarfile.open(os.path.join(src_dir, req_driver + ".txz"), "w:xz") as tar:
+            tar.add(src_dir, arcname=req_driver)
+    # _make_tarfile(os.path.join(src_dir, kimcode + ".txz"), src_dir)
+    with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
+        tar.add(src_dir, arcname=kimcode)
     contents = os.listdir(src_dir)
     tarfile_objs = []
     for item in contents:
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_objs.append(tarfile_obj)
-            os.remove(os.path.join(src_dir, item))
+            # os.remove(os.path.join(src_dir, item))
     return tarfile_objs
 
 
@@ -424,15 +428,12 @@ def fork(
 
 def install(repository, kimcode, install_dir):
 
-    export(install_dir, kimcode, repository)
+    tarfile_objs = export(kimcode, repository)
 
     # extract the item from its tar archive, along with any dependencies (e.g. drivers)
-    for file in os.listdir(install_dir):
-        if file.endswith(".tgz"):
-            flobj = os.path.join(install_dir, file)
-            tar = tarfile.open(flobj)
-            tar.extractall(path=install_dir)
-            tar.close()
+    for tar in tarfile_objs:
+        tar.extractall(path=install_dir)
+        tar.close()
 
     # go into the extracted archives, create relevant objects in memory, and call their make methods
     for file in os.listdir(install_dir):
