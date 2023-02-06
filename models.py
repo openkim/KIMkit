@@ -275,7 +275,7 @@ def export(kimcode, repository):
 def version_update(
     repository,
     kimcode,
-    src_dir,
+    tarfile_obj,
     UUID,
     metadata_update_dict=None,
     provenance_comments=None,
@@ -290,8 +290,8 @@ def version_update(
         root directory of the KIMkit repository containing the item
     kimcode : str
         id code of the item to be updated
-    src_dir : path_like
-        location on disk of the new item's content
+    tarfile_obj : tarfile.Tarfile
+        tarfile object containing the new version's content
     UUID : str
         id number of the user requesting the update
     metadata_update_dict : dict, optional
@@ -320,7 +320,30 @@ def version_update(
     new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
     if metadata_update_dict:
         metadata.check_metadata_types(metadata_update_dict, kim_item_type)
-    _save_to_repository(src_dir, new_kimcode, repository)
+    tmp_dir = os.path.join(repository, new_kimcode)
+    tarfile_obj.extractall(path=tmp_dir)
+    contents = os.listdir(tmp_dir)
+    # if the contents of the item are enclosed in a directory, copy them out
+    # then delete the directory
+    if len(contents) == 1:
+        inner_dir = os.path.join(tmp_dir, contents[0])
+        if os.path.isdir(inner_dir):
+            inner_contents = os.listdir(inner_dir)
+            for item in inner_contents:
+                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+            shutil.rmtree(inner_dir)
+
+    executables = []
+    for file in os.listdir(tmp_dir):
+        if os.path.isfile(file):
+            executable = os.access(file, os.X_OK)
+            if executable:
+                executables.append(os.path.split(file)[-1])
+    if executables:
+        if metadata_update_dict:
+            metadata_update_dict["executables"] = executables
+    dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+    _save_to_repository(tmp_dir, dest_dir)
     metadata.create_new_metadata_from_existing(
         repository,
         kimcode,
