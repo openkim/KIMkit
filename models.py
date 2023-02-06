@@ -368,9 +368,9 @@ def version_update(
 def fork(
     repository,
     kimcode,
-    src_dir,
+    new_kimcode,
+    tarfile_obj,
     UUID,
-    new_name=None,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -384,13 +384,12 @@ def fork(
         root directory of the KIMkit repository containing the item
     kimcode : str
         id code of the item to be updated
-    src_dir : path_like
-        location on disk of the new item's content
+    new_kimcode : str
+        id code the new item will be assigned
+    tarfile_obj : tarfile.Tarfile
+        tarfile object containing the new item's content
     UUID : str
         id number of the user requesting the update
-    new_name : str, optional
-        human readable prefix of the items kimcode,
-        if not specified, the name of the existing item is used, by default None
     metadata_update_dict : dict, optional
         dict of any metadata keys to be changed in the new version, by default None
     provenance_comments : str, optional
@@ -414,14 +413,33 @@ def fork(
     else:
         raise ValueError(f"Kim item type {leader} not recognized.")
 
-    if new_name:
-        name = new_name
-
-    new_kimcode = kimcodes.generate_kimcode(name, kim_item_type, repository)
-
     if metadata_update_dict:
         metadata.check_metadata_types(metadata_update_dict, kim_item_type)
-    _save_to_repository(src_dir, new_kimcode, repository)
+
+    tmp_dir = os.path.join(repository, new_kimcode)
+    tarfile_obj.extractall(path=tmp_dir)
+    contents = os.listdir(tmp_dir)
+    # if the contents of the item are enclosed in a directory, copy them out
+    # then delete the directory
+    if len(contents) == 1:
+        inner_dir = os.path.join(tmp_dir, contents[0])
+        if os.path.isdir(inner_dir):
+            inner_contents = os.listdir(inner_dir)
+            for item in inner_contents:
+                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+            shutil.rmtree(inner_dir)
+
+    executables = []
+    for file in os.listdir(tmp_dir):
+        if os.path.isfile(file):
+            executable = os.access(file, os.X_OK)
+            if executable:
+                executables.append(os.path.split(file)[-1])
+    if executables:
+        if metadata_update_dict:
+            metadata_update_dict["executables"] = executables
+    dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+    _save_to_repository(tmp_dir, dest_dir)
     metadata.create_new_metadata_from_existing(
         repository,
         kimcode,
