@@ -13,7 +13,7 @@ from kim_utils import kimcodes
 
 import users
 import provenance
-import metadata_config as cfg
+import config as cf
 
 central = timezone("US/Central")
 
@@ -75,7 +75,7 @@ class MetaData:
         if not users.is_user(UUID):
             raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
-        if key not in cfg.kimspec_order:
+        if key not in cf.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
         metadata_dict = vars(self)
 
@@ -140,7 +140,7 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
 
     metadata_dict_sorted = OrderedDict()
 
-    for field in cfg.kimspec_order:
+    for field in cf.kimspec_order:
         if field in metadata_dict:
             metadata_dict_sorted[field] = metadata_dict[field]
 
@@ -179,7 +179,7 @@ def validate_metadata(metadata_dict):
          Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
         )
 
-    metadata_requirements = cfg.KIMkit_item_type_key_requirements[kim_item_type]
+    metadata_requirements = cf.KIMkit_item_type_key_requirements[kim_item_type]
 
     required_fields = metadata_requirements["required"]
     optional_fields = metadata_requirements["optional"]
@@ -235,18 +235,18 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         )
 
     for field in metadata_dict:
-        if field in cfg.kimspec_strings:
+        if field in cf.kimspec_strings:
             if isinstance(metadata_dict[field], str):
                 pass
             else:
                 raise TypeError(
                     f"Required metadata field '{field}' is of incorrect type, must be str."
                 )
-        elif field in cfg.kimspec_arrays:
+        elif field in cf.kimspec_arrays:
             for item in metadata_dict[field]:
-                if isinstance(item, cfg.kimspec_arrays[field]):
-                    if cfg.kimspec_arrays[field] == dict:
-                        key_requirements = cfg.kimspec_arrays_dicts[field]
+                if isinstance(item, cf.kimspec_arrays[field]):
+                    if cf.kimspec_arrays[field] == dict:
+                        key_requirements = cf.kimspec_arrays_dicts[field]
                         for key in key_requirements:
                             if key and isinstance(metadata_dict[field][key], str):
                                 pass
@@ -255,11 +255,11 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                     f"Missing required key '{key}' in metadata field '{field}'."
                                 )
                     # Not really needed, written for clarity, type already checked above
-                    elif cfg.kimspec_arrays[field] == str:
+                    elif cf.kimspec_arrays[field] == str:
                         pass
                 else:
                     raise TypeError(
-                        f"Metadata field '{field}' is of invalid type, must be '{cfg.kimspec_arrays[field]}'."
+                        f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
                     )
 
 
