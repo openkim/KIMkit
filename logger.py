@@ -93,7 +93,7 @@ class LogLexer(RegexLexer):
     mimetypes = ["text/x-log"]
 
     flags = re.VERBOSE
-    _logger = r"-\s(pipeline)(\.([a-z._\-0-9]+))*\s-"
+    _logger = r"-\s(KIMkit)(\.([a-z._\-0-9]+))*\s-"
     _uuid = r"([A-Z]{2}_[0-9]{12}_[0-9]{3}-and-[A-Z]{2}_[0-9]{12}_[0-9]{3}-[0-9]{5,}-[tve]r)"
     _jobid = r"([A-Z]{2}_[0-9]{12}_[0-9]{3}-and-[A-Z]{2}_[0-9]{12}_[0-9]{3}-[0-9]{5,})"
     _kimid = r"((?:[_a-zA-Z][_a-zA-Z0-9]*?_?_)?[A-Z]{2}_[0-9]{12}(?:_[0-9]{3})?)"
@@ -157,14 +157,14 @@ class PygmentHandler(logging.StreamHandler):
 
 
 def createLogger():
-    logger = logging.getLogger("pipeline")
+    logger = logging.getLogger("KIMkit")
     logger.setLevel(FILELEVEL)
 
     # create the formatting style (with lines and times if verbose)
     log_formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
     )
-    if cf.PIPELINE_DEBUG:
+    if cf.KIMKIT_DEBUG:
         log_formatter = logging.Formatter(
             "%(filename)s:%(lineno)d _ %(asctime)s - %(levelname)s - %(name)s - %(message)s"
         )
@@ -172,7 +172,7 @@ def createLogger():
     # create a rotating file handler
     util.mkdir_ext(cf.LOG_DIR)
     rotfile_handler = loghandlers.RotatingFileHandler(
-        os.path.join(cf.LOG_DIR, "pipeline.log"), mode="a", backupCount=0, maxBytes=0
+        os.path.join(cf.LOG_DIR, "KIMkit.log"), mode="a", backupCount=0, maxBytes=0
     )
     rotfile_handler.setLevel(FILELEVEL)
     rotfile_handler.setFormatter(log_formatter)
@@ -181,7 +181,7 @@ def createLogger():
     # create a console logger
     console_handler = PygmentHandler()
     console_handler.setLevel(logging.INFO)
-    if cf.PIPELINE_DEBUG:
+    if cf.KIMKIT_DEBUG:
         console_handler.setLevel(logging.DEBUG)
 
     console_handler.setFormatter(log_formatter)
@@ -190,6 +190,4 @@ def createLogger():
     return log_formatter
 
 
-# if (cf.PIPELINE_GATEWAY or cf.PIPELINE_DIRECTOR or cf.PIPELINE_WORKER or
-#         cf.PIPELINE_DISPATCHER):
-#     log_formatter = createLogger()
+log_formatter = createLogger()
