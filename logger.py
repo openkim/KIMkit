@@ -37,7 +37,11 @@ import logging
 import logging.handlers as loghandlers
 
 from . import config as cf
-from . import util
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+from kim_utils import util
 
 FILELEVEL = logging.DEBUG
 
