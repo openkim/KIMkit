@@ -36,7 +36,7 @@ import os
 import logging
 import logging.handlers as loghandlers
 
-from . import config as cf
+import config as cf
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
