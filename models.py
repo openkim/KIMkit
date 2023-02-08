@@ -6,6 +6,7 @@ import tarfile
 import metadata
 import provenance
 import users
+from .logger import logging
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -15,6 +16,7 @@ from kim_utils import kimobjects, kimcodes, util
 """
 Base class items for KIMkit.
 """
+logger = logging.getLogger("KIMkit")
 
 
 class PortableModel(kimobjects.Model):
@@ -166,6 +168,8 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
 
         dest_dir = _create_install_dir(kimcode, repository)
 
+        logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
+
         _save_to_repository(tmp_dir, dest_dir)
 
         new_metadata = metadata.create_metadata(
@@ -218,6 +222,8 @@ def delete(kimcode, repository, UUID):
     if not users.is_user(UUID):
         raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
+    logger.info(f"User {UUID} deleted item {kimcode} from repository {repository}")
+
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
     shutil.rmtree(del_path)
 
@@ -226,14 +232,11 @@ def delete(kimcode, repository, UUID):
     with os.scandir(outer_dir) as it:
         if not any(it):  # empty directory
             shutil.rmtree(outer_dir)
+            kimcode_without_version = kimcodes.strip_version(kimcode)
 
-
-# def _make_tarfile(output_filename, source_dir):
-
-#     with tarfile.open(output_filename, "w:xz") as tar:
-#         for fn in os.listdir(source_dir):
-#             p = os.path.join(source_dir, fn)
-#             tar.add(p, arcname=fn)
+            logger.info(
+                f"All versions of {kimcode_without_version} deleted, deleting the item."
+            )
 
 
 def export(kimcode, repository):
@@ -253,6 +256,11 @@ def export(kimcode, repository):
         and its dependencies (if any).
     """
     src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if not os.path.isdir(src_dir):
+        raise FileNotFoundError(f"No item with kimcode {kimcode} exists, aborting.")
+
+    logger.debug(f"Exporting item {kimcode} from repository {repository}")
+
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
     if leader == "MO":  # portable model
@@ -305,6 +313,11 @@ def version_update(
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+
+    logger.info(
+        f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
+    )
+
     event_type = "revised-version-creation"
     name, leader, num, old_version = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
@@ -401,6 +414,10 @@ def fork(
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+
+    logger.info(
+        f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
+    )
     event_type = "fork"
     name, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
@@ -497,5 +514,9 @@ def install(repository, kimcode, install_dir):
             # this shouldn't ever happen...
             else:
                 raise ValueError(f"Kim item type {leader} not recognized.")
+
+            logger.debug(
+                f"Item {kimcode} from repository {repository} installed into kim-api-collection in directory {install_dir}"
+            )
 
             obj.make()
