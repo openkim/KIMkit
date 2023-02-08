@@ -9,11 +9,14 @@ from collections import OrderedDict
 from pytz import timezone
 import kim_edn
 import users
+from logger import logging
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from kim_utils import util, kimcodes
+
+logger = logging.getLogger("KIMkit")
 
 central = timezone("US/Central")
 
@@ -125,6 +128,10 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
         kimspec = util.loadedn(f)
 
     extended_id = kimspec["extended-id"]
+
+    logger.debug(
+        f"Provenance update {event_type} to item {extended_id} triggered by user {user_id}"
+    )
 
     if event_type != "initial-creation":
 
