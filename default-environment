@@ -11,4 +11,4 @@ LOCAL_REPOSITORY_PATH=$KIMKIT_DATA_DIRECTORY/repository
 # global defines that are necessary to define interface to tests
 #=============================================================================
 CONFIG_FILE=kimspec.edn
-
+KIMKIT_DEBUG=False
