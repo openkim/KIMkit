@@ -2,6 +2,10 @@ import uuid
 import kim_edn
 import os
 
+from logger import logging
+
+logger = logging.getLogger("KIMkit")
+
 
 def add_user(name):
     """Assign a UUID to a new user and add them to the list of approved users
@@ -14,6 +18,10 @@ def add_user(name):
 
     new_uuid = uuid.uuid4()
     new_uuid_key = str(new_uuid)
+
+    logger.info(
+        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
+    )
 
     with open("user_data.edn", "r") as file:
         user_data_dict = kim_edn.load(file)
@@ -60,6 +68,8 @@ def delete_user(user_id, name):
             )
     else:
         raise KeyError(f"UUID {user_id} not found in user data.")
+
+    logger.info(f"User {name} (UUID {user_id}) deleted from KIMkit approved users")
 
     with open("user_data_tmp.edn", "w") as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
