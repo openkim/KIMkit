@@ -81,6 +81,10 @@ class MetaData:
         if key not in cf.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
         metadata_dict = vars(self)
+        kimcode = metadata_dict["extended-id"]
+        logger.info(
+            f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
+        )
 
         metadata_dict[key] = new_value
 
@@ -114,6 +118,8 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     """
     if not users.is_user(UUID):
         raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
+    logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
 
     metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
     metadata_dict["contributor-id"] = UUID
@@ -289,6 +295,10 @@ def create_new_metadata_from_existing(
     """
     if not users.is_user(UUID):
         raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
+    logger.debug(
+        f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"
+    )
 
     old_metadata = MetaData(repository, old_kimcode)
     old_metadata_dict = vars(old_metadata)
