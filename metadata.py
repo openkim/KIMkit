@@ -14,8 +14,11 @@ from kim_utils import kimcodes
 import users
 import provenance
 import config as cf
+from logger import logging
 
 central = timezone("US/Central")
+
+logger = logging.getLogger("KIMkit")
 
 
 class MetaData:

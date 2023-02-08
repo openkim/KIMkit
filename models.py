@@ -6,7 +6,7 @@ import tarfile
 import metadata
 import provenance
 import users
-from .logger import logging
+from logger import logging
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
