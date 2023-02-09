@@ -314,6 +314,17 @@ def version_update(
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
 
+    outer_dir = os.path.split(current_dir)[0]
+    versions = os.listdir(outer_dir)
+    most_recent_version = max(versions)
+
+    most_recent_dir = os.path.join(outer_dir, most_recent_version)
+
+    if not os.path.samefile(current_dir, most_recent_dir):
+        raise ValueError(
+            f"{kimcode} is not the most recent version of this item. Most recent version {most_recent_version} should be used as a base for updating."
+        )
+
     logger.info(
         f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
     )
