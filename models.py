@@ -377,6 +377,8 @@ def version_update(
         comment=provenance_comments,
     )
 
+    shutil.rmtree(tmp_dir)
+
 
 def fork(
     repository,
@@ -476,6 +478,8 @@ def fork(
         event_type=event_type,
         comment=provenance_comments,
     )
+
+    shutil.rmtree(tmp_dir)
 
 
 def install(repository, kimcode, install_dir):
