@@ -86,6 +86,7 @@ def add_editor(editor_name):
             os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a"
         ) as editor_file:
             editor_file.write(editor_name + "\n")
+        logger.info(f"The Administrator added {editor_name} as a KIMkit editor.")
     else:
         username = whoami()
         logger.warning(
@@ -96,6 +97,9 @@ def add_editor(editor_name):
         )
 
 
+#################################################################################################
+# DEPRICATED FUNCTIONS BELOW HERE
+#################################################################################################
 def add_user(name):
     """Assign a UUID to a new user and add them to the list of approved users
 
