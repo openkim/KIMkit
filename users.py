@@ -19,7 +19,7 @@ or perfom certian other potenitally destructive actions (e.g. removing a require
 editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, KIMkit recoggnizes them as an Editor, and allows them certian
 elevated permissions (e.g. editing content submitted by other users). Any user that is neither the Administrator nor
-listed as an Editor is a regular User by default.
+listed as an Editor is a regular User by default. The Administrator should be listed as an Editor for most use cases.
 """
 
 logger = logging.getLogger("KIMkit")
@@ -90,7 +90,7 @@ def add_editor(editor_name):
     else:
         username = whoami()
         logger.warning(
-            f"User {username} attempted to add an Editor with insufficient privileges."
+            f"User {username} attempted to add {editor_name} as an Editor with insufficient privileges."
         )
         raise PermissionError(
             "You are not the Administrator, and do not have access rights to add Editors."
