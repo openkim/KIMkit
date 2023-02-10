@@ -41,9 +41,9 @@ def is_administrator():
     """
 
     try:
-        fp = open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a")
+        with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a+") as test:
+            test.read()
         is_admin = True
-        fp.close()
     except PermissionError:
         is_admin = False
 
