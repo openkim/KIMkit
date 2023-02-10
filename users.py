@@ -1,10 +1,99 @@
 import uuid
 import kim_edn
 import os
+import getpass
 
+import config as cf
 from logger import logging
 
+""" This module contains utility functions used to manager users and permissions in KIMkit.
+
+KIMkit defines 3 levels of user access: Administrator, Editor, and User.
+
+There is only one Administrator per installation of KIMkit. Inside the KIMkit package directory there should be
+a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to.
+Indeed, KIMkit determines whether a given user is the Administrator by checking whether the operating system grants
+them write access to editors.txt. Therefore only the Administrator can elevate Users to Editors,
+or perfom certian other potenitally destructive actions (e.g. removing a required metadata field from all items).
+
+editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
+If the current user is in editors.txt, KIMkit recoggnizes them as an Editor, and allows them certian
+elevated permissions (e.g. editing content submitted by other users). Any user that is neither the Administrator nor
+listed as an Editor is a regular User by default.
+"""
+
 logger = logging.getLogger("KIMkit")
+
+
+def whoami():
+    identity = getpass.getuser()
+    return identity
+
+
+def is_administrator():
+    """Check whether this user has write permissions from the operating system for the editors file,
+    if so, this user is the administrator.
+
+    Returns
+    -------
+    is_admin : bool
+        whether this user is the administrator or not
+    """
+
+    try:
+        fp = open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a")
+        is_admin = True
+        fp.close()
+    except PermissionError:
+        is_admin = False
+
+    return is_admin
+
+
+def is_editor():
+    """Read the editors.txt file to check if the current user is present,
+    if so, the current user is an editor, and is_editor() returns True.
+
+    Returns
+    -------
+    editor : bool
+        whether this user is an editor
+    """
+
+    identity = whoami()
+
+    with open(
+        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "r"
+    ) as editor_file:
+        if identity in editor_file.read():
+            editor = True
+        else:
+            editor = False
+    return editor
+
+
+def add_editor(editor_name):
+    """A function for the Administrator to add users to the set of approved KIMkit Editors
+
+    Parameters
+    ----------
+    username : str
+        username to be added to the set of approved Editors
+    """
+
+    if is_administrator():
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a"
+        ) as editor_file:
+            editor_file.write(editor_name + "\n")
+    else:
+        username = whoami()
+        logger.warning(
+            f"User {username} attempted to add an Editor with insufficient privileges."
+        )
+        raise PermissionError(
+            "You are not the Administrator, and do not have access rights to add Editors."
+        )
 
 
 def add_user(name):
