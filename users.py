@@ -41,8 +41,9 @@ def is_administrator():
     """
 
     try:
-        with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a+") as test:
-            test.read()
+        # attempt to write an empty string to check if user has write permissions to the editors file
+        with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a") as test:
+            test.write("")
         is_admin = True
     except PermissionError:
         is_admin = False
