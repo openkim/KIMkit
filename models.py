@@ -209,7 +209,7 @@ def _save_to_repository(source_dir, dest_dir):
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
 
 
-def delete(kimcode, repository, UUID):
+def delete(kimcode, repository):
     """delete an item from the repository and all of its content
 
     Parameters
@@ -219,24 +219,51 @@ def delete(kimcode, repository, UUID):
     repository : path like
         root directory of the KIMkit repo containing the item
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
-    logger.info(f"User {UUID} deleted item {kimcode} from repository {repository}")
+    this_user = users.whoami()
 
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
-    shutil.rmtree(del_path)
 
-    # if all versions of the item have been deleted, delete its enclosing directory
-    outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-    with os.scandir(outer_dir) as it:
-        if not any(it):  # empty directory
-            shutil.rmtree(outer_dir)
-            kimcode_without_version = kimcodes.strip_version(kimcode)
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
-            logger.info(
-                f"All versions of {kimcode_without_version} deleted, deleting the item."
-            )
+    if leader == "MO":
+        item = PortableModel(kimcode=kimcode, repository=repository)
+
+    elif leader == "SM":
+        item = SimulatorModel(kimcode=kimcode, repository=repository)
+
+    elif leader == "MD":
+        item = ModelDriver(kimcode=kimcode, repository=repository)
+
+    spec = item.kimspec
+
+    contributor = spec["contributor-id"]
+
+    if contributor == this_user or users.is_editor():
+
+        logger.info(
+            f"User {this_user} deleted item {kimcode} from repository {repository}"
+        )
+
+        shutil.rmtree(del_path)
+
+        # if all versions of the item have been deleted, delete its enclosing directory
+        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+        with os.scandir(outer_dir) as it:
+            if not any(it):  # empty directory
+                shutil.rmtree(outer_dir)
+                kimcode_without_version = kimcodes.strip_version(kimcode)
+
+                logger.info(
+                    f"All versions of {kimcode_without_version} deleted, deleting the item."
+                )
+    else:
+        logger.warning(
+            f"User {this_user} attempted to deleted item {kimcode} from repository {repository}, but is neither the contributor of the item nor an editor"
+        )
+        raise PermissionError(
+            "Only KIMkit Editors or the Administrator may delete items belonging to other users."
+        )
 
 
 def export(kimcode, repository):

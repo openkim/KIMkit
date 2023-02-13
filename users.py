@@ -117,7 +117,7 @@ def add_user(name):
         f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
     )
 
-    with open("user_data.edn", "r") as file:
+    with open("user_uuids.edn", "r") as file:
         user_data_dict = kim_edn.load(file)
 
     user_data_dict[new_uuid_key] = name
@@ -125,7 +125,7 @@ def add_user(name):
     with open("user_data_tmp.edn", "w") as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
-    os.rename("user_data_tmp.edn", "user_data.edn")
+    os.rename("user_data_tmp.edn", "user_uuids.edn")
 
 
 def delete_user(user_id, name):
@@ -149,7 +149,7 @@ def delete_user(user_id, name):
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
 
-    with open("user_data.edn", "r") as file:
+    with open("user_uuids.edn", "r") as file:
         user_data_dict = kim_edn.load(file)
 
     if is_user(user_id):
@@ -168,7 +168,7 @@ def delete_user(user_id, name):
     with open("user_data_tmp.edn", "w") as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
-    os.rename("user_data_tmp.edn", "user_data.edn")
+    os.rename("user_data_tmp.edn", "user_uuids.edn")
 
 
 def get_name_of_user(user_id):
@@ -195,7 +195,7 @@ def get_name_of_user(user_id):
         raise ValueError("user id is not a valid UUID4")
 
     if is_user(user_id):
-        with open("user_data.edn", "r") as file:
+        with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]
             return name
@@ -230,7 +230,7 @@ def is_user(user_id):
 
     if is_valid_uuid4(user_id):
 
-        with open("user_data.edn", "r") as file:
+        with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
         if user_id in user_data_dict:
             return True
