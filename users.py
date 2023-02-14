@@ -113,7 +113,7 @@ def add_user(name):
     new_uuid_key = str(new_uuid)
 
     logger.info(
-        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
+        f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
     )
 
     with open("user_uuids.edn", "r") as file:
