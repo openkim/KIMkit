@@ -58,7 +58,7 @@ class MetaData:
         metadata_dict = vars(self)
         return metadata_dict
 
-    def edit_metadata_value(self, key, new_value, UUID, provenance_comments=None):
+    def edit_metadata_value(self, key, new_value, provenance_comments=None):
         """edit a metadata field of an existing item
 
         Parameters
@@ -75,31 +75,49 @@ class MetaData:
         KeyError
             if the metadata key is not specified in metadata_config
         """
-        # TODO: fix user check
-        # if not users.is_user(UUID):
-        #     raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+        this_user = users.whoami()
+        if users.is_user(system_username=this_user):
+            UUID = users.get_uuid(system_username=this_user)
+        else:
+            raise PermissionError(
+                "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+            )
 
         if key not in cf.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
         metadata_dict = vars(self)
         kimcode = metadata_dict["extended-id"]
-        logger.info(
-            f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
-        )
 
-        metadata_dict[key] = new_value
+        contributor = metadata_dict["contributor-id"]
+        maintainer = metadata_dict["maintainer-id"]
 
-        _write_metadata_to_file(
-            self.repository, metadata_dict["extended-id"], metadata_dict
-        )
-        event_type = "metadata-update"
-        provenance.Provenance(
-            metadata_dict["extended-id"],
-            self.repository,
-            event_type,
-            UUID,
-            comments=provenance_comments,
-        )
+        if UUID == contributor or UUID == maintainer or users.is_editor():
+
+            logger.info(
+                f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
+            )
+
+            metadata_dict[key] = new_value
+
+            _write_metadata_to_file(
+                self.repository, metadata_dict["extended-id"], metadata_dict
+            )
+            event_type = "metadata-update"
+            provenance.Provenance(
+                metadata_dict["extended-id"],
+                self.repository,
+                event_type,
+                UUID,
+                comments=provenance_comments,
+            )
+
+        else:
+            logger.warning(
+                f"User {UUID} attempted to edit metadata field {key} of item {kimcode}, without editor privleges"
+            )
+            raise PermissionError(
+                "Only KIMkit Editors may edit metadata of items they are not the contributor or maintainer of."
+            )
 
 
 def create_metadata(repository, kimcode, metadata_dict, UUID):
