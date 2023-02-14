@@ -110,6 +110,8 @@ def add_user(name):
         name of the user
     """
 
+    system_username = whoami()
+
     new_uuid = uuid.uuid4()
     new_uuid_key = str(new_uuid)
 
@@ -120,7 +122,10 @@ def add_user(name):
     with open("user_uuids.edn", "r") as file:
         user_data_dict = kim_edn.load(file)
 
-    user_data_dict[new_uuid_key] = name
+    user_data_dict[new_uuid_key] = {
+        "personal-name": name,
+        "system-username": system_username,
+    }
 
     with open("user_data_tmp.edn", "w") as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
@@ -128,7 +133,35 @@ def add_user(name):
     os.rename("user_data_tmp.edn", "user_uuids.edn")
 
 
-def delete_user(user_id, name):
+def add_person(name):
+    """Assign a UUID to a person without a user account on the system running KIMkit for attribution,
+    and add them to the list of approved users
+
+    Parameters
+    ----------
+    name : str
+        name of the user
+    """
+
+    new_uuid = uuid.uuid4()
+    new_uuid_key = str(new_uuid)
+
+    logger.info(
+        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
+    )
+
+    with open("user_uuids.edn", "r") as file:
+        user_data_dict = kim_edn.load(file)
+
+    user_data_dict[new_uuid_key] = {"personal-name": name}
+
+    with open("user_data_tmp.edn", "w") as outfile:
+        kim_edn.dump(user_data_dict, outfile, indent=4)
+
+    os.rename("user_data_tmp.edn", "user_uuids.edn")
+
+
+def delete_user(user_id):
     """Remove a user from the list of approved users
 
     Parameters
@@ -149,26 +182,23 @@ def delete_user(user_id, name):
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
 
-    with open("user_uuids.edn", "r") as file:
-        user_data_dict = kim_edn.load(file)
+    if is_editor():
 
-    if is_user(user_id):
-        if user_data_dict[user_id] == name:
+        with open("user_uuids.edn", "r") as file:
+            user_data_dict = kim_edn.load(file)
+
+        if is_user(user_id):
             del user_data_dict[user_id]
 
         else:
-            raise ValueError(
-                f"Supplied name {name} does not match name corresponding to {user_id}"
-            )
-    else:
-        raise KeyError(f"UUID {user_id} not found in user data.")
+            raise KeyError(f"UUID {user_id} not found in user data.")
 
-    logger.info(f"User {name} (UUID {user_id}) deleted from KIMkit approved users")
+        logger.info(f"User {user_id}) deleted from KIMkit approved users")
 
-    with open("user_data_tmp.edn", "w") as outfile:
-        kim_edn.dump(user_data_dict, outfile, indent=4)
+        with open("user_data_tmp.edn", "w") as outfile:
+            kim_edn.dump(user_data_dict, outfile, indent=4)
 
-    os.rename("user_data_tmp.edn", "user_uuids.edn")
+        os.rename("user_data_tmp.edn", "user_uuids.edn")
 
 
 def get_name_of_user(user_id):
@@ -197,7 +227,40 @@ def get_name_of_user(user_id):
     if is_user(user_id):
         with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
-            name = user_data_dict[user_id]
+            name = user_data_dict[user_id]["personal-name"]
+            return name
+
+    else:
+        raise KeyError(f"uuid {user_id} not in authorized users")
+
+
+def get_system_username_of_user(user_id):
+    """get the name of a user from their uuid
+
+    Parameters
+    ----------
+    user_id : str
+        uuid of the user
+
+    Returns
+    -------
+    name: str
+        name of the user corresponding to the uuid
+
+    Raises
+    ------
+    ValueError
+        if the user_id is not a valid UUID4
+    KeyError
+        if the uuid is not in the user file
+    """
+    if not is_valid_uuid4(user_id):
+        raise ValueError("user id is not a valid UUID4")
+
+    if is_user(user_id):
+        with open("user_uuids.edn", "r") as file:
+            user_data_dict = kim_edn.load(file)
+            name = user_data_dict[user_id]["system-username"]
             return name
 
     else:
