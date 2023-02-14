@@ -155,9 +155,18 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
     dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
     if os.path.exists(dest_path):
-        dest_file = os.path.join(dest_path, "kimspec.edn")
+        dest_file = os.path.join(dest_path, "kimspec_tmp.edn")
         with open(dest_file, "w") as outfile:
-            kim_edn.dump(metadata_dict_sorted, outfile, indent=4)
+            try:
+                kim_edn.dump(metadata_dict_sorted, outfile, indent=4)
+            except TypeError as e:
+                os.remove(os.path.join(dest_path, dest_file))
+                raise e
+
+        os.rename(
+            os.path.join(dest_path, "kimspec_tmp.edn"),
+            os.path.join(dest_path, "kimspec.edn"),
+        )
 
     else:
         raise FileNotFoundError(
