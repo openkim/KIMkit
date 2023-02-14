@@ -264,6 +264,45 @@ def get_system_username_of_user(user_id):
         raise KeyError(f"uuid {user_id} not in authorized users")
 
 
+def get_uuid(system_username=None, personal_name=None):
+    """Given a personal name or system username, return the associated UUID (if any)
+
+    Parameters
+    ----------
+    system_username : str, optional
+        unix username of the user account, by default None
+    personal_name : str, optional
+        personal name of a user, by default None
+
+    Returns
+    -------
+    UUID : str
+        unique id assigned to the user
+    """
+
+    with open("user_uuids.edn", "r") as file:
+        user_data_dict = kim_edn.load(file)
+        user_data = user_data_dict.items()
+        found_user = False
+        for item in user_data:
+            UUID = item[0]
+            names = item[1]
+
+            if system_username:
+                if names["system-username"] == system_username:
+                    found_user = True
+                    break
+
+            if personal_name:
+                if names["personal-name"] == personal_name:
+                    found_user = True
+                    break
+        if found_user:
+            return UUID
+        else:
+            return None
+
+
 def is_valid_uuid4(user_id):
 
     # Verify this is a valid uuid4
