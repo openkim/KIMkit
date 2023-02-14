@@ -98,7 +98,7 @@ def add_editor(editor_name):
         )
 
 
-def add_user(name):
+def add_self_as_user(name):
     """Assign a UUID to a new user and add them to the list of approved users
 
     Parameters
@@ -108,6 +108,13 @@ def add_user(name):
     """
 
     system_username = whoami()
+
+    existing_uuid = get_uuid(system_username=system_username, personal_name=name)
+
+    if existing_uuid != None:
+        raise RuntimeError(
+            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+        )
 
     new_uuid = uuid.uuid4()
     new_uuid_key = str(new_uuid)
@@ -139,6 +146,13 @@ def add_person(name):
     name : str
         name of the user
     """
+
+    existing_uuid = get_uuid(personal_name=name)
+
+    if existing_uuid != None:
+        raise RuntimeError(
+            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+        )
 
     new_uuid = uuid.uuid4()
     new_uuid_key = str(new_uuid)
@@ -184,7 +198,7 @@ def delete_user(user_id):
         with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
 
-        if is_user(user_id):
+        if is_user(user_id=user_id):
             del user_data_dict[user_id]
 
         else:
@@ -230,7 +244,7 @@ def get_name_of_user(user_id):
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
 
-    if is_user(user_id):
+    if is_user(user_id=user_id):
         with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["personal-name"]
@@ -263,7 +277,7 @@ def get_system_username_of_user(user_id):
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
 
-    if is_user(user_id):
+    if is_user(user_id=user_id):
         with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["system-username"]
@@ -322,7 +336,7 @@ def is_valid_uuid4(user_id):
         return False
 
 
-def is_user(system_username):
+def is_user(system_username=None, personal_name=None, user_id=None):
     """return True if the user currently logged in is in the list of approved users
     stored in the user data file.
 
@@ -335,16 +349,23 @@ def is_user(system_username):
     ----------
     True if the uuid is in the list of verified users
     """
-
+    found_user = False
     with open("user_uuids.edn", "r") as file:
         user_data_dict = kim_edn.load(file)
+
+        if user_id:
+            if user_id in user_data_dict:
+                found_user = True
         user_data = user_data_dict.items()
-        found_user = False
         for item in user_data:
             UUID = item[0]
             names = item[1]
-
-            if names["system-username"] == system_username:
-                found_user = True
-                break
+            if system_username:
+                if names["system-username"] == system_username:
+                    found_user = True
+                    break
+            if personal_name:
+                if names["personal-name"] == personal_name:
+                    found_user = True
+                    break
     return found_user
