@@ -322,27 +322,29 @@ def is_valid_uuid4(user_id):
         return False
 
 
-def is_user(user_id):
-    """return True if the user_id is in the list of approved users
+def is_user(system_username):
+    """return True if the user currently logged in is in the list of approved users
     stored in the user data file.
 
     Parameters
     ----------
-    user_id : str
-        uuid of the user to be verified
+    system_username : str
+        unix username of the user to be verified
 
     Returns
     ----------
     True if the uuid is in the list of verified users
     """
 
-    if is_valid_uuid4(user_id):
+    with open("user_uuids.edn", "r") as file:
+        user_data_dict = kim_edn.load(file)
+        user_data = user_data_dict.items()
+        found_user = False
+        for item in user_data:
+            UUID = item[0]
+            names = item[1]
 
-        with open("user_uuids.edn", "r") as file:
-            user_data_dict = kim_edn.load(file)
-        if user_id in user_data_dict:
-            return True
-        else:
-            return False
-    else:
-        raise TypeError(f"user id {user_id} is not a valid UUID4")
+            if names["system-username"] == system_username:
+                found_user = True
+                break
+    return found_user
