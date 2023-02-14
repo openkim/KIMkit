@@ -105,7 +105,7 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
-def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
+def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     """Create a directory in the selected repository for the item based on its kimcode,
     copy the item's files into it, generate needed metadata and provenance files,
     and store them with the item.
@@ -126,8 +126,13 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
         user id of the entity importing the item
     """
 
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     if not kimcodes.is_kimcode_available(repository, kimcode):
         raise ValueError(f"kimcode {kimcode} is already in use, please select another.")
@@ -209,7 +214,7 @@ def _save_to_repository(source_dir, dest_dir):
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
 
 
-def delete(kimcode, repository, UUID):
+def delete(kimcode, repository):
     """delete an item from the repository and all of its content
 
     Parameters
@@ -219,24 +224,61 @@ def delete(kimcode, repository, UUID):
     repository : path like
         root directory of the KIMkit repo containing the item
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
-    logger.info(f"User {UUID} deleted item {kimcode} from repository {repository}")
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can delete items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
-    shutil.rmtree(del_path)
 
-    # if all versions of the item have been deleted, delete its enclosing directory
-    outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-    with os.scandir(outer_dir) as it:
-        if not any(it):  # empty directory
-            shutil.rmtree(outer_dir)
-            kimcode_without_version = kimcodes.strip_version(kimcode)
+    if not os.path.exists(del_path):
+        raise FileNotFoundError(f"No item {kimcode} found in repository {repository}")
 
-            logger.info(
-                f"All versions of {kimcode_without_version} deleted, deleting the item."
-            )
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
+
+    if leader == "MO":
+        item = PortableModel(kimcode=kimcode, repository=repository)
+
+    elif leader == "SM":
+        item = SimulatorModel(kimcode=kimcode, repository=repository)
+
+    elif leader == "MD":
+        item = ModelDriver(kimcode=kimcode, repository=repository)
+
+    spec = item.kimspec
+
+    contributor = spec["contributor-id"]
+    maintainer = spec["maintainer-id"]
+
+    if UUID == contributor or UUID == maintainer or users.is_editor():
+
+        logger.info(
+            f"User {this_user} deleted item {kimcode} from repository {repository}"
+        )
+
+        shutil.rmtree(del_path)
+
+        # if all versions of the item have been deleted, delete its enclosing directory
+        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
+        with os.scandir(outer_dir) as it:
+            if not any(it):  # empty directory
+                shutil.rmtree(outer_dir)
+                kimcode_without_version = kimcodes.strip_version(kimcode)
+
+                logger.info(
+                    f"All versions of {kimcode_without_version} deleted, deleting the item."
+                )
+    else:
+        logger.warning(
+            f"User {this_user} attempted to deleted item {kimcode} from repository {repository}, but is neither the contributor of the item nor an editor"
+        )
+        raise PermissionError(
+            "Only KIMkit Editors or the Administrator may delete items belonging to other users."
+        )
 
 
 def export(kimcode, repository):
@@ -284,7 +326,6 @@ def version_update(
     repository,
     kimcode,
     tarfile_obj,
-    UUID,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -307,8 +348,14 @@ def version_update(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can update items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
@@ -325,70 +372,89 @@ def version_update(
             f"{kimcode} is not the most recent version of this item. Most recent version {most_recent_version} should be used as a base for updating."
         )
 
-    logger.info(
-        f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
-    )
-
     event_type = "revised-version-creation"
     name, leader, num, old_version = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
+        this_item = PortableModel(kimcode=kimcode, repository=repository)
         kim_item_type = "portable-model"
     elif leader == "SM":
+        this_item = SimulatorModel(kimcode=kimcode, repository=repository)
         kim_item_type = "simulator-model"
     elif leader == "MD":
+        this_item = ModelDriver(kimcode=kimcode, repository=repository)
         kim_item_type = "model-driver"
     # this shouldn't ever happen...
     else:
         raise ValueError(f"Kim item type {leader} not recognized.")
-    new_version = str(int(old_version) + 1)
-    new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
-    if metadata_update_dict:
-        metadata.check_metadata_types(metadata_update_dict, kim_item_type)
-    tmp_dir = os.path.join(repository, new_kimcode)
-    tarfile_obj.extractall(path=tmp_dir)
-    contents = os.listdir(tmp_dir)
-    # if the contents of the item are enclosed in a directory, copy them out
-    # then delete the directory
-    if len(contents) == 1:
-        inner_dir = os.path.join(tmp_dir, contents[0])
-        if os.path.isdir(inner_dir):
-            inner_contents = os.listdir(inner_dir)
-            for item in inner_contents:
-                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
-            shutil.rmtree(inner_dir)
 
-    executables = []
-    for file in os.listdir(tmp_dir):
-        if os.path.isfile(file):
-            executable = os.access(file, os.X_OK)
-            if executable:
-                executables.append(os.path.split(file)[-1])
-    if executables:
+    spec = this_item.kimspec
+
+    contributor = spec["contributor-id"]
+    maintainer = spec["maintainer-id"]
+
+    if UUID == contributor or UUID == maintainer or users.is_editor():
+
+        logger.info(
+            f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
+        )
+        new_version = str(int(old_version) + 1)
+        new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         if metadata_update_dict:
-            metadata_update_dict["executables"] = executables
-    dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    _save_to_repository(tmp_dir, dest_dir)
-    metadata.create_new_metadata_from_existing(
-        repository,
-        kimcode,
-        new_kimcode,
-        UUID,
-        metadata_update_dict=metadata_update_dict,
-    )
-    old_provenance = os.path.join(
-        kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
-    )
-    new_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    shutil.copy(old_provenance, new_dir)
+            metadata.check_metadata_types(metadata_update_dict, kim_item_type)
+        tmp_dir = os.path.join(repository, new_kimcode)
+        tarfile_obj.extractall(path=tmp_dir)
+        contents = os.listdir(tmp_dir)
+        # if the contents of the item are enclosed in a directory, copy them out
+        # then delete the directory
+        if len(contents) == 1:
+            inner_dir = os.path.join(tmp_dir, contents[0])
+            if os.path.isdir(inner_dir):
+                inner_contents = os.listdir(inner_dir)
+                for item in inner_contents:
+                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                shutil.rmtree(inner_dir)
 
-    provenance.add_kimprovenance_entry(
-        new_dir,
-        user_id=UUID,
-        event_type=event_type,
-        comment=provenance_comments,
-    )
+        executables = []
+        for file in os.listdir(tmp_dir):
+            if os.path.isfile(file):
+                executable = os.access(file, os.X_OK)
+                if executable:
+                    executables.append(os.path.split(file)[-1])
+        if executables:
+            if metadata_update_dict:
+                metadata_update_dict["executables"] = executables
+        dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+        _save_to_repository(tmp_dir, dest_dir)
+        metadata.create_new_metadata_from_existing(
+            repository,
+            kimcode,
+            new_kimcode,
+            UUID,
+            metadata_update_dict=metadata_update_dict,
+        )
+        old_provenance = os.path.join(
+            kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
+        )
+        new_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+        shutil.copy(old_provenance, new_dir)
 
-    shutil.rmtree(tmp_dir)
+        provenance.add_kimprovenance_entry(
+            new_dir,
+            user_id=UUID,
+            event_type=event_type,
+            comment=provenance_comments,
+        )
+
+        shutil.rmtree(tmp_dir)
+
+    else:
+
+        logger.warning(
+            f"User {this_user} requested a verion update of item {kimcode} in repository {repository}, but is neither the owner of the item nor an Editor."
+        )
+        raise PermissionError(
+            "Only KIMkit Editors or the Administrator may create updated versions of items belonging to other users."
+        )
 
 
 def fork(
@@ -396,7 +462,6 @@ def fork(
     kimcode,
     new_kimcode,
     tarfile_obj,
-    UUID,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -421,8 +486,13 @@ def fork(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can fork items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
