@@ -98,9 +98,6 @@ def add_editor(editor_name):
         )
 
 
-#################################################################################################
-# DEPRICATED FUNCTIONS BELOW HERE
-#################################################################################################
 def add_user(name):
     """Assign a UUID to a new user and add them to the list of approved users
 
