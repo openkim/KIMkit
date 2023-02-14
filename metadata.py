@@ -113,10 +113,56 @@ class MetaData:
 
         else:
             logger.warning(
-                f"User {UUID} attempted to edit metadata field {key} of item {kimcode}, without editor privleges"
+                f"User {UUID} attempted to edit metadata field {key} of item {kimcode} in repository {self.repository} without editor privleges"
             )
             raise PermissionError(
                 "Only KIMkit Editors may edit metadata of items they are not the contributor or maintainer of."
+            )
+
+    def delete_metadata_field(self, field, provenance_comments=None):
+
+        this_user = users.whoami()
+        if users.is_user(system_username=this_user):
+            UUID = users.get_uuid(system_username=this_user)
+        else:
+            raise PermissionError(
+                "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+            )
+
+        if field not in cf.kimspec_order:
+            raise KeyError(f"metadata field {field} not recognized, aborting.")
+        metadata_dict = vars(self)
+        kimcode = metadata_dict["extended-id"]
+
+        contributor = metadata_dict["contributor-id"]
+        maintainer = metadata_dict["maintainer-id"]
+
+        if UUID == contributor or UUID == maintainer or users.is_editor():
+
+            logger.info(
+                f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
+            )
+
+            del metadata_dict[field]
+
+            _write_metadata_to_file(
+                self.repository, metadata_dict["extended-id"], metadata_dict
+            )
+            event_type = "metadata-update"
+            provenance.Provenance(
+                metadata_dict["extended-id"],
+                self.repository,
+                event_type,
+                UUID,
+                comments=provenance_comments,
+            )
+
+        else:
+            logger.warning(
+                f"User {UUID} attempted to delete metadata field {field} of item {kimcode} in repository {self.repository} without editor privleges"
+            )
+            raise PermissionError(
+                "Only KIMkit Editors may delete metadata fields of items they are not the contributor or maintainer of."
             )
 
 
