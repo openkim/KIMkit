@@ -197,6 +197,15 @@ def delete_user(user_id):
 
         os.rename("user_data_tmp.edn", "user_uuids.edn")
 
+    else:
+        username = whoami()
+        logger.warning(
+            f"User {username} attempted to delete user {user_id} without editor priveleges"
+        )
+        raise PermissionError(
+            "Editor permissions are required to delete users from KIMkit."
+        )
+
 
 def get_name_of_user(user_id):
     """get the name of a user from their uuid
