@@ -105,7 +105,7 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
-def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
+def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     """Create a directory in the selected repository for the item based on its kimcode,
     copy the item's files into it, generate needed metadata and provenance files,
     and store them with the item.
@@ -126,8 +126,13 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict, UUID):
         user id of the entity importing the item
     """
 
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     if not kimcodes.is_kimcode_available(repository, kimcode):
         raise ValueError(f"kimcode {kimcode} is already in use, please select another.")
@@ -221,8 +226,17 @@ def delete(kimcode, repository):
     """
 
     this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can delete items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+
+    if not os.path.exists(del_path):
+        raise FileNotFoundError(f"No item {kimcode} found in repository {repository}")
 
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
@@ -238,9 +252,9 @@ def delete(kimcode, repository):
     spec = item.kimspec
 
     contributor = spec["contributor-id"]
+    maintainer = spec["maintainer-id"]
 
-    # TODO: associate personal name, username, and UUID
-    if contributor == this_user or users.is_editor():
+    if UUID == contributor or UUID == maintainer or users.is_editor():
 
         logger.info(
             f"User {this_user} deleted item {kimcode} from repository {repository}"
@@ -312,7 +326,6 @@ def version_update(
     repository,
     kimcode,
     tarfile_obj,
-    UUID,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -335,10 +348,14 @@ def version_update(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
     this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can update items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
@@ -370,12 +387,12 @@ def version_update(
     else:
         raise ValueError(f"Kim item type {leader} not recognized.")
 
-    spec = item.kimspec
+    spec = this_item.kimspec
 
     contributor = spec["contributor-id"]
+    maintainer = spec["maintainer-id"]
 
-    # TODO: associate personal name, username, and UUID
-    if contributor == this_user or users.is_editor():
+    if UUID == contributor or UUID == maintainer or users.is_editor():
 
         logger.info(
             f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
@@ -445,7 +462,6 @@ def fork(
     kimcode,
     new_kimcode,
     tarfile_obj,
-    UUID,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -470,8 +486,13 @@ def fork(
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+    this_user = users.whoami()
+    if users.is_user(system_username=this_user):
+        UUID = users.get_uuid(system_username=this_user)
+    else:
+        raise PermissionError(
+            "Only KIMkit users can fork items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):

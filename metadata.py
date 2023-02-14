@@ -75,8 +75,9 @@ class MetaData:
         KeyError
             if the metadata key is not specified in metadata_config
         """
-        if not users.is_user(UUID):
-            raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
+        # TODO: fix user check
+        # if not users.is_user(UUID):
+        #     raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
         if key not in cf.kimspec_order:
             raise KeyError(f"metadata field {key} not recognized, aborting.")
@@ -116,8 +117,6 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     UUID : str
         id number of the entity requesting the item's creation
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
     logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
 
@@ -293,8 +292,6 @@ def create_new_metadata_from_existing(
     metadata_update_dict : dict, optional
         dict of any metadata fields to be changed/assigned, by default None
     """
-    if not users.is_user(UUID):
-        raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
 
     logger.debug(
         f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"

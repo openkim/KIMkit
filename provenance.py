@@ -79,8 +79,6 @@ class Provenance:
         comments : str, optional
             comments about why and how the item was updated, by default None
         """
-        if not users.is_user(UUID):
-            raise ValueError(f"UUID {UUID} not recognized as a KIMkit user.")
         self.kimcode = kimcode
         self.event_type = event_type
         self.UUID = UUID
@@ -112,8 +110,6 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
     e
     RuntimeError
     """
-    if not users.is_user(user_id):
-        raise ValueError(f"UUID {user_id} not recognized as a KIMkit user.")
 
     assert event_type in [
         "initial-creation",
