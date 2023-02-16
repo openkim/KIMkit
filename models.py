@@ -211,7 +211,7 @@ def _save_to_repository(source_dir, dest_dir):
         raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
 
 
-def delete(kimcode, repository):
+def delete(kimcode, repository, run_as_editor=False):
     """delete an item from the repository and all of its content
 
     Parameters
@@ -251,7 +251,20 @@ def delete(kimcode, repository):
     contributor = spec["contributor-id"]
     maintainer = spec["maintainer-id"]
 
-    if UUID == contributor or UUID == maintainer or users.is_editor():
+    can_edit = False
+
+    if UUID == contributor or UUID == maintainer:
+        can_edit = True
+
+    elif users.is_editor():
+        if run_as_editor:
+            can_edit = True
+        else:
+            raise PermissionError(
+                "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
+            )
+
+    if can_edit:
 
         logger.info(
             f"User {this_user} deleted item {kimcode} from repository {repository}"
@@ -325,6 +338,7 @@ def version_update(
     tarfile_obj,
     metadata_update_dict=None,
     provenance_comments=None,
+    run_as_editor=False,
 ):
     """Create a new version of the item with new content and possibly new metadata
 
@@ -389,7 +403,20 @@ def version_update(
     contributor = spec["contributor-id"]
     maintainer = spec["maintainer-id"]
 
-    if UUID == contributor or UUID == maintainer or users.is_editor():
+    can_edit = False
+
+    if UUID == contributor or UUID == maintainer:
+        can_edit = True
+
+    elif users.is_editor():
+        if run_as_editor:
+            can_edit = True
+        else:
+            raise PermissionError(
+                "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
+            )
+
+    if can_edit:
 
         logger.info(
             f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"

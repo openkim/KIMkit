@@ -73,7 +73,7 @@ def is_editor():
     return editor
 
 
-def add_editor(editor_name):
+def add_editor(editor_name, run_as_administrator=False):
     """A function for the Administrator to add users to the set of approved KIMkit Editors
 
     Parameters
@@ -82,7 +82,17 @@ def add_editor(editor_name):
         username to be added to the set of approved Editors
     """
 
+    can_edit = False
+
     if is_administrator():
+        if run_as_administrator:
+            can_edit = True
+        else:
+            raise PermissionError(
+                "Did you mean to add an editor? If you are The Administrator run again with run_as_administrator=True"
+            )
+
+    if can_edit:
         with open(
             os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a"
         ) as editor_file:
@@ -172,7 +182,7 @@ def add_person(name):
     os.rename("user_data_tmp.edn", "user_uuids.edn")
 
 
-def delete_user(user_id):
+def delete_user(user_id, run_as_editor=False):
     """Remove a user from the list of approved users
 
     Parameters
@@ -193,7 +203,17 @@ def delete_user(user_id):
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
 
+    can_edit = False
+
     if is_editor():
+        if run_as_editor:
+            can_edit = True
+        else:
+            raise PermissionError(
+                "Did you mean to delete this user? If you are an Editor run again with run_as_editor=True"
+            )
+
+    if can_edit:
 
         with open("user_uuids.edn", "r") as file:
             user_data_dict = kim_edn.load(file)

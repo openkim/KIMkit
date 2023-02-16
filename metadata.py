@@ -53,7 +53,9 @@ class MetaData:
         metadata_dict = vars(self)
         return metadata_dict
 
-    def edit_metadata_value(self, key, new_value, provenance_comments=None):
+    def edit_metadata_value(
+        self, key, new_value, provenance_comments=None, run_as_editor=False
+    ):
         """edit a metadata field of an existing item
 
         Parameters
@@ -86,7 +88,20 @@ class MetaData:
         contributor = metadata_dict["contributor-id"]
         maintainer = metadata_dict["maintainer-id"]
 
-        if UUID == contributor or UUID == maintainer or users.is_editor():
+        can_edit = False
+
+        if UUID == contributor or UUID == maintainer:
+            can_edit = True
+
+        elif users.is_editor():
+            if run_as_editor:
+                can_edit = True
+            else:
+                raise PermissionError(
+                    "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
+                )
+
+        if can_edit:
 
             logger.info(
                 f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
@@ -114,7 +129,9 @@ class MetaData:
                 "Only KIMkit Editors may edit metadata of items they are not the contributor or maintainer of."
             )
 
-    def delete_metadata_field(self, field, provenance_comments=None):
+    def delete_metadata_field(
+        self, field, provenance_comments=None, run_as_editor=False
+    ):
 
         this_user = users.whoami()
         if users.is_user(system_username=this_user):
@@ -132,7 +149,20 @@ class MetaData:
         contributor = metadata_dict["contributor-id"]
         maintainer = metadata_dict["maintainer-id"]
 
-        if UUID == contributor or UUID == maintainer or users.is_editor():
+        can_edit = False
+
+        if UUID == contributor or UUID == maintainer:
+            can_edit = True
+
+        elif users.is_editor():
+            if run_as_editor:
+                can_edit = True
+            else:
+                raise PermissionError(
+                    "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
+                )
+
+        if can_edit:
 
             logger.info(
                 f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
