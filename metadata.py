@@ -368,6 +368,10 @@ def create_new_metadata_from_existing(
     old_metadata = MetaData(repository, old_kimcode)
     old_metadata_dict = vars(old_metadata)
 
+    # repository is useful as a Metadata object instance attribute, but isn't a metadata field
+    if "repository" in old_metadata_dict:
+        del old_metadata_dict["repository"]
+
     new_metadata_dict = {}
 
     for key in old_metadata_dict:
