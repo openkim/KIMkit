@@ -1,4 +1,3 @@
-import sys
 import os
 import shutil
 import tarfile
@@ -7,11 +6,9 @@ import metadata
 import provenance
 import users
 from logger import logging
+import kimobjects
+import kimcodes
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-from kim_utils import kimobjects, kimcodes, util
 
 """
 Base class items for KIMkit.

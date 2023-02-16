@@ -1,5 +1,4 @@
 import os
-import sys
 import datetime
 import subprocess
 import hashlib
@@ -8,13 +7,11 @@ import re
 from collections import OrderedDict
 from pytz import timezone
 import kim_edn
-import users
 from logger import logging
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-from kim_utils import util, kimcodes
+import util
+import kimcodes
+
 
 logger = logging.getLogger("KIMkit")
 

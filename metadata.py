@@ -1,20 +1,15 @@
 import datetime
 from pytz import timezone
-import sys
 import os
 import warnings
 import kim_edn
 from collections import OrderedDict
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-from kim_utils import kimcodes
-
 import users
 import provenance
 import config as cf
 from logger import logging
+import kimcodes
 
 central = timezone("US/Central")
 
