@@ -26,9 +26,9 @@ import subprocess
 import os
 import itertools
 from contextlib import contextmanager
+import kim_edn
 
 import config as cf
-import util
 import kimcodes
 import kimapi
 
@@ -218,7 +218,7 @@ class KIMObject(object):
 
         spec = {}
         with open(specfile) as f:
-            spec = util.loadedn(f)
+            spec = kim_edn.load(f)
         return spec
 
     @property
@@ -616,7 +616,7 @@ class Test(Runner):
         # FIXME: Verify that each item listed in dependencies.edn is at least a partial kimcode for
         #        a Test, i.e. only Tests should be listed in dependencies.edn.
         if self.depfile:
-            deps = util.loadedn(self.depfile)
+            deps = kim_edn.load(self.depfile)
             if not isinstance(deps, list):
                 logger.exception(
                     "Dependencies file of item %r has invalid format (must be a list)"

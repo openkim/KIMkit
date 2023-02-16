@@ -7,9 +7,8 @@ import re
 from collections import OrderedDict
 from pytz import timezone
 import kim_edn
-from logger import logging
 
-import util
+from logger import logging
 import kimcodes
 
 
@@ -118,7 +117,7 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
 
     # Read kimspec.edn to get extended id
     with open(os.path.join(path, "kimspec.edn")) as f:
-        kimspec = util.loadedn(f)
+        kimspec = kim_edn.load(f)
 
     extended_id = kimspec["extended-id"]
 
@@ -129,7 +128,7 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
     if event_type != "initial-creation":
 
         with open(os.path.join(path, "kimprovenance.edn")) as f:
-            kimprovenance_current = util.loadedn(f)
+            kimprovenance_current = kim_edn.load(f)
 
         kimprovenance_current_ordered = []
         for entry in kimprovenance_current:
@@ -212,7 +211,7 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
 
 def write_provenance(o, f, allow_nils=True):
     if not allow_nils:
-        o = util.replace_nones(o)
+        o = replace_nones(o)
 
     # If f is a string, create a file object
     if isinstance(f, str):
@@ -305,3 +304,12 @@ def format_kimprovenance(kimprov_as_str):
     new_kimprov_as_str = re.sub("}$\n]", "}]", new_kimprov_as_str, flags=re.MULTILINE)
 
     return new_kimprov_as_str
+
+
+def replace_nones(o):
+    if isinstance(o, list):
+        return [replace_nones(i) for i in o]
+    elif isinstance(o, dict):
+        return {k: replace_nones(v) for k, v in o.items()}
+    else:
+        return o if o is not None else ""

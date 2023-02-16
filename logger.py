@@ -37,12 +37,8 @@ import logging
 import logging.handlers as loghandlers
 
 import config as cf
-import util
+import subprocess
 
-# current = os.path.dirname(os.path.realpath(__file__))
-# parent = os.path.dirname(current)
-# sys.path.append(parent)
-# from kim_utils import util
 
 FILELEVEL = logging.DEBUG
 
@@ -171,7 +167,7 @@ def createLogger():
         )
 
     # create a rotating file handler
-    util.mkdir_ext(cf.LOG_DIR)
+    mkdir_ext(cf.LOG_DIR)
     rotfile_handler = loghandlers.RotatingFileHandler(
         os.path.join(cf.LOG_DIR, "KIMkit.log"), mode="a", backupCount=0, maxBytes=0
     )
@@ -189,6 +185,11 @@ def createLogger():
     logger.addHandler(console_handler)
 
     return log_formatter
+
+
+def mkdir_ext(p):
+    if not os.path.exists(p):
+        subprocess.check_call(["mkdir", "-p", p])
 
 
 log_formatter = createLogger()
