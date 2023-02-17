@@ -163,16 +163,17 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
 
         try:
             metadata_dict = metadata.validate_metadata(metadata_dict)
-        except (ValueError, KeyError) as e:
-            raise e(
+        except (ValueError, KeyError, TypeError) as e:
+            shutil.rmtree(tmp_dir)
+            raise ValueError(
                 "Supplied dictionary of metadata does not comply with KIMkit standard."
-            )
+            ) from e
 
-        dest_dir = _create_install_dir(kimcode, repository)
+        dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
 
         logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
 
-        _save_to_repository(tmp_dir, dest_dir)
+        shutil.copytree(tmp_dir, dest_dir)
 
         new_metadata = metadata.create_metadata(
             repository, kimcode, metadata_dict, UUID
@@ -191,24 +192,6 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
             f"""A name, source directory, KIMkit repository,
              and dict of required metadata fields are required to initialize a new item."""
         )
-
-
-def _create_install_dir(kimcode, repository):
-
-    dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
-
-    os.makedirs(dest_path)
-
-    return dest_path
-
-
-def _save_to_repository(source_dir, dest_dir):
-
-    if os.path.isdir(source_dir):
-        shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
-
-    else:
-        raise FileNotFoundError(f"Source Directory {source_dir} Not Found")
 
 
 def delete(kimcode, repository, run_as_editor=False):
@@ -448,14 +431,21 @@ def version_update(
             if metadata_update_dict:
                 metadata_update_dict["executables"] = executables
         dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-        _save_to_repository(tmp_dir, dest_dir)
-        metadata.create_new_metadata_from_existing(
-            repository,
-            kimcode,
-            new_kimcode,
-            UUID,
-            metadata_update_dict=metadata_update_dict,
-        )
+        shutil.copytree(tmp_dir, dest_dir)
+        try:
+            metadata.create_new_metadata_from_existing(
+                repository,
+                kimcode,
+                new_kimcode,
+                UUID,
+                metadata_update_dict=metadata_update_dict,
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            shutil.rmtree(dest_dir)
+            shutil.rmtree(tmp_dir)
+            raise ValueError(
+                f"Metadata associated with item {new_kimcode} is invalid."
+            ) from e
         old_provenance = os.path.join(
             kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
         )
@@ -563,22 +553,28 @@ def fork(
         if metadata_update_dict:
             metadata_update_dict["executables"] = executables
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    _save_to_repository(tmp_dir, dest_dir)
-    metadata.create_new_metadata_from_existing(
-        repository,
-        kimcode,
-        new_kimcode,
-        UUID,
-        metadata_update_dict=metadata_update_dict,
-    )
+    shutil.copytree(tmp_dir, dest_dir)
+    try:
+        metadata.create_new_metadata_from_existing(
+            repository,
+            kimcode,
+            new_kimcode,
+            UUID,
+            metadata_update_dict=metadata_update_dict,
+        )
+    except (KeyError, ValueError, TypeError) as e:
+        shutil.rmtree(dest_dir)
+        shutil.rmtree(tmp_dir)
+        raise ValueError(
+            f"Metadata associated with item {new_kimcode} is invalid."
+        ) from e
     old_provenance = os.path.join(
         kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
     )
-    new_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    shutil.copy(old_provenance, new_dir)
+    shutil.copy(old_provenance, dest_dir)
 
     provenance.add_kimprovenance_entry(
-        new_dir,
+        dest_dir,
         user_id=UUID,
         event_type=event_type,
         comment=provenance_comments,
