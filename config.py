@@ -180,6 +180,13 @@ kimspec_order = [
     "training",
 ]
 
+kimspec_uuid_fields = [
+    "contributor-id",
+    "developer",
+    "implementer",
+    "maintainer-id",
+]
+
 kimspec_strings = [
     "content-origin",
     "content-other-locations",

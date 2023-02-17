@@ -127,7 +127,7 @@ def add_self_as_user(name):
         )
 
     new_uuid = uuid.uuid4()
-    new_uuid_key = str(new_uuid)
+    new_uuid_key = new_uuid.hex
 
     logger.info(
         f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
@@ -165,7 +165,7 @@ def add_person(name):
         )
 
     new_uuid = uuid.uuid4()
-    new_uuid_key = str(new_uuid)
+    new_uuid_key = new_uuid.hex
 
     logger.info(
         f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
@@ -346,13 +346,11 @@ def get_uuid(system_username=None, personal_name=None):
             return None
 
 
-def is_valid_uuid4(user_id):
-
-    # Verify this is a valid uuid4
+def is_valid_uuid4(val):
     try:
-        assert user_id.replace("-", "") == uuid.UUID(user_id, version=4).hex
+        uuid.UUID(str(val))
         return True
-    except AssertionError as e:
+    except ValueError:
         return False
 
 
@@ -374,8 +372,11 @@ def is_user(system_username=None, personal_name=None, user_id=None):
         user_data_dict = kim_edn.load(file)
 
         if user_id:
-            if user_id in user_data_dict:
-                found_user = True
+            if is_valid_uuid4(user_id):
+                if user_id in user_data_dict:
+                    found_user = True
+            else:
+                raise TypeError(f"User ID {user_id} is not a valid UUID4.")
         user_data = user_data_dict.items()
         for item in user_data:
             UUID = item[0]

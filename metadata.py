@@ -348,6 +348,11 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                 raise TypeError(
                     f"Required metadata field '{field}' is of incorrect type, must be str."
                 )
+            if field in cf.kimspec_uuid_fields:
+                if not users.is_user(user_id=metadata_dict[field]):
+                    raise ValueError(
+                        f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
+                    )
         elif field in cf.kimspec_arrays:
             for item in metadata_dict[field]:
                 if isinstance(item, cf.kimspec_arrays[field]):
@@ -360,9 +365,12 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                 raise KeyError(
                                     f"Missing required key '{key}' in metadata field '{field}'."
                                 )
-                    # Not really needed, written for clarity, type already checked above
                     elif cf.kimspec_arrays[field] == str:
-                        pass
+                        if field in cf.kimspec_uuid_fields:
+                            if not users.is_user(user_id=item):
+                                raise ValueError(
+                                    f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
+                                )
                 else:
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
