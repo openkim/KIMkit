@@ -11,6 +11,13 @@ import kim_edn
 from logger import logging
 import kimcodes
 
+"""This module contains methods for managing KIMkit item history, which is tracked via a file
+stored along with each item called kimprovenance.edn. This file is automatically created when
+a new item is imported into KIMkit, and updated whenever the item's content changes on disk.
+
+In general, users should not call any of the functions in this module directly,
+nor edit kimprovenance.edn for any KIMkit items."""
+
 
 logger = logging.getLogger("KIMkit")
 
@@ -57,23 +64,23 @@ class Provenance:
         The provenance file of an item stores a list of dicts,
         where each dict corresponds to a single version of the item.
         The first entry in each is itself a dict of hash values of all the files
-        in the item's directory, followed by metadata specifying who performed the
-        update and why.
-
-        None of the methods of the provenance item are meant to be called directly,
-        they will be invoked by updates to other KIMkit items which update their
-        own provenance automatically.
+        in the item's directory (except for kimprovenace.edn itself),
+        followed by metadata specifying what kind of update happened,
+        who performed the update, and why.
 
         Parameters
         ----------
-        kimcode : int
-            kimcode of target item
+        kimcode : str
+            ID code of the item
+        repository : path-like
+            root directory of the collection containing the item
         event_type : str
-            valid options include:"initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
-        UUID : list of str
-            UUID of the user(s) making the change to provenance
+            reason for the update, valid options include:
+            "initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
+        UUID : str
+            ID code of the person or entity performing the update in UUID4 format
         comments : str, optional
-            comments about why and how the item was updated, by default None
+            Any comments about how the item was updated and/or why, by default None
         """
         self.kimcode = kimcode
         self.event_type = event_type
@@ -88,23 +95,36 @@ class Provenance:
 def add_kimprovenance_entry(path, user_id, event_type, comment):
     """Create a new kimprovenance.edn entry for a new instance of an item
 
-    _extended_summary_
+    Attempt to read the previous kimprovenance.edn (if any),
+    create a new entry for the new version of the item, and append it to the
+    existing entries, and write the result as a kimprovenance.edn in the
+    updated item's directory.
+
+    The kimprovenance.edn file of an item stores a list of dicts,
+    where each dict corresponds to a single version of the item.
+    The first entry in each is itself a dict of shasum hash values
+    of all the files in the item's directory
+    (except for kimprovenace.edn itself),
+    followed by metadata specifying what kind of update happened,
+    who performed the update, and why.
 
     Parameters
     ----------
-    path : str
+    path : path-like
         location of the item on disk
     user_id : str
-        UUID of the user making the edit
+        ID code of the user or entity modifying the item, in UUID4 format
     event_type : str
-        reason for the update, valid options include:"initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
+        reason for the update, valid options include:
+        "initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
     comment : str
-        any comments about what changes were made and why
+        Any comments about how the item was updated and/or why, by default None
 
     Raises
     ------
-    e
     RuntimeError
+        Encountered object that appears to be neither a file nor a directory
+        when attempting to hash the item's files/dirs
     """
 
     assert event_type in [
@@ -210,6 +230,22 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
 
 
 def write_provenance(o, f, allow_nils=True):
+    """Write a kimprovenance.edn file
+
+    Parameters
+    ----------
+    o : list
+        content to write
+    f : file object or str
+        location to write to
+    allow_nils : bool, optional
+        whether to allow nil-types to be written, by default True
+
+    Raises
+    ------
+    Exception
+        not all kimprovenance objects are lists
+    """
     if not allow_nils:
         o = replace_nones(o)
 
@@ -256,6 +292,25 @@ def write_provenance(o, f, allow_nils=True):
 
 
 def format_kimprovenance(kimprov_as_str):
+    """Organize provenance information into the correct format
+
+    Parameters
+    ----------
+    kimprov_as_str : str
+        kimprovenance content as a string
+
+    Returns
+    -------
+    str
+        correctly formatted kimprovenence string
+
+    Raises
+    ------
+    Exception
+        no checksums in kimprovenance string
+    Exception
+        no checksums in kimprovenance string
+    """
     # First replace the checksums section
     tmp = CHECKSUMS_MATCH.findall(kimprov_as_str)
     if len(tmp) == 0:
@@ -307,6 +362,18 @@ def format_kimprovenance(kimprov_as_str):
 
 
 def replace_nones(o):
+    """Helper function to replace None values in kimprovenance
+
+    Parameters
+    ----------
+    o : list/dict
+        kimprovenance item to have Nones removed from
+
+    Returns
+    -------
+    list/dict
+        object o with nones removed
+    """
     if isinstance(o, list):
         return [replace_nones(i) for i in o]
     elif isinstance(o, dict):

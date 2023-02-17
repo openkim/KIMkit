@@ -10,7 +10,7 @@ from logger import logging
 
 KIMkit defines 3 levels of user access: Administrator, Editor, and User.
 
-There is only one Administrator per installation of KIMkit. Inside the KIMkit package directory there should be
+There is only one Administrator per installation of KIMkit. Inside the KIMkit package root directory there should be
 a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to.
 Indeed, KIMkit determines whether a given user is the Administrator by checking whether the operating system grants
 them write access to editors.txt. Therefore only the Administrator can elevate Users to Editors,
@@ -18,14 +18,27 @@ or perfom certian other potenitally destructive actions (e.g. removing a require
 
 editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, KIMkit recoggnizes them as an Editor, and allows them certian
-elevated permissions (e.g. editing content submitted by other users). Any user that is neither the Administrator nor
-listed as an Editor is a regular User by default. The Administrator should be listed as an Editor for most use cases.
+elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
+Any user that is neither the Administrator nor listed as an Editor is a regular User by default.
+
+The Administrator should be listed as an Editor for most use cases.
+
+Seperately from editors.txt, there should also be a file named user_uuids.edn, also in the KIMkit root directory,
+which stores information about all KIMkit users. This file contains an .edn dict where the keys are
+UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
+and optionally their operating system username (if any).
 """
 
 logger = logging.getLogger("KIMkit")
 
 
 def whoami():
+    """
+    Returns
+    -------
+    str
+        operating system username of the current user
+    """
     identity = getpass.getuser()
     return identity
 
@@ -36,12 +49,12 @@ def is_administrator():
 
     Returns
     -------
-    is_admin : bool
+    bool
         whether this user is the administrator or not
     """
 
     try:
-        # attempt to write an empty string to check if user has write permissions to the editors file
+        # attempt to append an empty string to editors.txt to check if user has write permissions to the editors file
         with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a") as test:
             test.write("")
         is_admin = True
@@ -52,12 +65,13 @@ def is_administrator():
 
 
 def is_editor():
-    """Read the editors.txt file to check if the current user is present,
-    if so, the current user is an editor, and is_editor() returns True.
+    """Read the editors.txt file to check if the current user's
+    operating system username is present, if so, the current user is an editor,
+    and is_editor() returns True.
 
     Returns
     -------
-    editor : bool
+    bool
         whether this user is an editor
     """
 
@@ -76,10 +90,21 @@ def is_editor():
 def add_editor(editor_name, run_as_administrator=False):
     """A function for the Administrator to add users to the set of approved KIMkit Editors
 
+    Requires Administrator Priveleges.
+
     Parameters
     ----------
-    username : str
-        username to be added to the set of approved Editors
+    editor_name : str
+        operating system username of the editor to be added
+    run_as_administrator : bool, optional
+        A flag to be used by the KIMkit Administrator to run with elevated permissions, by default False
+
+    Raises
+    ------
+    PermissionError
+        This user is the Administrator, but did not specify run_as_administrator=True
+    PermissionError
+        A user who is not the administrator attempted to add an editor.
     """
 
     can_edit = False
@@ -109,12 +134,21 @@ def add_editor(editor_name, run_as_administrator=False):
 
 
 def add_self_as_user(name):
-    """Assign a UUID to a new user and add them to the list of approved users
+    """Function to be used when a new user uses KIMkit for the first time,
+    to assign themselves a UUID4 and adds them to the list of approved KIMkit users.
+
+    Checks if this user has already been added to the user file.
 
     Parameters
     ----------
     name : str
-        name of the user
+        personal name of the user adding themselves
+
+    Raises
+    ------
+    RuntimeError
+        This user already has a UUID4 associated with their personal name,
+        or operating system username.
     """
 
     system_username = whoami()
@@ -149,12 +183,21 @@ def add_self_as_user(name):
 
 def add_person(name):
     """Assign a UUID to a person without a user account on the system running KIMkit for attribution,
-    and add them to the list of approved users
+    and add them to the list of approved users.
+
+    This function is intended to allow individuals who contributed to content in KIMkit,
+    but who do not have user accounts on the system running KIMkit, to be credited for their contributions
+    by assigning them a UUID4 and associating it to ther personal name.
 
     Parameters
     ----------
     name : str
-        name of the user
+        personal name of the individual to be added
+
+    Raises
+    ------
+    RuntimeError
+        This individual already has a UUID4 associated with their personal name.
     """
 
     existing_uuid = get_uuid(personal_name=name)
@@ -183,22 +226,27 @@ def add_person(name):
 
 
 def delete_user(user_id, run_as_editor=False):
-    """Remove a user from the list of approved users
+    """Remove a user from the list of approved users.
+
+    Requires editor privleges.
 
     Parameters
     ----------
     user_id : str or UUID
         UUID of the user to be deleted
-    name : str
-        name of the user to be deleted,
-        must correspond to the UUID
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions and delete users, by default False
 
     Raises
     ------
     ValueError
-        if the name supplied does not correspond to the uuid
+        Invalid UUID4
+    PermissionError
+        This user is a KIMkit Editor, but did not specify run_as_editor=True
     KeyError
-        if the uuid is not in the list of recognized uuids
+        Specified user_id not found in the user data file
+    PermissionError
+        A user who is not a KIMkit editor attempted to delete a user
     """
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
@@ -242,7 +290,7 @@ def delete_user(user_id, run_as_editor=False):
 
 
 def get_name_of_user(user_id):
-    """get the name of a user from their uuid
+    """get the personal name of a user from their uuid
 
     Parameters
     ----------
@@ -257,9 +305,9 @@ def get_name_of_user(user_id):
     Raises
     ------
     ValueError
-        if the user_id is not a valid UUID4
+        Invalid UUID4
     KeyError
-        if the uuid is not in the user file
+        Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
@@ -275,7 +323,7 @@ def get_name_of_user(user_id):
 
 
 def get_system_username_of_user(user_id):
-    """get the name of a user from their uuid
+    """get the operating system username of a user from their uuid
 
     Parameters
     ----------
@@ -285,14 +333,14 @@ def get_system_username_of_user(user_id):
     Returns
     -------
     name: str
-        name of the user corresponding to the uuid
+        operating system username of the user corresponding to the uuid
 
     Raises
     ------
     ValueError
-        if the user_id is not a valid UUID4
+        Invalid UUID4
     KeyError
-        if the uuid is not in the user file
+        Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
         raise ValueError("user id is not a valid UUID4")
@@ -320,7 +368,7 @@ def get_uuid(system_username=None, personal_name=None):
     Returns
     -------
     UUID : str
-        unique id assigned to the user
+        unique id assigned to the user in UUID4 format
     """
 
     with open("user_uuids.edn", "r") as file:
@@ -347,6 +395,19 @@ def get_uuid(system_username=None, personal_name=None):
 
 
 def is_valid_uuid4(val):
+    """Check whether a given string can be converted
+    to a valid UUID4
+
+    Parameters
+    ----------
+    val : str
+        UUID string to be checked
+
+    Returns
+    -------
+    bool
+        whether the val is a valid UUID4
+    """
     try:
         uuid.UUID(str(val))
         return True
@@ -355,17 +416,29 @@ def is_valid_uuid4(val):
 
 
 def is_user(system_username=None, personal_name=None, user_id=None):
-    """return True if the user currently logged in is in the list of approved users
+    """Return True if the user currently logged in is in the list of approved users
     stored in the user data file.
+
+    Generally, only one of system_username, personal_name, or user_id should be specified.
 
     Parameters
     ----------
-    system_username : str
-        unix username of the user to be verified
+    system_username : str, optional
+        operating system username to be searched for, by default None
+    personal_name : str, optional
+        personal name to be searched for, by default None
+    user_id : str, optional
+        UUID4 to be searched for, by default None
 
     Returns
-    ----------
-    True if the uuid is in the list of verified users
+    -------
+    bool
+        whether the input refers to a recognized KIMkit user
+
+    Raises
+    ------
+    TypeError
+        user_id is not a valid UUID4
     """
     found_user = False
     with open("user_uuids.edn", "r") as file:

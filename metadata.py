@@ -15,27 +15,33 @@ central = timezone("US/Central")
 
 logger = logging.getLogger("KIMkit")
 
+"""Module used to manage KIMkit metadata.
+
+Metadata is stored along with every KIMkit item in a file named kimspec.edn, which is organized
+as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
+and the types of data stored as the relevant values vary. The metadata standards specifying value types
+and key requirements are stored in config.py"""
+
 
 class MetaData:
     def __init__(self, repository, kimcode):
-        """Default metadata class for KIMkit items
+        """Metadata class for KIMkit items, reads metadata from kimspec.edn stored
+        in the item's directory. Newly imported items should have a kimspec.edn created
+        for them via the create_metadata() function.
 
-        _extended_summary_
 
         Parameters
         ----------
+        repository: path-like
+            repository where the item is saved
         kimcode : str
             kimcode ID string of the item
-        repository: path like
-            repository where the item is saved
-        metadata_dict: dict, optional
-            Dictionary of any metadata values to be added or modified.
-            All required fields for the item type must be specified to initialize metadata for a new item.
-            If not suppied, metadata information is read from existing kimspec.edn
+
+        Raises
+        ------
+        FileNotFoundError
+            No kimspec.edn found in the item's directory.
         """
-        # setattr(
-        #     self, "date", datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
-        # )
         setattr(self, "repository", repository)
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
@@ -56,21 +62,35 @@ class MetaData:
     def edit_metadata_value(
         self, key, new_value, provenance_comments=None, run_as_editor=False
     ):
-        """edit a metadata field of an existing item
+        """Edit a key-value pair corresponding to a metadata field of a KIMkit item
+        from that item's kimspec.edn
 
         Parameters
         ----------
         key : str
             name of the metadata field to be updated
-        new_value : str, array, see metadata_config
-            new value to be set for the metadata field
+        new_value : str/list/dict
+            new value to be set for the metadata field,
+            see metadata_config for types and data structure
+            requirements for specific metadata fields
         provenance_comments : str, optional
             any comments about how/why the item was edited, by default None
+        run_as_editor : bool, optional
+            flag to be used by KIMkit Editors to run with elevated permissions,
+            and edit metadata of items they are neither the contributor nor maintainer of, by default False
 
         Raises
         ------
+        PermissionError
+            A non KIMkit user attempted to edit metadata of an item.
         KeyError
-            if the metadata key is not specified in metadata_config
+            Metadata field not in the KIMkit metdata standard
+        PermissionError
+            A user with Editor permissions attempted to edit metadata of the item,
+            but did not specify run_as_editor=True
+        PermissionError
+            A user without Editor permissions attempted to edit metadata
+            of an item they are not the contributor or maintainer of.
         """
         this_user = users.whoami()
         if users.is_user(system_username=this_user):
@@ -132,7 +152,33 @@ class MetaData:
     def delete_metadata_field(
         self, field, provenance_comments=None, run_as_editor=False
     ):
+        """Delete a key-value pair corresponding to a metadata field of a KIMkit item
+        from that item's kimspec.edn
 
+        Parameters
+        ----------
+        field : str
+            name of the metadata field to be deleted
+        provenance_comments : str, optional
+            any comments about how/why the item was deleted, by default None
+        run_as_editor : bool, optional
+            flag to be used by KIMkit Editors to run with elevated permissions,
+            and delete metadata fields of items they are neither
+            the contributor nor maintainer of, by default False
+
+        Raises
+        ------
+        PermissionError
+            A non KIMkit user attempted to delete metadata of an item.
+        KeyError
+            Metadata field not in the KIMkit metdata standard
+        PermissionError
+            A user with Editor permissions attempted to delete metadata of the item,
+            but did not specify run_as_editor=True
+        PermissionError
+            A user without Editor permissions attempted to delete metadata of an item
+            they are not the contributor or maintainer of.
+        """
         this_user = users.whoami()
         if users.is_user(system_username=this_user):
             UUID = users.get_uuid(system_username=this_user)
@@ -192,19 +238,25 @@ class MetaData:
 
 
 def create_metadata(repository, kimcode, metadata_dict, UUID):
-    """Create a kimspec.edn metadata file for an item without one.
+    """Create a kimspec.edn metadata file for a new KIMkit item.
 
+    _extended_summary_
 
     Parameters
     ----------
-    repository : path like
-        root directory of the KIMkit repository where the item is stored
+    repository : path-like
+        root directory of the KIMkit repository where the item is to be stored
     kimcode : str
         id code of the item for which metadata is being created
     metadata_dict : dict
         dict of all required and any optional metadata keys
     UUID : str
-        id number of the entity requesting the item's creation
+        id number of the user or entity requesting the item's creation in UUID format
+
+    Returns
+    -------
+    MetaData
+        KIMkit metadata object
     """
 
     logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
@@ -225,14 +277,25 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
 
 
 def _write_metadata_to_file(repository, kimcode, metadata_dict):
-    """generate and write the kimspec.edn metadata file for a new KIM item
+    """Internal function used to write a KIMkit item's metadata to disk
+    once its metadata has been validated and created.
 
     Parameters
     ----------
+    repository : path-like
+        Root directory of the KIMkit repository the item is stored within
     kimcode : str
-        id code of the item associated with this metadata
-    repository : pathlike
-        root directory of the KIMkit repository the item is stored within
+        ID code of the item that this metadata is being written for
+    metadata_dict : dict
+        Dictionary of metadata to be written to disk in a kimspec.edn.
+        Assumed to have been previously validated by validate_metadata()
+
+    Raises
+    ------
+    e
+        Data type not compatible with .edn format
+    FileNotFoundError
+        No item with kimcode exists in repository
     """
 
     metadata_dict_sorted = OrderedDict()
@@ -264,12 +327,31 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
 
 
 def validate_metadata(metadata_dict):
-    """check that all required metadata fields have valid entries.
+    """Check that all required metadata fields have valid entries.
+
+    Further, call check_metadata_types to ensure all metadata fields
+    are of valid type and structure.
 
     Parameters
     ----------
     metadata_dict : dict
         dictionary of all required and any optional metadata fields
+
+    Returns
+    -------
+    dict
+        dictionary of validated metadata
+
+    Raises
+    ------
+    KeyError
+        kim-item-type not specified.
+        Prevents further validation because the metdata standard depends on item type.
+    ValueError
+        kim-item-type is invalid.
+        Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
+    KeyError
+        A required metadata field is not specified.
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
@@ -320,7 +402,27 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     metadata_dict : dict
         dict of any metadata fields
     kim_item_type : str, optional
-        can pass in kim_item_type as a parameter if not included in the metadata dict
+        can pass in kim_item_type as a parameter if not included in the metadata dict, by default None
+        Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
+
+    Raises
+    ------
+    KeyError
+        kim-item-type not specified.
+        Prevents further validation because the metdata standard depends on item type.
+    ValueError
+        kim-item-type is invalid.
+        Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
+    TypeError
+        Required metadata field that should be str is not
+    ValueError
+        Metadata field that should be UUID4 is not
+    KeyError
+        Metadata field of type dict is missing a required key
+    ValueError
+        Metadata field that should be UUID4 is not
+    TypeError
+        General error for metadata field of incorrect type
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
@@ -387,16 +489,21 @@ def create_new_metadata_from_existing(
 
     Parameters
     ----------
-    repository : str
+    repository : path-like
         root directory of the KIMkit repository containing the item
     old_kimcode : str
         kimcode of the parent item
     new_kimcode : str
         kimcode of the newly created item
     UUID : str
-        id number of the entity making the update
+        id number of the user or entity making the update in UUID4 format
     metadata_update_dict : dict, optional
         dict of any metadata fields to be changed/assigned, by default None
+
+    Returns
+    -------
+    MetaData
+        KIMkit metadata object for the new item
     """
 
     logger.debug(

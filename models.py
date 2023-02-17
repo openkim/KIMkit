@@ -11,7 +11,15 @@ import kimcodes
 
 
 """
-Base class items for KIMkit.
+This module contains the classes corresponding to the various KIMkit items (portable-model, simulator-model, and model-driver),
+along with functions to manage them.
+
+In general, content is passed in and out of KIMkit as tarfile.TarFile objects, so that
+automated systems can submit and retrieve KIMkit content without needing to write to disk.
+
+When creating a new item, either importing it into KIMkit for the first time, or forking an existing item,
+you should first generate a kimcode for the item by calling kimcodes.generate_kimcode() with a human-readable prefix
+for the item, its item-type, and the repository it is to be saved in (to ensure that kimcode is not already in use).
 """
 logger = logging.getLogger("KIMkit")
 
@@ -27,19 +35,18 @@ class PortableModel(kimobjects.Model):
         *args,
         **kwargs,
     ):
-        """Portable Model Class
+        """Class representing KIMkit portable-models
 
-        Repository is always required in KIMkit.
-
-        Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
+        Inherits from OpenKIM PortableModel class
 
         Parameters
         ----------
-        repository : str
+        repository : path-like
             path to root directory of KIMkit repository
         kimcode : str, optional
-            ID code of the item. If not supplied assumne a new item is being imported,
-            generate a new kimcode and assign it to the new item
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
         """
 
         setattr(self, "repository", repository)
@@ -51,20 +58,26 @@ class PortableModel(kimobjects.Model):
 class SimulatorModel(kimobjects.SimulatorModel):
     """Simulator Model Class"""
 
-    def __init__(self, repository, kimcode, abspath=None, *args, **kwargs):
-        """Simulator Model Class
+    def __init__(
+        self,
+        repository,
+        kimcode,
+        abspath=None,
+        *args,
+        **kwargs,
+    ):
+        """Class representing KIMkit simulator-models
 
-        Repository is always required in KIMkit.
-
-        Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
+        Inherits from OpenKIM SimulatorModel class
 
         Parameters
         ----------
-        repository : str
+        repository : path-like
             path to root directory of KIMkit repository
         kimcode : str, optional
-            ID code of the item. If not supplied assumne a new item is being imported,
-            generate a new kimcode and assign it to the new item
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
         """
 
         setattr(self, "repository", repository)
@@ -82,19 +95,18 @@ class ModelDriver(kimobjects.ModelDriver):
         *args,
         **kwargs,
     ):
-        """Model Driver Class
+        """Class representing KIMkit model-drivers
 
-        Repository is always required in KIMkit.
-
-        Items can be initialized with just a kimcode if the item is already installed in a KIMkit repository.
+        Inherits from OpenKIM ModelDriver class
 
         Parameters
         ----------
-        repository : str
+        repository : path-like
             path to root directory of KIMkit repository
         kimcode : str, optional
-            ID code of the item. If not supplied assumne a new item is being imported,
-            generate a new kimcode and assign it to the new item
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
         """
         setattr(self, "repository", repository)
         if not abspath:
@@ -113,14 +125,23 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     ----------
     tarfile_obj : tarfile.TarFile
         tarfile object containing item files
+    repository : path-like
+        root directory of collection to install into
     kimcode : str
         id code of the item
-    repository : path like
-        path to collection to install into
     metadata_dict : dict
         dict of all required and any optional metadata key-value pairs
-    UUID : str
-        user id of the entity importing the item
+
+    Raises
+    ------
+    PermissionError
+        The user attempting to import the item isn't in the list of KIMkit users.
+    ValueError
+        Specified kimcode is already in use by another item in the same repository.
+    ValueError
+        Metadata does not comply with KIMkit standard.
+    AttributeError
+        One or more inputs required for import is missing.
     """
 
     this_user = users.whoami()
@@ -194,15 +215,34 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         )
 
 
-def delete(kimcode, repository, run_as_editor=False):
-    """delete an item from the repository and all of its content
+def delete(repository, kimcode, run_as_editor=False):
+    """Delete an item from the repository and all of its content
+
+    Users may delete items if they are the contributor or maintainer of that item.
+    Otherwise, a KIMkit editor must delete the item, by specifying run_as_editor=True.
+
+    If all versions of the item have been deleted, delete its enclosing directory as well.
 
     Parameters
     ----------
-    kimcode : str
-        kimcode of the item, must match self.kim_code for the item to be deleted
-    repository : path like
+    repository : path-like
         root directory of the KIMkit repo containing the item
+    kimcode : str
+        ID code the item, must refer to a valid item in repository
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and delete items they are neither the contributor nor maintainer of, by default False
+
+    Raises
+    ------
+    PermissionError
+        A non KIMkit user attempted to delete an item.
+    FileNotFoundError
+        No item with kimcode exists in repository.
+    PermissionError
+        A user with Editor permissions attempted to delete the item, but did not specify run_as_editor=True
+    PermissionError
+        A user without Editor permissions attempted to delete an item they are not the contributor or maintainer of.
     """
 
     this_user = users.whoami()
@@ -274,47 +314,6 @@ def delete(kimcode, repository, run_as_editor=False):
         )
 
 
-def export(kimcode, repository):
-    """Export as a tar archive, with all needed dependancies for it to run
-
-    Parameters
-    ----------
-    kimcode: str
-        id code of the item
-    repository : path like
-        root directory of the KIMkit repository containing the item
-
-    Returns
-    -------
-    tarfile_objs : list of tarfile.Tarfile objects
-        list of tarfile object containing the contents of the item
-        and its dependencies (if any).
-    """
-    src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
-    if not os.path.isdir(src_dir):
-        raise FileNotFoundError(f"No item with kimcode {kimcode} exists, aborting.")
-
-    logger.debug(f"Exporting item {kimcode} from repository {repository}")
-
-    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
-
-    if leader == "MO":  # portable model
-        this_item = PortableModel(repository, kimcode=kimcode)
-        req_driver = this_item.driver
-        with tarfile.open(os.path.join(src_dir, req_driver + ".txz"), "w:xz") as tar:
-            tar.add(src_dir, arcname=req_driver)
-    with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
-        tar.add(src_dir, arcname=kimcode)
-    contents = os.listdir(src_dir)
-    tarfile_objs = []
-    for item in contents:
-        if ".txz" in item:
-            tarfile_obj = tarfile.open(os.path.join(src_dir, item))
-            tarfile_objs.append(tarfile_obj)
-            os.remove(os.path.join(src_dir, item))
-    return tarfile_objs
-
-
 def version_update(
     repository,
     kimcode,
@@ -325,22 +324,41 @@ def version_update(
 ):
     """Create a new version of the item with new content and possibly new metadata
 
-    _extended_summary_
+    Expects the content of the new version of the item to be passed in as a tarfile.Tarfile object.
+
+    Users may update items if they are the contributor or maintainer of that item.
+    Otherwise, a KIMkit editor must update the item, by specifying run_as_editor=True.
 
     Parameters
     ----------
-    repository : str
+    repository : path-like
         root directory of the KIMkit repository containing the item
     kimcode : str
-        id code of the item to be updated
+        ID code of the item to be updated
     tarfile_obj : tarfile.Tarfile
         tarfile object containing the new version's content
-    UUID : str
-        id number of the user requesting the update
     metadata_update_dict : dict, optional
         dict of any metadata keys to be changed in the new version, by default None
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and update items they are neither the contributor nor maintainer of, by default False
+
+    Raises
+    ------
+    PermissionError
+        A non KIMkit user attempted to update an item.
+    NotADirectoryError
+        No item with kimcode exists in repository
+    ValueError
+        A more recent version of the item exists, so the older one should not be updated
+    PermissionError
+        A user with Editor permissions attempted to update the item, but did not specify run_as_editor=True
+    ValueError
+        The metadata_update_dict does not comply with the KIMkit standard
+    PPermissionError
+        A user without Editor permissions attempted to update an item they are not the contributor or maintainer of.
     """
 
     this_user = users.whoami()
@@ -377,9 +395,6 @@ def version_update(
     elif leader == "MD":
         this_item = ModelDriver(kimcode=kimcode, repository=repository)
         kim_item_type = "model-driver"
-    # this shouldn't ever happen...
-    else:
-        raise ValueError(f"Kim item type {leader} not recognized.")
 
     spec = this_item.kimspec
 
@@ -406,8 +421,6 @@ def version_update(
         )
         new_version = str(int(old_version) + 1)
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
-        if metadata_update_dict:
-            metadata.check_metadata_types(metadata_update_dict, kim_item_type)
         tmp_dir = os.path.join(repository, new_kimcode)
         tarfile_obj.extractall(path=tmp_dir)
         contents = os.listdir(tmp_dir)
@@ -482,24 +495,33 @@ def fork(
     """Create a new item, based off a fork of an existing one,
     with new content and possibly new metadata
 
+    Expects the content of the new version of the item to be passed in as a tarfile.Tarfile object.
 
     Parameters
     ----------
-    repository : str
+    repository : path-like
         root directory of the KIMkit repository containing the item
     kimcode : str
-        id code of the item to be updated
+        ID code of the item to be forked
     new_kimcode : str
         id code the new item will be assigned
     tarfile_obj : tarfile.Tarfile
-        tarfile object containing the new item's content
-    UUID : str
-        id number of the user requesting the update
+        tarfile object containing the new version's content
     metadata_update_dict : dict, optional
         dict of any metadata keys to be changed in the new version, by default None
     provenance_comments : str, optional
         any comments about how/why this version was created, by default None
+
+    Raises
+    ------
+    PermissionError
+        A non KIMkit user attempted to update an item.
+    NotADirectoryError
+        No item with kimcode exists in repository
+    ValueError
+        The metadata_update_dict does not comply with the KIMkit standard
     """
+
     this_user = users.whoami()
     if users.is_user(system_username=this_user):
         UUID = users.get_uuid(system_username=this_user)
@@ -523,12 +545,6 @@ def fork(
         kim_item_type = "simulator-model"
     elif leader == "MD":
         kim_item_type = "model-driver"
-    # this shouldn't ever happen...
-    else:
-        raise ValueError(f"Kim item type {leader} not recognized.")
-
-    if metadata_update_dict:
-        metadata.check_metadata_types(metadata_update_dict, kim_item_type)
 
     tmp_dir = os.path.join(repository, new_kimcode)
     tarfile_obj.extractall(path=tmp_dir)
@@ -583,7 +599,67 @@ def fork(
     shutil.rmtree(tmp_dir)
 
 
+def export(repository, kimcode):
+    """Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run
+
+    Parameters
+    ----------
+    repository : path-like
+        root directory of the KIMkit repository containing the item
+    kimcode: str
+        id code of the item
+
+    Returns
+    -------
+    list of tarfile.TarFile objects
+        list of object(s) containing all of the item's content,
+        and any dependancies (e.g. model-drivers) needed for it to run
+
+    Raises
+    ------
+    FileNotFoundError
+        No item with kimcode found in repository
+    """
+    src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if not os.path.isdir(src_dir):
+        raise FileNotFoundError(f"No item with kimcode {kimcode} exists, aborting.")
+
+    logger.debug(f"Exporting item {kimcode} from repository {repository}")
+
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
+
+    if leader == "MO":  # portable model
+        this_item = PortableModel(repository, kimcode=kimcode)
+        req_driver = this_item.driver
+        with tarfile.open(os.path.join(src_dir, req_driver + ".txz"), "w:xz") as tar:
+            tar.add(src_dir, arcname=req_driver)
+    with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
+        tar.add(src_dir, arcname=kimcode)
+    contents = os.listdir(src_dir)
+    tarfile_objs = []
+    for item in contents:
+        if ".txz" in item:
+            tarfile_obj = tarfile.open(os.path.join(src_dir, item))
+            tarfile_objs.append(tarfile_obj)
+            os.remove(os.path.join(src_dir, item))
+    return tarfile_objs
+
+
 def install(repository, kimcode, install_dir):
+    """Export the item, and also install it into a collection managed by the kim-api-collections-manager
+
+    Requires the install location to be accessible on the same filesystem as the KIMkit repository,
+    and for the kim-api to be installed there.
+
+    Parameters
+    ----------
+    repository : path-like
+        root directory of the KIMkit repository containing the item
+    kimcode: str
+        id code of the item
+    install_dir : path-like
+        location on disk to install the item to
+    """
 
     tarfile_objs = export(kimcode, repository)
 
@@ -616,9 +692,6 @@ def install(repository, kimcode, install_dir):
                     kimcode=obj_kimcode,
                     abspath=os.path.join(install_dir, kimcode),
                 )
-            # this shouldn't ever happen...
-            else:
-                raise ValueError(f"Kim item type {leader} not recognized.")
 
             logger.debug(
                 f"Item {kimcode} from repository {repository} installed into kim-api-collection in directory {install_dir}"

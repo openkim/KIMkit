@@ -96,13 +96,45 @@ def format_kim_code(name, leader, num, version):
 def generate_kimcode(name, item_type, repository):
     """Generate a kimcode for a new KIMkit item
 
+    kimcodes have format:
+    [human-readable-prefix] [2 letter leader code] [12 digit id number] [3 digit version]
+
+    The prefix can only contain alphanumeric characters
+    (letters and digits) and underscores, and must begin with a letter.
+    Unicode characters are not allowed.
+
+    The leader code referrs to the item_type, and specifies the type of KIMkit item,
+    MO == portable-model, SM == simulator-model, MD == model-driver
+
+    The 12 digit ID number is generated pseudo-randomly, and is used to create a
+    directory for the item in the KIMkit repository. The repository is specified
+    at creation time to allow this function to check for ID number collisions
+    within that repository.
+
+    The version of a KIMkit item is a 3 digit integer, which starts at 000 for
+    all new items.
+
+
+
     Parameters
     ----------
     name : str
-        Human readable name for the item.
-
+        Human readable prefix for the item
     item_type : str
-        Valid item types include "portable-model", "simulator-model", and "model-driver"
+        type of KIMkit item to generate a kimcode for
+        Valid options include 'portable-model', 'simulator-model', and 'model-driver'
+    repository : path-like
+        root directory of the KIMkit repo containing the item
+
+    Returns
+    -------
+    str
+        kimcode of the item
+
+    Raises
+    ------
+    ValueError
+        invalid item_type
     """
 
     # generate appropriate leader code for item type
@@ -137,6 +169,22 @@ def generate_kimcode(name, item_type, repository):
 
 
 def is_kimcode_available(repository, kimcode):
+    """Check for kimcode collisions in the specified repository
+
+    _extended_summary_
+
+    Parameters
+    ----------
+    repository : path-like
+        root directory of repo to install into
+    kimcode : str
+        id code of the item
+
+    Returns
+    -------
+    bool
+        whether the kimcode is unused
+    """
     if not os.path.exists(kimcode_to_file_path(kimcode, repository)):
         return True
     else:
@@ -144,15 +192,29 @@ def is_kimcode_available(repository, kimcode):
 
 
 def kimcode_to_file_path(kimcode, repository):
-    """Convert a kimcode (and optional repository) to a location on disk
+    """Convert a kimcode and repository to a location on disk
     to save the item.
+
+    Items in /repository/ with kimcode 'name_prefix_XXXXYYYYZZZZ_VVV' are stored at path:
+
+    /repository/XXXX/YYYY/ZZZZ/VVV/
 
     Parameters
     ----------
     kimcode : str
-        kimcode of a model or driver
-    repository : str
-        repository at root of file path
+        id code of the item
+    repository : path-like
+        root directory of repo to begin item's path at
+
+    Returns
+    -------
+    path-like
+        path to save item in repository with kimcode
+
+    Raises
+    ------
+    ValueError
+        Unrecognized KIMkit item type
     """
     parsed_kimcode = parse_kim_code(kimcode)
 
