@@ -62,20 +62,20 @@ you should first generate a kimcode for the item by calling kimcodes.generate_ki
 for the item, its item-type, and the repository it is to be saved in to ensure that kimcode is not already in use.
 
 
-'''py
+```py
 >>> import KIMkit
 >>> example_kimcode = KIMkit.kimcodes.generate_kimcode(
         name="example_model",
         item_type="portable-model",
         repository="/path/to/repository/")
-'''
+```
 
 A **KIMkit** repository is simply the root directory of a collection of **KIMkit** items on disk. The repository will have 3 subdirectories within it, corresponding to Portable Models, Simulator Models, and Model Drivers. Inside each of these the various **KIMkit** items are organized according to substrings of the 12 digit ID number in the items' kimcodes and their 3 digit version numbers. In general, there can be an arbitrary number of **KIMkit** repositories used with any given installation of **KIMkit**.
 
 Content is passed in and out of **KIMkit** as python tarfile.TarFile objects, so that automated systems can submit and retrieve **KIMkit** content without needing to write to disk. The content of the item should be packaged as a tar archive and read into memory (e.g. by tar = tarfile.open(/path/to/tar_file.txz)), to be passed into **KIMkit**
 along with a dictionary of all required and any optional metadata fields.
 
-'''py
+```py
 >>> import KIMkit
 >>> tar_file = "/path/to/tar/archive/example_model__MO_123456789101_000.txz"
 >>> tar = tarfile.open(tar_file)
@@ -98,7 +98,7 @@ along with a dictionary of all required and any optional metadata fields.
         repository="/path/to/repository/",
         kimcode="example_model__MO_1234567891011_000",
         metadata_dict=model_metadata)
-'''
+```
 
 ## Creating New Content From Existing KIMkit Items
 
@@ -120,7 +120,7 @@ A dictionary of all required and any desired optional metadata fields conforming
 
 Additionally, it is possible to directly edit the metadata of an item without creating a new version/item, although this will create an update in the item's kimprovenance.edn file that tracks changes to item's content on disk.
 
-'''py
+```py
 >>> import KIMkit
 >>> example_metadata = KIMkit.metadata.MetaData(
     "path/to/repository/",
@@ -130,4 +130,4 @@ Additionally, it is possible to directly edit the metadata of an item without cr
         "description",
         "edited example description",
         provenance_comments="edit description")
-'''
+```
