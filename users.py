@@ -153,13 +153,6 @@ def add_self_as_user(name):
 
     system_username = whoami()
 
-    existing_uuid = get_uuid(system_username=system_username, personal_name=name)
-
-    if existing_uuid != None:
-        raise RuntimeError(
-            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
-        )
-
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
@@ -167,8 +160,19 @@ def add_self_as_user(name):
         f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
     )
 
-    with open("user_uuids.edn", "r") as file:
-        user_data_dict = kim_edn.load(file)
+    try:
+        with open("user_uuids.edn", "r") as file:
+            user_data_dict = kim_edn.load(file)
+
+        existing_uuid = get_uuid(system_username=system_username, personal_name=name)
+
+        if existing_uuid != None:
+            raise RuntimeError(
+                f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+            )
+
+    except FileNotFoundError:
+        user_data_dict = {}
 
     user_data_dict[new_uuid_key] = {
         "personal-name": name,
@@ -200,13 +204,6 @@ def add_person(name):
         This individual already has a UUID4 associated with their personal name.
     """
 
-    existing_uuid = get_uuid(personal_name=name)
-
-    if existing_uuid != None:
-        raise RuntimeError(
-            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
-        )
-
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
@@ -214,8 +211,18 @@ def add_person(name):
         f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
     )
 
-    with open("user_uuids.edn", "r") as file:
-        user_data_dict = kim_edn.load(file)
+    try:
+        with open("user_uuids.edn", "r") as file:
+            user_data_dict = kim_edn.load(file)
+
+        existing_uuid = get_uuid(personal_name=name)
+
+        if existing_uuid != None:
+            raise RuntimeError(
+                f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+            )
+    except FileNotFoundError:
+        user_data_dict = {}
 
     user_data_dict[new_uuid_key] = {"personal-name": name}
 
