@@ -1,6 +1,6 @@
 # KIMkit Interatomic Model Management and Storage System
 
-**KIMkit** is a standalone python package implementing an Interatomic Model managment and storage system based upon and intended to be compatible with the standards set out by the [OpenKIM Project](https://openkim.org). **KIMkit** provides methods to store, archive, edit, and track changes to Interatomic Models, which are simulation codes used to compute specific interactions between atoms, e.g. an interatomic potential or force field.
+**KIMkit** is a standalone python package implementing an Interatomic Model management and storage system based upon and intended to be compatible with the standards set out by the [OpenKIM Project](https://openkim.org). **KIMkit** provides methods to store, archive, edit, and track changes to Interatomic Models, which are simulation codes used to compute specific interactions between atoms, e.g. an interatomic potential or force field.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ edits to content contributed by or maintained by other users.
 
 There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory there should be
 a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
-If the current user is in editors.txt, **KIMkit** recoggnizes them as an Editor, and allows them certian
+If the current user is in editors.txt, **KIMkit** recognizes them as an Editor, and allows them certain
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.
 
@@ -46,8 +46,8 @@ The Administrator should be listed as an Editor for most use cases.
 
 ## First Time Using KIMkit
 
-Seperately from editors.txt, there should also be a file named user_uuids.edn, also in the **KIMkit** root directory,
-which stores information about all **KIMkit** users. This file contains an .edn dict where the keys are
+Seperately from editors.txt, there is also a file named user_uuids.edn, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
+This file stores information about all **KIMkit** users in an .edn dict where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
 and optionally their operating system username (if any).
 
