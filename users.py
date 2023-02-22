@@ -161,7 +161,9 @@ def add_self_as_user(name):
     )
 
     try:
-        with open("user_uuids.edn", "r") as file:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
+        ) as file:
             user_data_dict = kim_edn.load(file)
 
         existing_uuid = get_uuid(system_username=system_username, personal_name=name)
@@ -212,7 +214,9 @@ def add_person(name):
     )
 
     try:
-        with open("user_uuids.edn", "r") as file:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
+        ) as file:
             user_data_dict = kim_edn.load(file)
 
         existing_uuid = get_uuid(personal_name=name)
@@ -226,10 +230,15 @@ def add_person(name):
 
     user_data_dict[new_uuid_key] = {"personal-name": name}
 
-    with open("user_data_tmp.edn", "w") as outfile:
+    with open(
+        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"), "w"
+    ) as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
-    os.rename("user_data_tmp.edn", "user_uuids.edn")
+    os.rename(
+        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"),
+        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"),
+    )
 
 
 def delete_user(user_id, run_as_editor=False):
@@ -270,7 +279,9 @@ def delete_user(user_id, run_as_editor=False):
 
     if can_edit:
 
-        with open("user_uuids.edn", "r") as file:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
+        ) as file:
             user_data_dict = kim_edn.load(file)
 
         if is_user(user_id=user_id):
@@ -281,10 +292,15 @@ def delete_user(user_id, run_as_editor=False):
 
         logger.info(f"User {user_id}) deleted from KIMkit approved users")
 
-        with open("user_data_tmp.edn", "w") as outfile:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"), "w"
+        ) as outfile:
             kim_edn.dump(user_data_dict, outfile, indent=4)
 
-        os.rename("user_data_tmp.edn", "user_uuids.edn")
+        os.rename(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"),
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"),
+        )
 
     else:
         username = whoami()
@@ -320,7 +336,9 @@ def get_name_of_user(user_id):
         raise ValueError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
-        with open("user_uuids.edn", "r") as file:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
+        ) as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["personal-name"]
             return name
@@ -353,7 +371,9 @@ def get_system_username_of_user(user_id):
         raise ValueError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
-        with open("user_uuids.edn", "r") as file:
+        with open(
+            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
+        ) as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["system-username"]
             return name
@@ -378,7 +398,7 @@ def get_uuid(system_username=None, personal_name=None):
         unique id assigned to the user in UUID4 format
     """
 
-    with open("user_uuids.edn", "r") as file:
+    with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r") as file:
         user_data_dict = kim_edn.load(file)
         user_data = user_data_dict.items()
         found_user = False
@@ -448,7 +468,7 @@ def is_user(system_username=None, personal_name=None, user_id=None):
         user_id is not a valid UUID4
     """
     found_user = False
-    with open("user_uuids.edn", "r") as file:
+    with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r") as file:
         user_data_dict = kim_edn.load(file)
 
         if user_id:
