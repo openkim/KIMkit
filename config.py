@@ -210,14 +210,14 @@ kimspec_strings = [
 
 # The type specified in these dicts is what the inner type of the kimspec array should be
 kimspec_arrays = {
-    "developer": str,
-    "execuatbles": str,
+    "developer": list,
+    "execuatbles": list,
     "funding": dict,
-    "implementer": str,
-    "simulator_potential_compatibility": dict,
+    "implementer": list,
+    "simulator_potential_compatibility": list,
     "source-citations": dict,  # BibTex style edn dicts of citations
-    "species": str,
-    "training": str,
+    "species": list,
+    "training": list,
 }
 
 kimspec_arrays_dicts = {

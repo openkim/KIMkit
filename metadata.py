@@ -498,23 +498,28 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                         f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
                     )
         elif field in cf.kimspec_arrays:
-            for item in metadata_dict[field]:
-                if isinstance(item, cf.kimspec_arrays[field]):
-                    if cf.kimspec_arrays[field] == dict:
-                        key_requirements = cf.kimspec_arrays_dicts[field]
-                        for key in key_requirements:
-                            if key and isinstance(metadata_dict[field][key], str):
-                                pass
-                            else:
+            if cf.kimspec_arrays[field] == list:
+                for item in metadata_dict[field]:
+                    if isinstance(item, str):
+                        pass
+                    else:
+                        raise TypeError(f"Metadata field {field} must be list of str.")
+            elif cf.kimspec_arrays[field] == dict:
+                if isinstance(metadata_dict[field], dict):
+                    for key in cf.kimspec_arrays_dicts[field]:
+                        if cf.kimspec_arrays_dicts[field][key]:
+                            if not metadata_dict[field][key]:
                                 raise KeyError(
-                                    f"Missing required key '{key}' in metadata field '{field}'."
+                                    f"Required key {key} in metadata field {field} not found"
                                 )
-                    elif cf.kimspec_arrays[field] == str:
-                        if field in cf.kimspec_uuid_fields:
-                            if not users.is_user(user_id=item):
-                                raise ValueError(
-                                    f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
-                                )
+                        try:
+                            value = metadata_dict[field][key]
+                        except:
+                            KeyError
+                        if value and not isinstance(value, str):
+                            raise TypeError(
+                                f"Required key {key} in metadata field {field} must have str value"
+                            )
                 else:
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
