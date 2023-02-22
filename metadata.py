@@ -451,8 +451,10 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
     TypeError
         Required metadata field that should be str is not
-    ValueError
+    TypeError
         Metadata field that should be UUID4 is not
+    ValueError
+        Metadata field that should refer to a valid KIMkit user's UUID4 does not
     KeyError
         Metadata field of type dict is missing a required key
     ValueError
@@ -487,7 +489,11 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     f"Required metadata field '{field}' is of incorrect type, must be str."
                 )
             if field in cf.kimspec_uuid_fields:
-                if not users.is_user(user_id=metadata_dict[field]):
+                try:
+                    valid_user = users.is_user(user_id=metadata_dict[field])
+                except TypeError as e:
+                    raise TypeError(f"Metadata field {field} must be a UUID4") from e
+                if not valid_user:
                     raise ValueError(
                         f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
                     )
