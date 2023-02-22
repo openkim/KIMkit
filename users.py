@@ -327,13 +327,13 @@ def get_name_of_user(user_id):
 
     Raises
     ------
-    ValueError
+    TypeError
         Invalid UUID4
     KIMkitUserNotFoundError
         Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
-        raise ValueError("user id is not a valid UUID4")
+        raise TypeError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
         with open(
@@ -362,13 +362,13 @@ def get_system_username_of_user(user_id):
 
     Raises
     ------
-    ValueError
+    TypeError
         Invalid UUID4
     KIMkitUserNotFoundError
         Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
-        raise ValueError("user id is not a valid UUID4")
+        raise TypeError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
         with open(
