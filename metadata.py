@@ -85,7 +85,7 @@ class MetaData:
             A non KIMkit user attempted to edit metadata of an item.
         KeyError
             Metadata field not in the KIMkit metdata standard
-        PermissionError
+        NotRunAsEditorError
             A user with Editor permissions attempted to edit metadata of the item,
             but did not specify run_as_editor=True
         PermissionError
@@ -117,7 +117,7 @@ class MetaData:
             if run_as_editor:
                 can_edit = True
             else:
-                raise PermissionError(
+                raise cf.NotRunAsEditorError(
                     "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
                 )
 
@@ -172,7 +172,7 @@ class MetaData:
             A non KIMkit user attempted to delete metadata of an item.
         KeyError
             Metadata field not in the KIMkit metdata standard
-        PermissionError
+        NotRunAsEditorError
             A user with Editor permissions attempted to delete metadata of the item,
             but did not specify run_as_editor=True
         PermissionError
@@ -204,7 +204,7 @@ class MetaData:
             if run_as_editor:
                 can_edit = True
             else:
-                raise PermissionError(
+                raise cf.NotRunAsEditorError(
                     "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
                 )
 

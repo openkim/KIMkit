@@ -242,7 +242,7 @@ def delete(repository, kimcode, run_as_editor=False):
         A non KIMkit user attempted to delete an item.
     KIMkitItemNotFoundError
         No item with kimcode exists in repository.
-    PermissionError
+    NotRunAsEditorError
         A user with Editor permissions attempted to delete the item, but did not specify run_as_editor=True
     PermissionError
         A user without Editor permissions attempted to delete an item they are not the contributor or maintainer of.
@@ -288,7 +288,7 @@ def delete(repository, kimcode, run_as_editor=False):
         if run_as_editor:
             can_edit = True
         else:
-            raise PermissionError(
+            raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
 
@@ -358,7 +358,7 @@ def version_update(
         No item with kimcode exists in repository
     ValueError
         A more recent version of the item exists, so the older one should not be updated
-    PermissionError
+    NotRunAsEditorError
         A user with Editor permissions attempted to update the item, but did not specify run_as_editor=True
     ValueError
         The metadata_update_dict does not comply with the KIMkit standard
@@ -417,7 +417,7 @@ def version_update(
         if run_as_editor:
             can_edit = True
         else:
-            raise PermissionError(
+            raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
 

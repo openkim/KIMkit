@@ -338,3 +338,8 @@ class KimCodeAlreadyInUseError(FileExistsError):
 
 class KIMkitItemNotFoundError(FileNotFoundError):
     """Raised when no item with a given kimcode is found in the specified repository"""
+
+
+class NotRunAsEditorError(PermissionError):
+    """Raised when a user with editor permissions attemted an operation which requires elevated permissions,
+    but did not specify run_as_editor=True"""

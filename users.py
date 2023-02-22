@@ -248,7 +248,7 @@ def delete_user(user_id, run_as_editor=False):
     ------
     ValueError
         Invalid UUID4
-    PermissionError
+    NotRunAsEditorError
         This user is a KIMkit Editor, but did not specify run_as_editor=True
     KeyError
         Specified user_id not found in the user data file
@@ -264,7 +264,7 @@ def delete_user(user_id, run_as_editor=False):
         if run_as_editor:
             can_edit = True
         else:
-            raise PermissionError(
+            raise cf.NotRunAsEditorError(
                 "Did you mean to delete this user? If you are an Editor run again with run_as_editor=True"
             )
 
