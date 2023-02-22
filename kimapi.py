@@ -12,8 +12,8 @@ from subprocess import check_call, CalledProcessError
 from contextlib import contextmanager
 import packaging.specifiers, packaging.version
 
-import config as cf
-from logger import logging
+from . import config as cf
+from .logger import logging
 
 logger = logging.getLogger("pipeline").getChild("kimapi")
 

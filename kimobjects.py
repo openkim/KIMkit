@@ -28,12 +28,12 @@ import itertools
 from contextlib import contextmanager
 import kim_edn
 
-import config as cf
-import kimcodes
-import kimapi
+from . import config as cf
+from . import kimcodes
+from . import kimapi
 
 # import template
-from logger import logging
+from .logger import logging
 
 logger = logging.getLogger("pipeline").getChild("kimobjects")
 

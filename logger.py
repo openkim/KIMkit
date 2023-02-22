@@ -35,9 +35,9 @@ import sys
 import os
 import logging
 import logging.handlers as loghandlers
-
-import config as cf
 import subprocess
+
+from . import config as cf
 
 
 FILELEVEL = logging.DEBUG

@@ -3,8 +3,8 @@ import kim_edn
 import os
 import getpass
 
-import config as cf
-from logger import logging
+from . import config as cf
+from .logger import logging
 
 """ This module contains utility functions used to manager users and permissions in KIMkit.
 

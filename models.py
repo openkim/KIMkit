@@ -2,12 +2,12 @@ import os
 import shutil
 import tarfile
 
-import metadata
-import provenance
-import users
-from logger import logging
-import kimobjects
-import kimcodes
+from . import metadata
+from . import provenance
+from . import users
+from .logger import logging
+from . import kimobjects
+from . import kimcodes
 
 
 """

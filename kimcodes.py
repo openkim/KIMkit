@@ -9,8 +9,8 @@ import re
 import os
 import random
 
-import config as cf
-from logger import logging
+from . import config as cf
+from .logger import logging
 
 logger = logging.getLogger("pipeline").getChild("kimcodes")
 

@@ -8,8 +8,8 @@ from collections import OrderedDict
 from pytz import timezone
 import kim_edn
 
-from logger import logging
-import kimcodes
+from .logger import logging
+from . import kimcodes
 
 """This module contains methods for managing KIMkit item history, which is tracked via a file
 stored along with each item called kimprovenance.edn. This file is automatically created when

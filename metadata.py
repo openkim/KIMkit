@@ -5,11 +5,11 @@ import warnings
 import kim_edn
 from collections import OrderedDict
 
-import users
-import provenance
-import config as cf
-from logger import logging
-import kimcodes
+from . import users
+from . import provenance
+from . import config as cf
+from .logger import logging
+from . import kimcodes
 
 central = timezone("US/Central")
 
