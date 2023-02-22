@@ -422,6 +422,7 @@ def validate_metadata(metadata_dict):
         TypeError,
         ValueError,
         cf.MissingRequiredMetadataFieldError,
+        cf.KIMkitUserNotFoundError,
     ) as e:
         raise cf.InvalidMetadataTypesError(
             "Types of one or more metadata fields are invalid"
@@ -455,12 +456,16 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         Metadata field that should be UUID4 is not
     ValueError
         Metadata field that should refer to a valid KIMkit user's UUID4 does not
-    KeyError
-        Metadata field of type dict is missing a required key
-    ValueError
-        Metadata field that should be UUID4 is not
     TypeError
-        General error for metadata field of incorrect type
+        Metadata field that should be list of str is not
+    KeyError
+        Required key in metadata field of type dict not specified
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
@@ -504,6 +509,16 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                         pass
                     else:
                         raise TypeError(f"Metadata field {field} must be list of str.")
+
+                    if field in cf.kimspec_uuid_fields:
+                        if not users.is_valid_uuid4(item):
+                            raise TypeError(
+                                f"Metadata Field {field} should be a list of UUID4 strings"
+                            )
+                        if not users.is_user(item):
+                            raise cf.KIMkitUserNotFoundError(
+                                f"UUID {item} not recognized as a KIMkit user"
+                            )
             elif cf.kimspec_arrays[field] == dict:
                 keys_to_remove = []
                 for key in metadata_dict[field]:
