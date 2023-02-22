@@ -103,7 +103,7 @@ def add_editor(editor_name, run_as_administrator=False):
     ------
     NotRunAsAdministratorError
         This user is the Administrator, but did not specify run_as_administrator=True
-    PermissionError
+    NotAdministratorError
         A user who is not the administrator attempted to add an editor.
     """
 
@@ -128,7 +128,7 @@ def add_editor(editor_name, run_as_administrator=False):
         logger.warning(
             f"User {username} attempted to add {editor_name} as an Editor with insufficient privileges."
         )
-        raise PermissionError(
+        raise cf.NotAdministratorError(
             "You are not the Administrator, and do not have access rights to add Editors."
         )
 

@@ -175,7 +175,7 @@ class MetaData:
         NotRunAsEditorError
             A user with Editor permissions attempted to delete metadata of the item,
             but did not specify run_as_editor=True
-        PermissionError
+        NotAnEditorError
             A user without Editor permissions attempted to delete metadata of an item
             they are not the contributor or maintainer of.
         """
@@ -232,7 +232,7 @@ class MetaData:
             logger.warning(
                 f"User {UUID} attempted to delete metadata field {field} of item {kimcode} in repository {self.repository} without editor privleges"
             )
-            raise PermissionError(
+            raise cf.NotAnEditorError(
                 "Only KIMkit Editors may delete metadata fields of items they are not the contributor or maintainer of."
             )
 
