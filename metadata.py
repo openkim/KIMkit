@@ -458,14 +458,18 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         Metadata field that should refer to a valid KIMkit user's UUID4 does not
     TypeError
         Metadata field that should be list of str is not
+    TypeError
+        Values inside metadata field of type list are not UUIDs
+    cf.KIMkitUserNotFoundError
+        UUID in metadata field list not recognized as a KIMkit user
     KeyError
         Required key in metadata field of type dict not specified
     TypeError
-        _description_
+        Value associated with required key inside metadata field of dict type is not str
     TypeError
-        _description_
+        Value associated with optional key inside metadata field of dict type is not str
     TypeError
-        _description_
+        Metadata field that should be dict is not
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
