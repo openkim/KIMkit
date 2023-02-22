@@ -101,7 +101,7 @@ def add_editor(editor_name, run_as_administrator=False):
 
     Raises
     ------
-    PermissionError
+    NotRunAsAdministratorError
         This user is the Administrator, but did not specify run_as_administrator=True
     PermissionError
         A user who is not the administrator attempted to add an editor.
@@ -113,7 +113,7 @@ def add_editor(editor_name, run_as_administrator=False):
         if run_as_administrator:
             can_edit = True
         else:
-            raise PermissionError(
+            raise cf.NotRunAsAdministratorError(
                 "Did you mean to add an editor? If you are The Administrator run again with run_as_administrator=True"
             )
 

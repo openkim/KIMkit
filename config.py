@@ -341,9 +341,18 @@ class KIMkitItemNotFoundError(FileNotFoundError):
 
 
 class NotRunAsEditorError(PermissionError):
-    """Raised when a user with editor permissions attemted an operation which requires elevated permissions,
+    """Raised when a user with Editor permissions attemted an operation which requires elevated permissions,
     but did not specify run_as_editor=True"""
 
 
 class NotAnEditorError(PermissionError):
-    """Raised when a user without editor permissions attempted an operation that requires them"""
+    """Raised when a user without Editor permissions attempted an operation that requires them"""
+
+
+class NotRunAsAdministratorError(PermissionError):
+    """Raised when a user with Administrator permisions attempts an operation that requires elevated permissions,
+    but does not specify run_as_administrator=True"""
+
+
+class NotAdministratorError(PermissionError):
+    """Raised when a user without Administrator permissions attempts an operation that requires them"""
