@@ -88,7 +88,7 @@ class MetaData:
         NotRunAsEditorError
             A user with Editor permissions attempted to edit metadata of the item,
             but did not specify run_as_editor=True
-        PermissionError
+        NotAnEditorError
             A user without Editor permissions attempted to edit metadata
             of an item they are not the contributor or maintainer of.
         """
@@ -145,7 +145,7 @@ class MetaData:
             logger.warning(
                 f"User {UUID} attempted to edit metadata field {key} of item {kimcode} in repository {self.repository} without editor privleges"
             )
-            raise PermissionError(
+            raise cf.NotAnEditorError(
                 "Only KIMkit Editors may edit metadata of items they are not the contributor or maintainer of."
             )
 

@@ -252,7 +252,7 @@ def delete_user(user_id, run_as_editor=False):
         This user is a KIMkit Editor, but did not specify run_as_editor=True
     KeyError
         Specified user_id not found in the user data file
-    PermissionError
+    NotAnEditorError
         A user who is not a KIMkit editor attempted to delete a user
     """
     if not is_valid_uuid4(user_id):
@@ -291,7 +291,7 @@ def delete_user(user_id, run_as_editor=False):
         logger.warning(
             f"User {username} attempted to delete user {user_id} without editor priveleges"
         )
-        raise PermissionError(
+        raise cf.NotAnEditorError(
             "Editor permissions are required to delete users from KIMkit."
         )
 
