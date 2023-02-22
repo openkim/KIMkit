@@ -356,7 +356,7 @@ def version_update(
         A non KIMkit user attempted to update an item.
     KIMkitItemNotFoundError
         No item with kimcode exists in repository
-    ValueError
+    NotMostRecentVersionError
         A more recent version of the item exists, so the older one should not be updated
     NotRunAsEditorError
         A user with Editor permissions attempted to update the item, but did not specify run_as_editor=True
@@ -387,7 +387,7 @@ def version_update(
     most_recent_dir = os.path.join(outer_dir, most_recent_version)
 
     if not os.path.samefile(current_dir, most_recent_dir):
-        raise ValueError(
+        raise cf.NotMostRecentVersionError(
             f"{kimcode} is not the most recent version of this item. Most recent version {most_recent_version} should be used as a base for updating."
         )
 

@@ -356,3 +356,7 @@ class NotRunAsAdministratorError(PermissionError):
 
 class NotAdministratorError(PermissionError):
     """Raised when a user without Administrator permissions attempts an operation that requires them"""
+
+
+class NotMostRecentVersionError(ValueError):
+    """Raised when attempting to update an item that is not the most recent version"""
