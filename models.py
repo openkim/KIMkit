@@ -214,7 +214,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
             shutil.rmtree(tmp_dir)
             shutil.rmtree(dest_dir)
             raise cf.InvalidMetadataError(
-                "Supplied dictionary of metadata does not comply with KIMkit standard."
+                "Import Failed due to invalid metadata."
             ) from e
 
         provenance.Provenance(
@@ -479,7 +479,7 @@ def version_update(
             shutil.rmtree(dest_dir)
             shutil.rmtree(tmp_dir)
             raise cf.InvalidMetadataError(
-                f"Metadata associated with item {new_kimcode} is invalid."
+                f"Update failed due to invalid metadata."
             ) from e
         old_provenance = os.path.join(
             kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
@@ -627,9 +627,7 @@ def fork(
     except cf.InvalidMetadataError as e:
         shutil.rmtree(dest_dir)
         shutil.rmtree(tmp_dir)
-        raise cf.InvalidMetadataError(
-            f"Metadata associated with item {new_kimcode} is invalid."
-        ) from e
+        raise cf.InvalidMetadataError(f"Forking failed due to invalid metadata.") from e
     old_provenance = os.path.join(
         kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
     )
