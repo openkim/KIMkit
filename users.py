@@ -255,17 +255,17 @@ def delete_user(user_id, run_as_editor=False):
 
     Raises
     ------
-    ValueError
+    TypeError
         Invalid UUID4
     NotRunAsEditorError
         This user is a KIMkit Editor, but did not specify run_as_editor=True
-    KeyError
+    KIMkitUserNotFoundError
         Specified user_id not found in the user data file
     NotAnEditorError
         A user who is not a KIMkit editor attempted to delete a user
     """
     if not is_valid_uuid4(user_id):
-        raise ValueError("user id is not a valid UUID4")
+        raise TypeError("user id is not a valid UUID4")
 
     can_edit = False
 
@@ -288,7 +288,7 @@ def delete_user(user_id, run_as_editor=False):
             del user_data_dict[user_id]
 
         else:
-            raise KeyError(f"UUID {user_id} not found in user data.")
+            raise cf.KIMkitUserNotFoundError(f"UUID {user_id} not found in user data.")
 
         logger.info(f"User {user_id}) deleted from KIMkit approved users")
 
@@ -329,7 +329,7 @@ def get_name_of_user(user_id):
     ------
     ValueError
         Invalid UUID4
-    KeyError
+    KIMkitUserNotFoundError
         Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
@@ -344,7 +344,7 @@ def get_name_of_user(user_id):
             return name
 
     else:
-        raise KeyError(f"uuid {user_id} not in authorized users")
+        raise cf.KIMkitUserNotFoundError(f"uuid {user_id} not in authorized users")
 
 
 def get_system_username_of_user(user_id):
@@ -364,7 +364,7 @@ def get_system_username_of_user(user_id):
     ------
     ValueError
         Invalid UUID4
-    KeyError
+    KIMkitUserNotFoundError
         Specified user_id not found in the user data file
     """
     if not is_valid_uuid4(user_id):
@@ -379,7 +379,7 @@ def get_system_username_of_user(user_id):
             return name
 
     else:
-        raise KeyError(f"uuid {user_id} not in authorized users")
+        raise cf.KIMkitUserNotFoundError(f"uuid {user_id} not in authorized users")
 
 
 def get_uuid(system_username=None, personal_name=None):
