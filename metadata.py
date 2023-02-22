@@ -519,7 +519,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                             raise TypeError(
                                 f"Metadata Field {field} should be a list of UUID4 strings"
                             )
-                        if not users.is_user(item):
+                        if not users.is_user(user_id=item):
                             raise cf.KIMkitUserNotFoundError(
                                 f"UUID {item} not recognized as a KIMkit user"
                             )
