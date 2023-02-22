@@ -376,3 +376,7 @@ class InvalidItemTypeError(TypeError):
 
 class InvalidMetadataFieldError(KeyError):
     """Raised when attempting to reference a metadata field that is not in the standard"""
+
+
+class MissingRequiredMetadataFieldError(KeyError):
+    """Raised when a required metadata key is not specified"""

@@ -261,6 +261,11 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     -------
     MetaData
         KIMkit metadata object
+
+    Raises
+    ------
+    InvalidMetadataError
+        If the supplied metadata_dict does not conform to the KIMkit standard
     """
 
     metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
@@ -274,7 +279,11 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     try:
         metadata_dict = validate_metadata(metadata_dict)
 
-    except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
+    except (
+        cf.MissingRequiredMetadataFieldError,
+        cf.InvalidItemTypeError,
+        cf.InvalidMetadataTypesError,
+    ) as e:
         raise cf.InvalidMetadataError(
             "Supplied metadata dict does not conform to the KIMkit metadata standard."
         ) from e
@@ -356,13 +365,13 @@ def validate_metadata(metadata_dict):
 
     Raises
     ------
-    KeyError
+    MissingRequiredMetadataFieldError
         kim-item-type not specified.
         Prevents further validation because the metdata standard depends on item type.
     InvalidItemTypeError
         kim-item-type is invalid.
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
-    KeyError
+    MissingRequiredMetadataFieldError
         A required metadata field is not specified.
     InvalidMetadataTypesError
         Validating metadata types failed
@@ -372,8 +381,10 @@ def validate_metadata(metadata_dict):
     try:
         kim_item_type = metadata_dict["kim-item-type"]
 
-    except (KeyError):
-        raise KeyError(f"Required metadata field 'kim-item-type' not specified.")
+    except (KeyError) as e:
+        raise cf.MissingRequiredMetadataFieldError(
+            f"Required metadata field 'kim-item-type' not specified."
+        ) from e
 
     if kim_item_type not in supported_item_types:
         raise cf.InvalidItemTypeError(
@@ -389,10 +400,10 @@ def validate_metadata(metadata_dict):
     for field in required_fields:
         try:
             metadata_dict[field]
-        except KeyError:
-            raise KeyError(
+        except KeyError as e:
+            raise cf.MissingRequiredMetadataFieldError(
                 f"Required metadata field '{field}' not specified, aborting"
-            ) from KeyError
+            ) from e
     fields_to_remove = []
     for field in metadata_dict:
         if field not in required_fields and field not in optional_fields:
@@ -556,7 +567,11 @@ def create_new_metadata_from_existing(
 
     try:
         valid_metadata = validate_metadata(new_metadata_dict)
-    except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
+    except (
+        cf.MissingRequiredMetadataFieldError,
+        cf.InvalidItemTypeError,
+        cf.InvalidMetadataTypesError,
+    ) as e:
         raise cf.InvalidMetadataError("Validating metadata failed.") from e
     _write_metadata_to_file(repository, new_kimcode, valid_metadata)
     new_metadata = MetaData(repository, new_kimcode)
