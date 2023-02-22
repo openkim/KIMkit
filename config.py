@@ -330,3 +330,7 @@ KIMkit_item_type_key_requirements = {
 
 class KIMkitUserNotFoundError(PermissionError):
     """Raised when a user does not have a vaild KIMkit UUID4 assigned in user_uuids.edn"""
+
+
+class KimCodeAlreadyInUseError(FileExistsError):
+    """Raised when attmpting to assign a kimcode to an item that is already assigned to a different item in the same repository"""

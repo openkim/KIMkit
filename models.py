@@ -137,7 +137,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     ------
     KIMkitUserNotFoundError
         The user attempting to import the item isn't in the list of KIMkit users.
-    ValueError
+    KimCodeAlreadyInUseError
         Specified kimcode is already in use by another item in the same repository.
     ValueError
         Metadata does not comply with KIMkit standard.
@@ -154,7 +154,9 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         )
 
     if not kimcodes.is_kimcode_available(repository, kimcode):
-        raise ValueError(f"kimcode {kimcode} is already in use, please select another.")
+        raise cf.KimCodeAlreadyInUseError(
+            f"kimcode {kimcode} is already in use, please select another."
+        )
 
     metadata_dict["extended-id"] = kimcode
 
@@ -519,6 +521,8 @@ def fork(
         A non KIMkit user attempted to update an item.
     NotADirectoryError
         No item with kimcode exists in repository
+    KimCodeAlreadyInUseError
+        New kimcode is already assigned to an item in this repository
     ValueError
         The metadata_update_dict does not comply with the KIMkit standard
     """
@@ -534,6 +538,11 @@ def fork(
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
         raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+
+    if not kimcodes.is_kimcode_available(repository, new_kimcode):
+        raise cf.KimCodeAlreadyInUseError(
+            f"kimcode {new_kimcode} is already in use, please select another."
+        )
 
     logger.info(
         f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
