@@ -505,6 +505,16 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     else:
                         raise TypeError(f"Metadata field {field} must be list of str.")
             elif cf.kimspec_arrays[field] == dict:
+                keys_to_remove = []
+                for key in metadata_dict[field]:
+                    if key not in cf.kimspec_arrays_dicts[field]:
+                        keys_to_remove.append(key)
+                        warnings.warn(
+                            f"Metadata field '{key}' in field {field} not used for kim item type {kim_item_type}, ignoring."
+                        )
+                for key in keys_to_remove:
+                    metadata_dict[field].pop(key, None)
+
                 if isinstance(metadata_dict[field], dict):
                     for key in cf.kimspec_arrays_dicts[field]:
                         if cf.kimspec_arrays_dicts[field][key]:
