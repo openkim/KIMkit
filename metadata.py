@@ -519,14 +519,15 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                     f"Required key {key} in metadata field {field} must have str value"
                                 )
                         # optional keys are allowed not to exist
-                        try:
-                            value = metadata_dict[field][key]
-                        except:
-                            KeyError
-                        if value and not isinstance(value, str):
-                            raise TypeError(
-                                f"Key {key} in metadata field {field} must have str value"
-                            )
+                        else:
+                            try:
+                                value = metadata_dict[field][key]
+                            except KeyError:
+                                pass
+                            if value and not isinstance(value, str):
+                                raise TypeError(
+                                    f"Key {key} in metadata field {field} must have str value"
+                                )
                 else:
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
