@@ -372,3 +372,7 @@ class InvalidMetadataTypesError(TypeError):
 
 class InvalidItemTypeError(TypeError):
     """Rasised when a KIMkit item refers to a nonexistant item type"""
+
+
+class InvalidMetadataFieldError(KeyError):
+    """Raised when attempting to reference a metadata field that is not in the standard"""

@@ -83,7 +83,7 @@ class MetaData:
         ------
         KIMkitUserNotFoundError
             A non KIMkit user attempted to edit metadata of an item.
-        KeyError
+        InvalidMetadataFieldError
             Metadata field not in the KIMkit metdata standard
         NotRunAsEditorError
             A user with Editor permissions attempted to edit metadata of the item,
@@ -101,7 +101,9 @@ class MetaData:
             )
 
         if key not in cf.kimspec_order:
-            raise KeyError(f"metadata field {key} not recognized, aborting.")
+            raise cf.InvalidMetadataFieldError(
+                f"metadata field {key} not recognized, aborting."
+            )
         metadata_dict = vars(self)
         kimcode = metadata_dict["extended-id"]
 
@@ -170,7 +172,7 @@ class MetaData:
         ------
         KIMkitUserNotFoundError
             A non KIMkit user attempted to delete metadata of an item.
-        KeyError
+        InvalidMetadataFieldError
             Metadata field not in the KIMkit metdata standard
         NotRunAsEditorError
             A user with Editor permissions attempted to delete metadata of the item,
@@ -188,7 +190,9 @@ class MetaData:
             )
 
         if field not in cf.kimspec_order:
-            raise KeyError(f"metadata field {field} not recognized, aborting.")
+            raise cf.InvalidMetadataFieldError(
+                f"metadata field {field} not recognized, aborting."
+            )
         metadata_dict = vars(self)
         kimcode = metadata_dict["extended-id"]
 
@@ -259,8 +263,6 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
         KIMkit metadata object
     """
 
-    logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
-
     metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
     metadata_dict["contributor-id"] = UUID
     if not "maintainer-id" in metadata_dict:
@@ -269,9 +271,19 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
 
     # TODO: assign DOI?
 
+    try:
+        metadata_dict = validate_metadata(metadata_dict)
+
+    except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
+        raise cf.InvalidMetadataError(
+            "Supplied metadata dict does not conform to the KIMkit metadata standard."
+        ) from e
+
     _write_metadata_to_file(repository, kimcode, metadata_dict)
 
     new_metadata = MetaData(repository, kimcode)
+
+    logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
 
     return new_metadata
 

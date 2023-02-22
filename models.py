@@ -202,23 +202,20 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         if executables:
             metadata_dict["executables"] = executables
 
-        try:
-            metadata_dict = metadata.validate_metadata(metadata_dict)
-        except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
-            shutil.rmtree(tmp_dir)
-            raise cf.InvalidMetadataError(
-                "Supplied dictionary of metadata does not comply with KIMkit standard."
-            ) from e
-
         dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
-
-        logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
 
         shutil.copytree(tmp_dir, dest_dir)
 
-        new_metadata = metadata.create_metadata(
-            repository, kimcode, metadata_dict, UUID
-        )
+        try:
+            new_metadata = metadata.create_metadata(
+                repository, kimcode, metadata_dict, UUID
+            )
+        except cf.InvalidMetadataError as e:
+            shutil.rmtree(tmp_dir)
+            shutil.rmtree(dest_dir)
+            raise cf.InvalidMetadataError(
+                "Supplied dictionary of metadata does not comply with KIMkit standard."
+            ) from e
 
         provenance.Provenance(
             kimcode,
@@ -228,6 +225,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
             comments=None,
         )
         shutil.rmtree(tmp_dir)
+        logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
     else:
         raise AttributeError(
             f"""A name, source directory, KIMkit repository,
