@@ -508,17 +508,24 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                 if isinstance(metadata_dict[field], dict):
                     for key in cf.kimspec_arrays_dicts[field]:
                         if cf.kimspec_arrays_dicts[field][key]:
-                            if not metadata_dict[field][key]:
+                            try:
+                                value = metadata_dict[field][key]
+                            except KeyError as e:
                                 raise KeyError(
                                     f"Required key {key} in metadata field {field} not found"
+                                ) from e
+                            if value and not isinstance(value, str):
+                                raise TypeError(
+                                    f"Required key {key} in metadata field {field} must have str value"
                                 )
+                        # optional keys are allowed not to exist
                         try:
                             value = metadata_dict[field][key]
                         except:
                             KeyError
                         if value and not isinstance(value, str):
                             raise TypeError(
-                                f"Required key {key} in metadata field {field} must have str value"
+                                f"Key {key} in metadata field {field} must have str value"
                             )
                 else:
                     raise TypeError(
