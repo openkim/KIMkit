@@ -416,7 +416,13 @@ def validate_metadata(metadata_dict):
 
     try:
         check_metadata_types(metadata_dict)
-    except (KeyError, cf.InvalidItemTypeError, TypeError, ValueError) as e:
+    except (
+        KeyError,
+        cf.InvalidItemTypeError,
+        TypeError,
+        ValueError,
+        cf.MissingRequiredMetadataFieldError,
+    ) as e:
         raise cf.InvalidMetadataTypesError(
             "Types of one or more metadata fields are invalid"
         ) from e
@@ -437,7 +443,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
 
     Raises
     ------
-    KeyError
+    MissingRequiredMetadataFieldError
         kim-item-type not specified.
         Prevents further validation because the metdata standard depends on item type.
     InvalidItemTypeError
@@ -461,10 +467,10 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         try:
             kim_item_type = metadata_dict["kim-item-type"]
 
-        except (KeyError):
-            raise KeyError(
+        except (KeyError) as e:
+            raise cf.MissingRequiredMetadataFieldError(
                 f"Required metadata field 'kim-item-type' not specified."
-            ) from KeyError
+            ) from e
 
     if kim_item_type not in supported_item_types:
         raise cf.InvalidItemTypeError(
