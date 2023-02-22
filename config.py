@@ -364,3 +364,11 @@ class NotMostRecentVersionError(ValueError):
 
 class InvalidMetadataError(ValueError):
     """General exception to raise when metadata does not conform to the standard for a given item type"""
+
+
+class InvalidMetadataTypesError(TypeError):
+    """Raised when metadata fields are not of the expected types"""
+
+
+class InvalidItemTypeError(TypeError):
+    """Rasised when a KIMkit item refers to a nonexistant item type"""

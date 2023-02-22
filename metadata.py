@@ -347,11 +347,13 @@ def validate_metadata(metadata_dict):
     KeyError
         kim-item-type not specified.
         Prevents further validation because the metdata standard depends on item type.
-    ValueError
+    InvalidItemTypeError
         kim-item-type is invalid.
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
     KeyError
         A required metadata field is not specified.
+    InvalidMetadataTypesError
+        Validating metadata types failed
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
@@ -362,7 +364,7 @@ def validate_metadata(metadata_dict):
         raise KeyError(f"Required metadata field 'kim-item-type' not specified.")
 
     if kim_item_type not in supported_item_types:
-        raise ValueError(
+        raise cf.InvalidItemTypeError(
             f"""Item type {kim_item_type} not recognized.
          Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
         )
@@ -389,7 +391,12 @@ def validate_metadata(metadata_dict):
     for field in fields_to_remove:
         metadata_dict.pop(field, None)
 
-    check_metadata_types(metadata_dict)
+    try:
+        check_metadata_types(metadata_dict)
+    except (KeyError, cf.InvalidItemTypeError, TypeError, ValueError) as e:
+        raise cf.InvalidMetadataTypesError(
+            "Types of one or more metadata fields are invalid"
+        ) from e
     return metadata_dict
 
 
@@ -410,7 +417,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     KeyError
         kim-item-type not specified.
         Prevents further validation because the metdata standard depends on item type.
-    ValueError
+    InvalidItemTypeError
         kim-item-type is invalid.
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
     TypeError
@@ -437,7 +444,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
             ) from KeyError
 
     if kim_item_type not in supported_item_types:
-        raise ValueError(
+        raise cf.InvalidItemTypeError(
             f"""Item type '{kim_item_type}' not recognized.
          Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
         )
@@ -504,6 +511,12 @@ def create_new_metadata_from_existing(
     -------
     MetaData
         KIMkit metadata object for the new item
+
+    Raises
+    ------
+    InvalidMetadataError
+        If the metadata of the new item does not conform to the standard,
+        most likely the metadata_update_dict has errors.
     """
 
     logger.debug(
@@ -529,7 +542,10 @@ def create_new_metadata_from_existing(
         for key in metadata_update_dict:
             new_metadata_dict[key] = metadata_update_dict[key]
 
-    valid_metadata = validate_metadata(new_metadata_dict)
+    try:
+        valid_metadata = validate_metadata(new_metadata_dict)
+    except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
+        raise cf.InvalidMetadataError("Validating metadata failed.") from e
     _write_metadata_to_file(repository, new_kimcode, valid_metadata)
     new_metadata = MetaData(repository, new_kimcode)
     return new_metadata

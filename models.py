@@ -137,6 +137,8 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     ------
     KIMkitUserNotFoundError
         The user attempting to import the item isn't in the list of KIMkit users.
+    InvalidItemTypeError
+        The leader of the kimcode is invalid.
     KimCodeAlreadyInUseError
         Specified kimcode is already in use by another item in the same repository.
     InvalidMetadataError
@@ -151,6 +153,21 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
+
+    if leader == "MO":
+        kim_item_type = "portable-model"
+
+    elif leader == "SM":
+        kim_item_type = "simulator-model"
+
+    elif leader == "MD":
+        kim_item_type = "model-driver"
+
+    else:
+        raise cf.InvalidItemTypeError(
+            f"Leader of kimcode {kimcode} does not represent a valid item type"
         )
 
     if not kimcodes.is_kimcode_available(repository, kimcode):
@@ -187,7 +204,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
 
         try:
             metadata_dict = metadata.validate_metadata(metadata_dict)
-        except (ValueError, KeyError, TypeError) as e:
+        except (KeyError, cf.InvalidItemTypeError, cf.InvalidMetadataTypesError) as e:
             shutil.rmtree(tmp_dir)
             raise cf.InvalidMetadataError(
                 "Supplied dictionary of metadata does not comply with KIMkit standard."
@@ -460,7 +477,7 @@ def version_update(
                 UUID,
                 metadata_update_dict=metadata_update_dict,
             )
-        except (KeyError, ValueError, TypeError) as e:
+        except cf.InvalidMetadataError as e:
             shutil.rmtree(dest_dir)
             shutil.rmtree(tmp_dir)
             raise cf.InvalidMetadataError(
@@ -523,6 +540,8 @@ def fork(
     ------
     KIMkitUserNotFoundError
         A non KIMkit user attempted to update an item.
+    InvalidItemTypeError
+        Leader of new kimcode is invalid.
     KIMkitItemNotFoundError
         No item with kimcode exists in repository
     KimCodeAlreadyInUseError
@@ -537,6 +556,19 @@ def fork(
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can fork items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+        )
+
+    __, new_leader, __, __ = kimcodes.parse_kim_code(new_kimcode)
+
+    if new_leader == "MO":
+        new_kim_item_type = "portable-model"
+    elif leader == "SM":
+        new_kim_item_type = "simulator-model"
+    elif leader == "MD":
+        new_kim_item_type = "model-driver"
+    else:
+        raise cf.InvalidItemTypeError(
+            f"Leader of new kimcode {new_kimcode} does not refer to a valid kim item type"
         )
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
@@ -594,7 +626,7 @@ def fork(
             UUID,
             metadata_update_dict=metadata_update_dict,
         )
-    except (KeyError, ValueError, TypeError) as e:
+    except cf.InvalidMetadataError as e:
         shutil.rmtree(dest_dir)
         shutil.rmtree(tmp_dir)
         raise cf.InvalidMetadataError(
