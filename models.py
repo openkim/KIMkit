@@ -139,7 +139,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         The user attempting to import the item isn't in the list of KIMkit users.
     KimCodeAlreadyInUseError
         Specified kimcode is already in use by another item in the same repository.
-    ValueError
+    InvalidMetadataError
         Metadata does not comply with KIMkit standard.
     AttributeError
         One or more inputs required for import is missing.
@@ -189,7 +189,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
             metadata_dict = metadata.validate_metadata(metadata_dict)
         except (ValueError, KeyError, TypeError) as e:
             shutil.rmtree(tmp_dir)
-            raise ValueError(
+            raise cf.InvalidMetadataError(
                 "Supplied dictionary of metadata does not comply with KIMkit standard."
             ) from e
 
@@ -360,7 +360,7 @@ def version_update(
         A more recent version of the item exists, so the older one should not be updated
     NotRunAsEditorError
         A user with Editor permissions attempted to update the item, but did not specify run_as_editor=True
-    ValueError
+    InvalidMetadataError
         The metadata_update_dict does not comply with the KIMkit standard
     NotAnEditorError
         A user without Editor permissions attempted to update an item they are not the contributor or maintainer of.
@@ -463,7 +463,7 @@ def version_update(
         except (KeyError, ValueError, TypeError) as e:
             shutil.rmtree(dest_dir)
             shutil.rmtree(tmp_dir)
-            raise ValueError(
+            raise cf.InvalidMetadataError(
                 f"Metadata associated with item {new_kimcode} is invalid."
             ) from e
         old_provenance = os.path.join(
@@ -527,7 +527,7 @@ def fork(
         No item with kimcode exists in repository
     KimCodeAlreadyInUseError
         New kimcode is already assigned to an item in this repository
-    ValueError
+    InvalidMetadataError
         The metadata_update_dict does not comply with the KIMkit standard
     """
 
@@ -597,7 +597,7 @@ def fork(
     except (KeyError, ValueError, TypeError) as e:
         shutil.rmtree(dest_dir)
         shutil.rmtree(tmp_dir)
-        raise ValueError(
+        raise cf.InvalidMetadataError(
             f"Metadata associated with item {new_kimcode} is invalid."
         ) from e
     old_provenance = os.path.join(

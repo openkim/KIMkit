@@ -360,3 +360,7 @@ class NotAdministratorError(PermissionError):
 
 class NotMostRecentVersionError(ValueError):
     """Raised when attempting to update an item that is not the most recent version"""
+
+
+class InvalidMetadataError(ValueError):
+    """General exception to raise when metadata does not conform to the standard for a given item type"""
