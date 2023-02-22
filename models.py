@@ -240,7 +240,7 @@ def delete(repository, kimcode, run_as_editor=False):
     ------
     KIMkitUserNotFoundError
         A non KIMkit user attempted to delete an item.
-    FileNotFoundError
+    KIMkitItemNotFoundError
         No item with kimcode exists in repository.
     PermissionError
         A user with Editor permissions attempted to delete the item, but did not specify run_as_editor=True
@@ -259,7 +259,9 @@ def delete(repository, kimcode, run_as_editor=False):
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
     if not os.path.exists(del_path):
-        raise FileNotFoundError(f"No item {kimcode} found in repository {repository}")
+        raise cf.KIMkitItemNotFoundError(
+            f"No item {kimcode} found in repository {repository}"
+        )
 
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
@@ -352,7 +354,7 @@ def version_update(
     ------
     KIMkitUserNotFoundError
         A non KIMkit user attempted to update an item.
-    NotADirectoryError
+    KIMkitItemNotFoundError
         No item with kimcode exists in repository
     ValueError
         A more recent version of the item exists, so the older one should not be updated
@@ -374,7 +376,9 @@ def version_update(
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
-        raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+        raise cf.KIMkitItemNotFoundError(
+            f"No item with kimcode {kimcode} exists, aborting."
+        )
 
     outer_dir = os.path.split(current_dir)[0]
     versions = os.listdir(outer_dir)
@@ -519,7 +523,7 @@ def fork(
     ------
     KIMkitUserNotFoundError
         A non KIMkit user attempted to update an item.
-    NotADirectoryError
+    KIMkitItemNotFoundError
         No item with kimcode exists in repository
     KimCodeAlreadyInUseError
         New kimcode is already assigned to an item in this repository
@@ -537,7 +541,9 @@ def fork(
 
     current_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.exists(current_dir):
-        raise NotADirectoryError(f"No item with kimcode {kimcode} exists, aborting.")
+        raise cf.KIMkitItemNotFoundError(
+            f"No item with kimcode {kimcode} exists, aborting."
+        )
 
     if not kimcodes.is_kimcode_available(repository, new_kimcode):
         raise cf.KimCodeAlreadyInUseError(
@@ -627,12 +633,14 @@ def export(repository, kimcode):
 
     Raises
     ------
-    FileNotFoundError
+    KIMkitItemNotFoundError
         No item with kimcode found in repository
     """
     src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     if not os.path.isdir(src_dir):
-        raise FileNotFoundError(f"No item with kimcode {kimcode} exists, aborting.")
+        raise cf.KIMkitItemNotFoundError(
+            f"No item with kimcode {kimcode} exists, aborting."
+        )
 
     logger.debug(f"Exporting item {kimcode} from repository {repository}")
 

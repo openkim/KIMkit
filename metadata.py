@@ -294,7 +294,7 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
     ------
     e
         Data type not compatible with .edn format
-    FileNotFoundError
+    KIMkitItemNotFoundError
         No item with kimcode exists in repository
     """
 
@@ -321,7 +321,7 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
         )
 
     else:
-        raise FileNotFoundError(
+        raise cf.KIMkitItemNotFoundError(
             f"KIM item does not appear to exist in the selected repository {repository}"
         )
 

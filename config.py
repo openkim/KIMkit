@@ -334,3 +334,7 @@ class KIMkitUserNotFoundError(PermissionError):
 
 class KimCodeAlreadyInUseError(FileExistsError):
     """Raised when attmpting to assign a kimcode to an item that is already assigned to a different item in the same repository"""
+
+
+class KIMkitItemNotFoundError(FileNotFoundError):
+    """Raised when no item with a given kimcode is found in the specified repository"""
