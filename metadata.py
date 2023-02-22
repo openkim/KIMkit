@@ -81,7 +81,7 @@ class MetaData:
 
         Raises
         ------
-        PermissionError
+        KIMkitUserNotFoundError
             A non KIMkit user attempted to edit metadata of an item.
         KeyError
             Metadata field not in the KIMkit metdata standard
@@ -96,7 +96,7 @@ class MetaData:
         if users.is_user(system_username=this_user):
             UUID = users.get_uuid(system_username=this_user)
         else:
-            raise PermissionError(
+            raise cf.KIMkitUserNotFoundError(
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
             )
 
@@ -168,7 +168,7 @@ class MetaData:
 
         Raises
         ------
-        PermissionError
+        KIMkitUserNotFoundError
             A non KIMkit user attempted to delete metadata of an item.
         KeyError
             Metadata field not in the KIMkit metdata standard
@@ -183,7 +183,7 @@ class MetaData:
         if users.is_user(system_username=this_user):
             UUID = users.get_uuid(system_username=this_user)
         else:
-            raise PermissionError(
+            raise cf.KIMkitUserNotFoundError(
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
             )
 

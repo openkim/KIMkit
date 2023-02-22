@@ -8,6 +8,7 @@ from . import users
 from .logger import logging
 from . import kimobjects
 from . import kimcodes
+from . import config as cf
 
 
 """
@@ -134,7 +135,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
 
     Raises
     ------
-    PermissionError
+    KIMkitUserNotFoundError
         The user attempting to import the item isn't in the list of KIMkit users.
     ValueError
         Specified kimcode is already in use by another item in the same repository.
@@ -148,7 +149,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
     if users.is_user(system_username=this_user):
         UUID = users.get_uuid(system_username=this_user)
     else:
-        raise PermissionError(
+        raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
 
@@ -235,7 +236,7 @@ def delete(repository, kimcode, run_as_editor=False):
 
     Raises
     ------
-    PermissionError
+    KIMkitUserNotFoundError
         A non KIMkit user attempted to delete an item.
     FileNotFoundError
         No item with kimcode exists in repository.
@@ -249,7 +250,7 @@ def delete(repository, kimcode, run_as_editor=False):
     if users.is_user(system_username=this_user):
         UUID = users.get_uuid(system_username=this_user)
     else:
-        raise PermissionError(
+        raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can delete items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
 
@@ -347,7 +348,7 @@ def version_update(
 
     Raises
     ------
-    PermissionError
+    KIMkitUserNotFoundError
         A non KIMkit user attempted to update an item.
     NotADirectoryError
         No item with kimcode exists in repository
@@ -365,7 +366,7 @@ def version_update(
     if users.is_user(system_username=this_user):
         UUID = users.get_uuid(system_username=this_user)
     else:
-        raise PermissionError(
+        raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can update items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
 
@@ -514,7 +515,7 @@ def fork(
 
     Raises
     ------
-    PermissionError
+    KIMkitUserNotFoundError
         A non KIMkit user attempted to update an item.
     NotADirectoryError
         No item with kimcode exists in repository
@@ -526,7 +527,7 @@ def fork(
     if users.is_user(system_username=this_user):
         UUID = users.get_uuid(system_username=this_user)
     else:
-        raise PermissionError(
+        raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can fork items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
 

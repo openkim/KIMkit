@@ -324,3 +324,9 @@ KIMkit_item_type_key_requirements = {
         ],
     },
 }
+
+# KIMkit custom exception types:
+
+
+class KIMkitUserNotFoundError(PermissionError):
+    """Raised when a user does not have a vaild KIMkit UUID4 assigned in user_uuids.edn"""
