@@ -214,11 +214,15 @@ class MetaData:
 
         if can_edit:
 
-            logger.info(
-                f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
-            )
+            removed_val = metadata_dict.pop(field, None)
 
-            del metadata_dict[field]
+            if removed_val == None:
+                warnings.warn(
+                    f"Metadata field {field} not specified for this item"
+                    + getattr(self, "extended-id")
+                    + ", ignoring."
+                )
+                return
 
             _write_metadata_to_file(
                 self.repository, metadata_dict["extended-id"], metadata_dict
@@ -230,6 +234,9 @@ class MetaData:
                 event_type,
                 UUID,
                 comments=provenance_comments,
+            )
+            logger.info(
+                f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
             )
 
         else:
