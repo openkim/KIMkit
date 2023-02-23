@@ -1,14 +1,12 @@
 *.pyc
 logs/*
-pipeline/logs/*
 *.tmp
-kim.log
 *.swp
 docs/_build
 stupid.*
 .ropeproject
 venv
-pipeline-env
+KIMkit-env
 __pycache__
 *.bak
 *vscode*
