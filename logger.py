@@ -92,7 +92,6 @@ class LogLexer(RegexLexer):
     flags = re.VERBOSE
     _logger = r"-\s(KIMkit)(\.([a-z._\-0-9]+))*\s-"
     _uuid = r"([A-Z]{2}_[0-9]{12}_[0-9]{3}-and-[A-Z]{2}_[0-9]{12}_[0-9]{3}-[0-9]{5,}-[tve]r)"
-    _jobid = r"([A-Z]{2}_[0-9]{12}_[0-9]{3}-and-[A-Z]{2}_[0-9]{12}_[0-9]{3}-[0-9]{5,})"
     _kimid = r"((?:[_a-zA-Z][_a-zA-Z0-9]*?_?_)?[A-Z]{2}_[0-9]{12}(?:_[0-9]{3})?)"
     _path = r"(?:[a-zA-Z0-9_-]{0,}/{1,2}[a-zA-Z0-9_\.-]+)+"
     _debug = r"DEBUG"
@@ -115,7 +114,6 @@ class LogLexer(RegexLexer):
         "root": [
             include("whitespace"),
             (_uuid, Comment.Special),
-            (_jobid, Comment.Special),
             (_kimid, Generic.Prompt),
             (_logger, Generic.Emph),
             (_date, Generic.Output),
