@@ -208,7 +208,9 @@ kimspec_strings = [
     "title",
 ]
 
-# The type specified in these dicts is what the inner type of the kimspec array should be
+# The type specified in these dicts is what type of array they should be
+# the inner type of each array should be str
+# some inner str should also be UUID4 rendered to hex, those are stored in kimspec_uuid_fields
 kimspec_arrays = {
     "developer": list,
     "execuatbles": list,
