@@ -44,6 +44,8 @@ Any user that is neither the Administrator nor listed as an Editor is a regular 
 
 The Administrator should be listed as an Editor for most use cases.
 
+The default-environment file contains paths and settings to be used as default environment variables for a variety of **KIMkit** settings. The main path KIMKIT_DATA_DIRECTORY is unset by default, and should be configured to point to the path where **KIMkit** is installed. These settings can be overridden by a file called KIMkit-env stored inside the directory **KIMkit** is installed to to allow for finer control of settings per installation.
+
 ## First Time Using KIMkit
 
 Seperately from editors.txt, there is also a file named user_uuids.edn, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
