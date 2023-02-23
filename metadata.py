@@ -422,7 +422,7 @@ def validate_metadata(metadata_dict):
         metadata_dict.pop(field, None)
 
     try:
-        check_metadata_types(metadata_dict)
+        metadata_dict = check_metadata_types(metadata_dict)
     except (
         KeyError,
         cf.InvalidItemTypeError,
@@ -448,6 +448,11 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     kim_item_type : str, optional
         can pass in kim_item_type as a parameter if not included in the metadata dict, by default None
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'.
+
+    Returns
+    -------
+    dict
+        dictionary of validated metadata
 
     Raises
     ------
@@ -568,6 +573,8 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
                     )
+
+    return metadata_dict
 
 
 def create_new_metadata_from_existing(
