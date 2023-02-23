@@ -213,6 +213,10 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         except cf.InvalidMetadataError as e:
             shutil.rmtree(tmp_dir)
             shutil.rmtree(dest_dir)
+            try:
+                os.removedirs(os.path.split(dest_dir)[0])
+            except OSError:
+                pass
             raise cf.InvalidMetadataError(
                 "Import Failed due to invalid metadata."
             ) from e
@@ -315,16 +319,14 @@ def delete(repository, kimcode, run_as_editor=False):
 
         shutil.rmtree(del_path)
 
-        # if all versions of the item have been deleted, delete its enclosing directory
-        outer_dir = os.path.split(del_path)[0]  # one level up in the directory
-        with os.scandir(outer_dir) as it:
-            if not any(it):  # empty directory
-                shutil.rmtree(outer_dir)
-                kimcode_without_version = kimcodes.strip_version(kimcode)
-
-                logger.info(
-                    f"All versions of {kimcode_without_version} deleted, deleting the item."
-                )
+        try:
+            os.removedirs(os.path.split(del_path)[0])
+            kimcode_without_version = kimcodes.strip_version(kimcode)
+            logger.info(
+                f"All versions of {kimcode_without_version} deleted, deleting the item."
+            )
+        except OSError:
+            pass
     else:
         logger.warning(
             f"User {this_user} attempted to deleted item {kimcode} from repository {repository}, but is neither the contributor of the item nor an editor"
@@ -478,6 +480,10 @@ def version_update(
         except cf.InvalidMetadataError as e:
             shutil.rmtree(dest_dir)
             shutil.rmtree(tmp_dir)
+            try:
+                os.removedirs(os.path.split(dest_dir)[0])
+            except OSError:
+                pass
             raise cf.InvalidMetadataError(
                 f"Update failed due to invalid metadata."
             ) from e
@@ -627,6 +633,10 @@ def fork(
     except cf.InvalidMetadataError as e:
         shutil.rmtree(dest_dir)
         shutil.rmtree(tmp_dir)
+        try:
+            os.removedirs(os.path.split(dest_dir)[0])
+        except OSError:
+            pass
         raise cf.InvalidMetadataError(f"Forking failed due to invalid metadata.") from e
     old_provenance = os.path.join(
         kimcodes.kimcode_to_file_path(kimcode, repository), "kimprovenance.edn"
