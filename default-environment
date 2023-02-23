@@ -1,14 +1,13 @@
 #=============================================================================
 # directories and other locations
 #=============================================================================
-KIMKIT_DATA_DIRECTORY=/home/brendon/Documents/Work/LLNL/KIMkit
+# Set this when installing
+# can be overridden by KIMkit-env local environment file
+KIMKIT_DATA_DIRECTORY=None
 LOG_DIR=$KIMKIT_DATA_DIRECTORY/logs/
 
 LOCAL_REPOSITORY_PATH=$KIMKIT_DATA_DIRECTORY/repository
 
-
-#=============================================================================
-# global defines that are necessary to define interface to tests
-#=============================================================================
 CONFIG_FILE=kimspec.edn
+
 KIMKIT_DEBUG=False

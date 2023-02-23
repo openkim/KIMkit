@@ -14,3 +14,4 @@ __pycache__
 editors.txt
 test.py
 *.egg-info/
+repository/*
