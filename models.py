@@ -1,6 +1,8 @@
 import os
 import shutil
 import tarfile
+import re
+import warnings
 
 from . import metadata
 from . import provenance
@@ -754,3 +756,54 @@ def install(repository, kimcode, install_dir):
             )
 
             obj.make()
+
+
+def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
+    """Search through the item's directory for makefiles containing kimcodes matching a previous version of the item,
+    and attempt to replace them with the item's new kimcode.
+
+    Parameters
+    ----------
+    repository : path-like
+        Root directory of the repository on disk where the item is stored.
+    old_kimcode : str
+        previous id code of the item that may be lingering in makefiles
+    new_kimcode : str
+        new id code of the item to be written into makefiles
+    """
+
+    item_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
+
+    # First, check for a makefile
+    possible_makefile_names = ["GNUmakefile", "makefile", "Makefile", "CMakeLists.txt"]
+    set_new_kimcode = False
+    for makefile_name in possible_makefile_names:
+        makefile = os.path.join(item_path, makefile_name)
+        if os.path.isfile(makefile):
+            with open(makefile, "r") as flobj:
+                makefile_contents = flobj.read()
+                updated_makefile_contents = re.sub(
+                    r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
+                )
+            if updated_makefile_contents != makefile_contents:
+                set_new_kimcode = True
+                tmp_makefile_name = "tmp_" + makefile_name
+                tmp_makefile = os.path.join(item_path, tmp_makefile_name)
+                with open(tmp_makefile, "w") as flobj2:
+                    flobj2.write(updated_makefile_contents)
+                os.rename(tmp_makefile, makefile)
+                logger.info(
+                    f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
+                )
+
+    if set_new_kimcode == False:
+        warnings.warn(
+            f"""
+            No kimcodes replaced in makefiles of item
+            {new_kimcode}
+            makefiles may refer to outdated kimcode,
+            and may require manual editing to be installable by kim_api.
+
+            Please write the kimcode of items explicitly into their makefiles
+            so that KIMkit can edit them by regex when managing items."""
+        )
