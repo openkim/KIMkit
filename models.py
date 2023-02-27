@@ -646,6 +646,9 @@ def fork(
             metadata_update_dict["executables"] = executables
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
     shutil.copytree(tmp_dir, dest_dir)
+
+    update_makefile_kimcode(repository, kimcode, new_kimcode)
+
     try:
         metadata.create_new_metadata_from_existing(
             repository,
