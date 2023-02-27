@@ -782,6 +782,9 @@ def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
         if os.path.isfile(makefile):
             with open(makefile, "r") as flobj:
                 makefile_contents = flobj.read()
+                # check if the user manually updated the kimcode before this
+                already_changed = re.search(r"\b" + new_kimcode + r"\b")
+                # attempt to replace the old kimcode
                 updated_makefile_contents = re.sub(
                     r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
                 )
@@ -796,7 +799,10 @@ def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
 
-    if set_new_kimcode == False:
+    if set_new_kimcode == False and already_changed == None:
+        logger.warning(
+            f"No kimcodes replaced in makefiles of item {new_kimcode}, makefiles may be invalid"
+        )
         warnings.warn(
             f"""
             No kimcodes replaced in makefiles of item
