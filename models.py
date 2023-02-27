@@ -117,7 +117,9 @@ class ModelDriver(kimobjects.ModelDriver):
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
 
-def import_item(tarfile_obj, repository, kimcode, metadata_dict):
+def import_item(
+    tarfile_obj, repository, kimcode, metadata_dict, previous_item_name=None
+):
     """Create a directory in the selected repository for the item based on its kimcode,
     copy the item's files into it, generate needed metadata and provenance files,
     and store them with the item.
@@ -134,6 +136,12 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         id code of the item
     metadata_dict : dict
         dict of all required and any optional metadata key-value pairs
+    previous_item_name : str, optional
+        Name the item was assigned before being imported into this KIMkit repository, if any.
+        May be a kimcode or regular string.
+        Used to search through makefiles and attempt to replace with the item's new kimcode.
+        If not set, the item's makefiles will need to have their item name manually set to the new kimcode.
+        By default None
 
     Raises
     ------
@@ -185,6 +193,7 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
         contents = os.listdir(tmp_dir)
+        # print(contents)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
         if len(contents) == 1:
@@ -207,6 +216,16 @@ def import_item(tarfile_obj, repository, kimcode, metadata_dict):
         dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
 
         shutil.copytree(tmp_dir, dest_dir)
+
+        if previous_item_name != None:
+            update_makefile_kimcode(repository, previous_item_name, kimcode)
+        else:
+            logger.warning(
+                f"Kimcode update not requested when importing item {kimcode}"
+            )
+            warnings.warn(
+                "No previous item name supplied, item name in makefiles may need to be updated to new kimcode"
+            )
 
         try:
             new_metadata = metadata.create_metadata(
@@ -777,13 +796,16 @@ def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
     # First, check for a makefile
     possible_makefile_names = ["GNUmakefile", "makefile", "Makefile", "CMakeLists.txt"]
     set_new_kimcode = False
+    already_changed = None
     for makefile_name in possible_makefile_names:
         makefile = os.path.join(item_path, makefile_name)
         if os.path.isfile(makefile):
             with open(makefile, "r") as flobj:
                 makefile_contents = flobj.read()
                 # check if the user manually updated the kimcode before this
-                already_changed = re.search(r"\b" + new_kimcode + r"\b")
+                already_changed = re.search(
+                    r"\b" + new_kimcode + r"\b", makefile_contents
+                )
                 # attempt to replace the old kimcode
                 updated_makefile_contents = re.sub(
                     r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
