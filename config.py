@@ -27,6 +27,7 @@ ENVIRONMENT_LOCATIONS = [
     os.path.join("./", ENVIRONMENT_FILE_NAME),
     os.path.join(os.path.expanduser("~"), ENVIRONMENT_FILE_NAME),
     os.path.join("/KIMkit", ENVIRONMENT_FILE_NAME),
+    os.path.join(os.path.split(os.path.realpath(__file__))[0], ENVIRONMENT_FILE_NAME),
 ]
 
 
