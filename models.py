@@ -744,7 +744,7 @@ def install(repository, kimcode, install_dir):
         location on disk to install the item to
     """
 
-    tarfile_objs = export(kimcode, repository)
+    tarfile_objs = export(repository, kimcode)
 
     # extract the item from its tar archive, along with any dependencies (e.g. drivers)
     for tar in tarfile_objs:
