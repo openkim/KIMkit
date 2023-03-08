@@ -335,6 +335,10 @@ class InvalidKIMCode(ValueError):
     """Raised when an item's identification does not parse as a valid kimcode"""
 
 
+class KIMBuildError(RuntimeError):
+    """Raised when attempting to build a KIMkit item fails"""
+
+
 class KIMkitUserNotFoundError(PermissionError):
     """Raised when a user does not have a vaild KIMkit UUID4 assigned in user_uuids.edn"""
 
