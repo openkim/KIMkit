@@ -747,6 +747,7 @@ def install(repository, kimcode):
     kimcode: str
         id code of the item
     """
+    _ensure_KIM_API_environment_variable_collection_structure()
 
     tarfile_objs = export(repository, kimcode)
 
@@ -849,3 +850,27 @@ def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
             Please write the kimcode of items explicitly into their makefiles
             so that KIMkit can edit them by regex when managing items."""
         )
+
+
+def _ensure_KIM_API_environment_variable_collection_structure():
+    """Create the expected directory structure within the KIM API
+    environment variable install directory, if it does not already exist
+
+    Environment variables are set in default-environment, and can be
+    overridden in KIMkit-env
+    """
+
+    root_path = cf.KIM_API_PREFIX_DIR
+
+    if not os.path.isdir(root_path):
+        os.mkdir(root_path)
+
+    target_dirs = [
+        cf.KIM_API_PORTABLE_MODELS_DIR,
+        cf.KIM_API_SIMULATOR_MODELS_DIR,
+        cf.KIM_API_MODEL_DRIVERS_DIR,
+    ]
+
+    for dir in target_dirs:
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
