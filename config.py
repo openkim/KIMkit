@@ -151,6 +151,16 @@ class Configuration(object):
 conf = Configuration()
 globals().update(conf.conf)
 
+
+# ==================================================
+# Final checks/initializations based on config vars
+# ==================================================
+
+# Set up environment variable collection paths for KIM API
+os.environ["KIM_API_PORTABLE_MODELS_DIR"] = conf.get("KIM_API_PORTABLE_MODELS_DIR")
+os.environ["KIM_API_SIMULATOR_MODELS_DIR"] = conf.get("KIM_API_SIMULATOR_MODELS_DIR")
+os.environ["KIM_API_MODEL_DRIVERS_DIR"] = conf.get("KIM_API_MODEL_DRIVERS_DIR")
+
 # Metadata Options
 kimspec_order = [
     "content-origin",

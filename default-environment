@@ -8,6 +8,10 @@ LOG_DIR=$KIMKIT_DATA_DIRECTORY/logs/
 
 LOCAL_REPOSITORY_PATH=$KIMKIT_DATA_DIRECTORY/repository
 
+KIM_API_PORTABLE_MODELS_DIR=$LOCAL_REPOSITORY_PATH/KIMkit_kim_api_environment_collection/portable-models/
+KIM_API_SIMULATOR_MODELS_DIR=$LOCAL_REPOSITORY_PATH/KIMkit_kim_api_environment_collection/simulator-models/
+KIM_API_MODEL_DRIVERS_DIR=$LOCAL_REPOSITORY_PATH/KIMkit_kim_api_environment_collection/model-drivers/
+
 CONFIG_FILE=kimspec.edn
 
 KIMKIT_DEBUG=False

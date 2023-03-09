@@ -708,18 +708,25 @@ def export(repository, kimcode):
         )
 
     logger.debug(f"Exporting item {kimcode} from repository {repository}")
-
+    tarfile_objs = []
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
-
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
         req_driver = this_item.driver
-        with tarfile.open(os.path.join(src_dir, req_driver + ".txz"), "w:xz") as tar:
-            tar.add(src_dir, arcname=req_driver)
+        driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
+        with tarfile.open(
+            os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
+        ) as tar:
+            tar.add(driver_src_dir, arcname=req_driver)
+        contents = os.listdir(driver_src_dir)
+        for item in contents:
+            if ".txz" in item:
+                tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
+                tarfile_objs.append(tarfile_obj)
+                os.remove(os.path.join(driver_src_dir, item))
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
     contents = os.listdir(src_dir)
-    tarfile_objs = []
     for item in contents:
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
@@ -728,11 +735,10 @@ def export(repository, kimcode):
     return tarfile_objs
 
 
-def install(repository, kimcode, install_dir):
-    """Export the item, and also install it into a collection managed by the kim-api-collections-manager
+def install(repository, kimcode):
+    """Export the item, and also install it into the environment variable collection of the kim-api-collections-manager
 
-    Requires the install location to be accessible on the same filesystem as the KIMkit repository,
-    and for the kim-api to be installed there.
+    Environment variable locations set in default-environment
 
     Parameters
     ----------
@@ -740,47 +746,49 @@ def install(repository, kimcode, install_dir):
         root directory of the KIMkit repository containing the item
     kimcode: str
         id code of the item
-    install_dir : path-like
-        location on disk to install the item to
     """
 
     tarfile_objs = export(repository, kimcode)
 
     # extract the item from its tar archive, along with any dependencies (e.g. drivers)
     for tar in tarfile_objs:
-        tar.extractall(path=install_dir)
-        tar.close()
-
-    # go into the extracted archives, create relevant objects in memory, and call their make methods
-    for file in os.listdir(install_dir):
-        d = os.path.join(install_dir, file)
-        if os.path.isdir(d):
-            obj_kimcode = os.path.basename(d)
-            __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
-            if leader == "MO":
-                obj = PortableModel(
-                    repository=None,
-                    kimcode=obj_kimcode,
-                    abspath=os.path.join(install_dir, kimcode),
-                )
-            elif leader == "SM":
-                obj = SimulatorModel(
-                    repository=None,
-                    kimcode=obj_kimcode,
-                    abspath=os.path.join(install_dir, kimcode),
-                )
-            elif leader == "MD":
-                obj = ModelDriver(
-                    repository=None,
-                    kimcode=obj_kimcode,
-                    abspath=os.path.join(install_dir, kimcode),
-                )
-
-            logger.debug(
-                f"Item {kimcode} from repository {repository} installed into kim-api-collection in directory {install_dir}"
+        path_name = tar.name
+        file_name = os.path.split(path_name)[1]
+        obj_kimcode = file_name.removesuffix(".txz")
+        __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
+        if leader == "MO":
+            install_dir = cf.KIM_API_PORTABLE_MODELS_DIR
+            tar.extractall(path=install_dir)
+            tar.close()
+            obj = PortableModel(
+                repository=None,
+                kimcode=obj_kimcode,
+                abspath=os.path.join(install_dir, obj_kimcode),
+            )
+        elif leader == "SM":
+            install_dir = cf.KIM_API_SIMULATOR_MODELS_DIR
+            tar.extractall(path=install_dir)
+            tar.close()
+            obj = SimulatorModel(
+                repository=None,
+                kimcode=obj_kimcode,
+                abspath=os.path.join(install_dir, obj_kimcode),
+            )
+        elif leader == "MD":
+            install_dir = cf.KIM_API_MODEL_DRIVERS_DIR
+            tar.extractall(path=install_dir)
+            tar.close()
+            obj = ModelDriver(
+                repository=None,
+                kimcode=obj_kimcode,
+                abspath=os.path.join(install_dir, obj_kimcode),
             )
 
-            obj.make()
+        logger.debug(
+            f"Item {kimcode} from repository {repository} installed into kim-api-collection in directory {install_dir}"
+        )
+
+        obj.make()
 
 
 def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
