@@ -334,11 +334,11 @@ def delete(repository, kimcode, run_as_editor=False):
 
     if can_edit:
 
+        shutil.rmtree(del_path)
+
         logger.info(
             f"User {this_user} deleted item {kimcode} from repository {repository}"
         )
-
-        shutil.rmtree(del_path)
 
         try:
             os.removedirs(os.path.split(del_path)[0])
@@ -461,9 +461,6 @@ def version_update(
 
     if can_edit:
 
-        logger.info(
-            f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
-        )
         new_version = str(int(old_version) + 1)
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
@@ -525,6 +522,10 @@ def version_update(
         )
 
         shutil.rmtree(tmp_dir)
+
+        logger.info(
+            f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
+        )
 
     else:
 
@@ -610,9 +611,6 @@ def fork(
             f"kimcode {new_kimcode} is already in use, please select another."
         )
 
-    logger.info(
-        f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
-    )
     event_type = "fork"
     name, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
@@ -678,6 +676,10 @@ def fork(
     )
 
     shutil.rmtree(tmp_dir)
+
+    logger.info(
+        f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
+    )
 
 
 def export(repository, kimcode):

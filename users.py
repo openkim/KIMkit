@@ -209,10 +209,6 @@ def add_person(name):
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
-    logger.info(
-        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
-    )
-
     try:
         with open(
             os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
@@ -238,6 +234,10 @@ def add_person(name):
     os.rename(
         os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"),
         os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"),
+    )
+
+    logger.info(
+        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
     )
 
 

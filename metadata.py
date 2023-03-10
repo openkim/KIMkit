@@ -125,10 +125,6 @@ class MetaData:
 
         if can_edit:
 
-            logger.info(
-                f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
-            )
-
             metadata_dict[key] = new_value
 
             _write_metadata_to_file(
@@ -141,6 +137,10 @@ class MetaData:
                 event_type,
                 UUID,
                 comments=provenance_comments,
+            )
+
+            logger.info(
+                f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
             )
 
         else:
@@ -610,10 +610,6 @@ def create_new_metadata_from_existing(
         most likely the metadata_update_dict has errors.
     """
 
-    logger.debug(
-        f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"
-    )
-
     old_metadata = MetaData(repository, old_kimcode)
     old_metadata_dict = vars(old_metadata)
 
@@ -643,6 +639,9 @@ def create_new_metadata_from_existing(
         raise cf.InvalidMetadataError("Validating metadata failed.") from e
     _write_metadata_to_file(repository, new_kimcode, valid_metadata)
     new_metadata = MetaData(repository, new_kimcode)
+    logger.debug(
+        f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"
+    )
     return new_metadata
 
 
