@@ -100,7 +100,16 @@ class MetaData:
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
             )
 
-        if key not in cf.kimspec_order:
+        (
+            kimspec_order,
+            kimspec_strings,
+            kimspec_uuid_fields,
+            kimspec_arrays,
+            kimspec_arrays_dicts,
+            KIMkit_item_type_key_requirements,
+        ) = _read_metadata_config()
+
+        if key not in kimspec_order:
             raise cf.InvalidMetadataFieldError(
                 f"metadata field {key} not recognized, aborting."
             )
@@ -189,7 +198,16 @@ class MetaData:
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
             )
 
-        if field not in cf.kimspec_order:
+        (
+            kimspec_order,
+            kimspec_strings,
+            kimspec_uuid_fields,
+            kimspec_arrays,
+            kimspec_arrays_dicts,
+            KIMkit_item_type_key_requirements,
+        ) = _read_metadata_config()
+
+        if field not in kimspec_order:
             raise cf.InvalidMetadataFieldError(
                 f"metadata field {field} not recognized, aborting."
             )
@@ -328,7 +346,16 @@ def _write_metadata_to_file(repository, kimcode, metadata_dict):
 
     metadata_dict_sorted = OrderedDict()
 
-    for field in cf.kimspec_order:
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
+    for field in kimspec_order:
         if field in metadata_dict:
             metadata_dict_sorted[field] = metadata_dict[field]
 
@@ -385,6 +412,15 @@ def validate_metadata(metadata_dict):
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
     try:
         kim_item_type = metadata_dict["kim-item-type"]
 
@@ -399,7 +435,7 @@ def validate_metadata(metadata_dict):
          Valid options include 'portable-model', 'simulator-model', and 'model-driver'."""
         )
 
-    metadata_requirements = cf.KIMkit_item_type_key_requirements[kim_item_type]
+    metadata_requirements = KIMkit_item_type_key_requirements[kim_item_type]
 
     required_fields = metadata_requirements["required"]
     optional_fields = metadata_requirements["optional"]
@@ -485,6 +521,15 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
 
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
     if not kim_item_type:
 
         try:
@@ -502,14 +547,14 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         )
 
     for field in metadata_dict:
-        if field in cf.kimspec_strings:
+        if field in kimspec_strings:
             if isinstance(metadata_dict[field], str):
                 pass
             else:
                 raise TypeError(
                     f"Required metadata field '{field}' is of incorrect type, must be str."
                 )
-            if field in cf.kimspec_uuid_fields:
+            if field in kimspec_uuid_fields:
                 try:
                     valid_user = users.is_user(user_id=metadata_dict[field])
                 except TypeError as e:
@@ -518,15 +563,15 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     raise ValueError(
                         f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
                     )
-        elif field in cf.kimspec_arrays:
-            if cf.kimspec_arrays[field] == list:
+        elif field in kimspec_arrays:
+            if kimspec_arrays[field] == list:
                 for item in metadata_dict[field]:
                     if isinstance(item, str):
                         pass
                     else:
                         raise TypeError(f"Metadata field {field} must be list of str.")
 
-                    if field in cf.kimspec_uuid_fields:
+                    if field in kimspec_uuid_fields:
                         if not users.is_valid_uuid4(item):
                             raise TypeError(
                                 f"Metadata Field {field} should be a list of UUID4 strings"
@@ -535,10 +580,10 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                             raise cf.KIMkitUserNotFoundError(
                                 f"UUID {item} not recognized as a KIMkit user"
                             )
-            elif cf.kimspec_arrays[field] == dict:
+            elif kimspec_arrays[field] == dict:
                 keys_to_remove = []
                 for key in metadata_dict[field]:
-                    if key not in cf.kimspec_arrays_dicts[field]:
+                    if key not in kimspec_arrays_dicts[field]:
                         keys_to_remove.append(key)
                         warnings.warn(
                             f"Metadata field '{key}' in field {field} not used for kim item type {kim_item_type}, ignoring."
@@ -547,8 +592,8 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     metadata_dict[field].pop(key, None)
 
                 if isinstance(metadata_dict[field], dict):
-                    for key in cf.kimspec_arrays_dicts[field]:
-                        if cf.kimspec_arrays_dicts[field][key]:
+                    for key in kimspec_arrays_dicts[field]:
+                        if kimspec_arrays_dicts[field][key]:
                             try:
                                 value = metadata_dict[field][key]
                             except KeyError as e:
@@ -571,7 +616,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                 )
                 else:
                     raise TypeError(
-                        f"Metadata field '{field}' is of invalid type, must be '{cf.kimspec_arrays[field]}'."
+                        f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
                     )
 
     return metadata_dict
@@ -643,6 +688,29 @@ def create_new_metadata_from_existing(
         f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"
     )
     return new_metadata
+
+
+def _read_metadata_config():
+
+    with open(
+        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn"), "r"
+    ) as configfile:
+        config = kim_edn.load(configfile)
+        kimspec_order = config["kimspec-order"]
+        kimspec_strings = config["kimspec-strings"]
+        kimspec_uuid_fields = config["kimspec-uuid-fields"]
+        kimspec_arrays = config["kimspec-arrays"]
+        kimspec_arrays_dicts = config["kimspec-arrays-dicts"]
+        KIMkit_item_type_key_requirements = config["KIMkit-item-type-key-requirements"]
+
+    return (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    )
 
 
 def add_metadata_key(self, key, value):
