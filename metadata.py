@@ -564,7 +564,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                         f"Metadtata field {field} requires a KIMkit user id in UUID4 format."
                     )
         elif field in kimspec_arrays:
-            if kimspec_arrays[field] == list:
+            if kimspec_arrays[field] == "list":
                 for item in metadata_dict[field]:
                     if isinstance(item, str):
                         pass
@@ -580,7 +580,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                             raise cf.KIMkitUserNotFoundError(
                                 f"UUID {item} not recognized as a KIMkit user"
                             )
-            elif kimspec_arrays[field] == dict:
+            elif kimspec_arrays[field] == "dict":
                 keys_to_remove = []
                 for key in metadata_dict[field]:
                     if key not in kimspec_arrays_dicts[field]:
