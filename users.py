@@ -156,10 +156,6 @@ def add_self_as_user(name):
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
-    logger.info(
-        f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
-    )
-
     try:
         with open(
             os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
@@ -185,6 +181,10 @@ def add_self_as_user(name):
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
     os.rename("user_data_tmp.edn", "user_uuids.edn")
+
+    logger.info(
+        f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
+    )
 
 
 def add_person(name):
