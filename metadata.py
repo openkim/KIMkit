@@ -691,6 +691,24 @@ def create_new_metadata_from_existing(
 
 
 def _read_metadata_config():
+    """Read in the metadata configuration spec from
+    metadata_config.edn, stored in the KIMkit install directory.
+
+    Returns
+    -------
+    list, list, list, dict, dict, dict
+        6 arrays containing metadata configuration information, including:
+
+        kimspec_order: ordering of kimspec keys (currently just alphabetical)
+        kimspec_strings: list of string-valued keys
+        kimspec_uuid_fields: subset of string-valued keys that must be UUID4 in hex
+        kimspec_arrays: dict of array-valued keys, with the values being strings specifying the type of array
+        kimspec_arrays_dicts: dict of inner keys in dict-valued metadata fields,
+            where the values are booleans specifying whether the inner key is required
+        KIMkit_item_type_key_requirements: dict where the top level keys are KIMkit item types,
+            under each are 2 inner keys, "required" and "optional", whose values are lists of
+            metadata fields that are Required or Optional for the specified item type.
+    """
 
     with open(
         os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn"), "r"
@@ -713,9 +731,49 @@ def _read_metadata_config():
     )
 
 
-def add_metadata_key(self, key, value):
+def add_optional_metadata_key(run_as_editor=False):
     pass
 
 
-def delete_metadata_key(self, key):
+def delete_optional_metadata_key(run_as_editor=False):
+    """Delete an optional metadata key from the spec
+
+    NOTE: Deleting a key from the metadata spec won't immediately
+    delete it out of all item's kimspec.edn, but when those items are
+    subsequently edited or updated, keys not in the specification will
+    be ignored and not copied to descendant items.
+
+    TODO: When the database is implemented, run a query to retrieve
+    all items with this key set, and have option to delete them.
+
+    Parameters
+    ----------
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and edit the metadata spec, by default False
+    """
+    pass
+
+
+def make_optional_metadata_key_required(run_as_editor=False):
+    """Promote an optional metadata field from Optional to Required
+    for a certian class of items
+
+    NOTE: Only promote a metadata field to Required if all relevant
+    items already have that field specified, or items may be left
+    with invalid metadata.
+
+    TODO: When the database is implemented, run a query to retrieve
+    any items without the specified key set.
+
+    Parameters
+    ----------
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and edit the metadata spec, by default False
+    """
+    pass
+
+
+def make_required_metadata_key_optional(run_as_editor=False):
     pass
