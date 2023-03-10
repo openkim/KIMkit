@@ -731,8 +731,135 @@ def _read_metadata_config():
     )
 
 
-def add_optional_metadata_key(run_as_editor=False):
-    pass
+def add_optional_metadata_key(
+    key_name,
+    item_types,
+    value_type,
+    is_uuid=False,
+    dict_key_requirements=None,
+    run_as_editor=False,
+):
+    """Add a new, Optional, metadata field for one or more KIMkit item types
+
+    Parameters
+    ----------
+    key_name : str
+        name of the new metadata key
+    item_types : list of str
+        types of KIMkit items this key can be set for, valid options include
+        "portable-model", "simulator-model", and "model-driver"
+    value_type : str
+       type of the new key, valid options include:
+        "str","list",and "dict"
+    is_uuid : bool, optional
+        if the metadata field's value_type is "str", is this field also a UUID?, by default False
+    dict_key_requirements : dict, optional
+        if the metadata field's value_type is "dict", you must provide a dict
+        who's keys are the keys of the new metadata field,
+        and who's values are bools specifying whether a given key is required,
+        by default None
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and edit the metadata spec, by default False
+    """
+
+    def _verify_dict_key_requirements(req_dict):
+        """Verify the inner structure of the dict
+        of key requirements for dict-valued metadata fields
+
+        Parameters
+        ----------
+        req_dict : dict
+            dictwho's keys are the keys of the new metadata field,
+        and who's values are bools specifying whether a given key is required
+
+        Raises
+        ------
+        TypeError
+            If types of values are not bool
+        TypeError
+            If req_dict itself is not a dict
+        """
+        if isinstance(req_dict, dict):
+            for key in req_dict:
+                if not isinstance(req_dict[key], bool):
+                    raise TypeError("Values must be bool")
+        else:
+            raise TypeError("Item Must be a dict")
+
+    if users.is_editor():
+        if not run_as_editor:
+            raise cf.NotRunAsEditorError(
+                "Did you mean to add a new metadata field? If you are an Editor run again with run_as_editor=True"
+            )
+        (
+            kimspec_order,
+            kimspec_strings,
+            kimspec_uuid_fields,
+            kimspec_arrays,
+            kimspec_arrays_dicts,
+            KIMkit_item_type_key_requirements,
+        ) = _read_metadata_config()
+
+        if value_type == "dict":
+            if not dict_key_requirements:
+                raise ValueError(
+                    """When adding a new metadata field of type 'dict',you must provide a dict
+        who's keys are the keys of the new metadata field,
+        and who's values are bools specifying whether a given key is required"""
+                )
+            _verify_dict_key_requirements(dict_key_requirements)
+
+            kimspec_arrays[key_name] = "dict"
+            kimspec_arrays_dicts[key_name] = dict_key_requirements
+
+        elif value_type == "list":
+
+            kimspec_arrays[key_name] = "list"
+
+        elif value_type == "str":
+
+            kimspec_strings.append(key_name)
+            if is_uuid:
+                kimspec_uuid_fields.append(key_name)
+
+        kimspec_order.append(key_name)
+        kimspec_order.sort()
+
+        for item in item_types:
+            KIMkit_item_type_key_requirements[item]["optional"].append(key_name)
+
+        final_dict = {
+            "kimspec-order": kimspec_order,
+            "kimspec-strings": kimspec_strings,
+            "kimspec-uuid-fields": kimspec_uuid_fields,
+            "kimspec-arrays": kimspec_arrays,
+            "kimspec-arrays-dicts": kimspec_arrays_dicts,
+            "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
+        }
+
+        tmp_dest_file = os.path.join(
+            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+        )
+
+        with open(tmp_dest_file, "w") as outfile:
+            kim_edn.dump(final_dict, outfile, indent=4)
+
+        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        os.rename(tmp_dest_file, dest_file)
+        id = users.whoami()
+        logger.info(
+            f"User {id} added field {key_name} as an Optional key of type {value_type} to {item_types}"
+        )
+
+    else:
+        id = users.whoami()
+        logger.warning(
+            f"User {id} attempted to add a new metadata key without editor privleges."
+        )
+        raise cf.NotAnEditorError(
+            "Only KIMkit Editors may change metadata configuration settings"
+        )
 
 
 def delete_optional_metadata_key(run_as_editor=False):
