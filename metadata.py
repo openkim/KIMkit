@@ -741,6 +741,8 @@ def add_optional_metadata_key(
 ):
     """Add a new, Optional, metadata field for one or more KIMkit item types
 
+    Requires Editor privleges.
+
     Parameters
     ----------
     key_name : str
@@ -902,5 +904,75 @@ def make_optional_metadata_key_required(run_as_editor=False):
     pass
 
 
-def make_required_metadata_key_optional(run_as_editor=False):
-    pass
+def make_required_metadata_key_optional(key_name, item_types, run_as_editor=False):
+    """Demote a metadata field from Required to Optional for one or more KIMkit item types
+
+    Requires Editor privleges.
+
+    Parameters
+    ----------
+    key_name : str
+        name of the new metadata key
+    item_types : list of str
+        types of KIMkit items this key can be set for, valid options include
+        "portable-model", "simulator-model", and "model-driver"
+    run_as_editor : bool, optional
+        flag to be used by KIMkit Editors to run with elevated permissions,
+        and edit the metadata spec, by default False
+    """
+
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
+    if key_name not in kimspec_order:
+        raise cf.InvalidMetadataFieldError(
+            f"Field {key_name} not recognized as a part of the KIMkit metadata standard, aborting."
+        )
+
+    if users.is_editor():
+        if not run_as_editor:
+            raise cf.NotRunAsEditorError(
+                "Did you mean to add a new metadata field? If you are an Editor run again with run_as_editor=True"
+            )
+
+        for item in item_types:
+            KIMkit_item_type_key_requirements[item]["required"].remove(key_name)
+            KIMkit_item_type_key_requirements[item]["optional"].append(key_name)
+
+        final_dict = {
+            "kimspec-order": kimspec_order,
+            "kimspec-strings": kimspec_strings,
+            "kimspec-uuid-fields": kimspec_uuid_fields,
+            "kimspec-arrays": kimspec_arrays,
+            "kimspec-arrays-dicts": kimspec_arrays_dicts,
+            "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
+        }
+
+        tmp_dest_file = os.path.join(
+            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+        )
+
+        with open(tmp_dest_file, "w") as outfile:
+            kim_edn.dump(final_dict, outfile, indent=4)
+
+        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        os.rename(tmp_dest_file, dest_file)
+        id = users.whoami()
+        logger.info(
+            f"User {id} modified metadata field {key_name} to be Optional instead of Required for types {item_types}"
+        )
+
+    else:
+        id = users.whoami()
+        logger.warning(
+            f"User {id} attempted to add a new metadata key without editor privleges."
+        )
+        raise cf.NotAnEditorError(
+            "Only KIMkit Editors may change metadata configuration settings"
+        )
