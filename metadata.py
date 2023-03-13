@@ -803,6 +803,14 @@ def add_optional_metadata_key(
             KIMkit_item_type_key_requirements,
         ) = _read_metadata_config()
 
+        all_item_types = KIMkit_item_type_key_requirements.keys()
+
+        for item in item_types:
+            if item not in all_item_types:
+                raise cf.InvalidItemTypeError(
+                    f"Item type {item} not recognized, aborting."
+                )
+
         if value_type == "dict":
             if not dict_key_requirements:
                 raise ValueError(
@@ -901,7 +909,7 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
     key_name : str
         name of the new metadata key
     item_types : list of str
-        types of KIMkit items this key can be set for, valid options include
+        types of KIMkit items to make this key required for for, valid options include
         "portable-model", "simulator-model", and "model-driver"
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
@@ -920,6 +928,12 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
         raise cf.InvalidMetadataFieldError(
             f"Field {key_name} not recognized as a part of the KIMkit metadata standard, aborting."
         )
+
+    all_item_types = KIMkit_item_type_key_requirements.keys()
+
+    for item in item_types:
+        if item not in all_item_types:
+            raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
 
     # TODO: When the database is implemented, run a query to retrieve any items without the specified key set.
 
@@ -976,7 +990,7 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
     key_name : str
         name of the new metadata key
     item_types : list of str
-        types of KIMkit items this key can be set for, valid options include
+        types of KIMkit items to make this key optional for, valid options include
         "portable-model", "simulator-model", and "model-driver"
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
@@ -996,6 +1010,12 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         raise cf.InvalidMetadataFieldError(
             f"Field {key_name} not recognized as a part of the KIMkit metadata standard, aborting."
         )
+
+    all_item_types = KIMkit_item_type_key_requirements.keys()
+
+    for item in item_types:
+        if item not in all_item_types:
+            raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
 
     if users.is_editor():
         if not run_as_editor:
