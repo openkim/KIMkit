@@ -319,7 +319,7 @@ def create_metadata(
             "Supplied metadata dict does not conform to the KIMkit metadata standard."
         ) from e
 
-    _write_metadata_to_file(repository, kimcode, metadata_dict)
+    _write_metadata_to_file(kimcode, metadata_dict, repository=repository)
 
     new_metadata = MetaData(repository, kimcode)
 
