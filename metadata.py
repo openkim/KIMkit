@@ -872,7 +872,7 @@ def add_optional_metadata_key(
         )
 
 
-def delete_optional_metadata_key(run_as_editor=False):
+def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
     """Delete an optional metadata key from the spec
 
     Requires Editor privleges.
@@ -882,16 +882,110 @@ def delete_optional_metadata_key(run_as_editor=False):
     subsequently edited or updated, keys not in the specification will
     be ignored and not copied to descendant items.
 
-    TODO: When the database is implemented, run a query to retrieve
-    all items with this key set, and have option to delete them.
-
     Parameters
     ----------
+    key_name : str
+        name of the new metadata key
+    item_types : list of str
+        types of KIMkit items to delete this key from, valid options include
+        "portable-model", "simulator-model", and "model-driver"
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
         and edit the metadata spec, by default False
     """
-    pass
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
+    if key_name not in kimspec_order:
+        raise cf.InvalidMetadataFieldError(
+            f"Field {key_name} not recognized as a part of the KIMkit metadata standard, aborting."
+        )
+
+    all_item_types = KIMkit_item_type_key_requirements.keys()
+
+    for item in item_types:
+        if item not in all_item_types:
+            raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
+
+    # TODO: When the database is implemented, run a query to retrieve all items with this key set,
+    # and implement an optional method to delete them.
+
+    if users.is_editor():
+        if not run_as_editor:
+            raise cf.NotRunAsEditorError(
+                "Did you mean to edit the metadata config? If you are an Editor run again with run_as_editor=True"
+            )
+        # remove this key from the optional key list for the specified item types
+        for item in item_types:
+            KIMkit_item_type_key_requirements[item]["optional"].remove(key_name)
+
+        id = users.whoami()
+        logger.info(
+            f"Editor {id} deleted optional metadata field {key_name} from item types {item_types}."
+        )
+
+        # check whether any item types still have this key specified
+        key_set = False
+
+        for item in all_item_types:
+
+            if key_name in KIMkit_item_type_key_requirements[item]["optional"]:
+                key_set = True
+
+            # safety check, shouldn't be possible
+            elif key_name in KIMkit_item_type_key_requirements[item]["required"]:
+                key_set = True
+
+        # if this key is not set for any item, delete it from the metadata standard completely
+        if key_set == False:
+
+            lists = [kimspec_order, kimspec_strings, kimspec_uuid_fields]
+            dicts = [kimspec_arrays, kimspec_arrays_dicts]
+
+            for l in lists:
+                if key_name in l:
+                    l.remove(key_name)
+
+            for d in dicts:
+                d.pop(key_name, None)
+
+            logger.info(
+                f"Optional metadata field {key_name} not set for any item types, deleting from the standard."
+            )
+
+        final_dict = {
+            "kimspec-order": kimspec_order,
+            "kimspec-strings": kimspec_strings,
+            "kimspec-uuid-fields": kimspec_uuid_fields,
+            "kimspec-arrays": kimspec_arrays,
+            "kimspec-arrays-dicts": kimspec_arrays_dicts,
+            "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
+        }
+
+        tmp_dest_file = os.path.join(
+            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+        )
+
+        with open(tmp_dest_file, "w") as outfile:
+            kim_edn.dump(final_dict, outfile, indent=4)
+
+        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        os.rename(tmp_dest_file, dest_file)
+
+    else:
+        id = users.whoami()
+        logger.warning(
+            f"User {id} attempted to delete metadata field {key_name} without editor privleges."
+        )
+        raise cf.NotAnEditorError(
+            "Only KIMkit Editors may change metadata configuration settings"
+        )
 
 
 def make_optional_metadata_key_required(key_name, item_types, run_as_editor=False):
