@@ -266,21 +266,27 @@ class MetaData:
             )
 
 
-def create_metadata(repository, kimcode, metadata_dict, UUID):
+def create_metadata(
+    kimcode,
+    metadata_dict,
+    UUID,
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
     """Create a kimspec.edn metadata file for a new KIMkit item.
 
     _extended_summary_
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository where the item is to be stored
     kimcode : str
         id code of the item for which metadata is being created
     metadata_dict : dict
         dict of all required and any optional metadata keys
     UUID : str
         id number of the user or entity requesting the item's creation in UUID format
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
 
     Returns
     -------
@@ -322,19 +328,24 @@ def create_metadata(repository, kimcode, metadata_dict, UUID):
     return new_metadata
 
 
-def _write_metadata_to_file(repository, kimcode, metadata_dict):
+def _write_metadata_to_file(
+    kimcode,
+    metadata_dict,
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
     """Internal function used to write a KIMkit item's metadata to disk
     once its metadata has been validated and created.
 
     Parameters
     ----------
-    repository : path-like
-        Root directory of the KIMkit repository the item is stored within
     kimcode : str
         ID code of the item that this metadata is being written for
     metadata_dict : dict
         Dictionary of metadata to be written to disk in a kimspec.edn.
         Assumed to have been previously validated by validate_metadata()
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
 
     Raises
     ------
@@ -623,7 +634,11 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
 
 
 def create_new_metadata_from_existing(
-    repository, old_kimcode, new_kimcode, UUID, metadata_update_dict=None
+    old_kimcode,
+    new_kimcode,
+    UUID,
+    metadata_update_dict=None,
+    repository=cf.LOCAL_REPOSITORY_PATH,
 ):
     """Create a new metadata object from an existing kimspec.edn, and any modifications
 
@@ -632,8 +647,6 @@ def create_new_metadata_from_existing(
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository containing the item
     old_kimcode : str
         kimcode of the parent item
     new_kimcode : str
@@ -642,6 +655,9 @@ def create_new_metadata_from_existing(
         id number of the user or entity making the update in UUID4 format
     metadata_update_dict : dict, optional
         dict of any metadata fields to be changed/assigned, by default None
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
 
     Returns
     -------

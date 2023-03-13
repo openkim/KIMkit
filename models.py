@@ -118,7 +118,11 @@ class ModelDriver(kimobjects.ModelDriver):
 
 
 def import_item(
-    tarfile_obj, repository, kimcode, metadata_dict, previous_item_name=None
+    tarfile_obj,
+    kimcode,
+    metadata_dict,
+    previous_item_name=None,
+    repository=cf.LOCAL_REPOSITORY_PATH,
 ):
     """Create a directory in the selected repository for the item based on its kimcode,
     copy the item's files into it, generate needed metadata and provenance files,
@@ -130,8 +134,6 @@ def import_item(
     ----------
     tarfile_obj : tarfile.TarFile
         tarfile object containing item files
-    repository : path-like
-        root directory of collection to install into
     kimcode : str
         id code of the item
     metadata_dict : dict
@@ -142,6 +144,9 @@ def import_item(
         Used to search through makefiles and attempt to replace with the item's new kimcode.
         If not set, the item's makefiles will need to have their item name manually set to the new kimcode.
         By default None
+    repository : path-like, optional
+        root directory of collection to install into,
+        by default set to cf.LOCAL_REPOSITORY_PATH
 
     Raises
     ------
@@ -258,7 +263,7 @@ def import_item(
         )
 
 
-def delete(repository, kimcode, run_as_editor=False):
+def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     """Delete an item from the repository and all of its content
 
     Users may delete items if they are the contributor or maintainer of that item.
@@ -268,13 +273,14 @@ def delete(repository, kimcode, run_as_editor=False):
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repo containing the item
     kimcode : str
         ID code the item, must refer to a valid item in repository
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
         and delete items they are neither the contributor nor maintainer of, by default False
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
 
     Raises
     ------
@@ -358,9 +364,9 @@ def delete(repository, kimcode, run_as_editor=False):
 
 
 def version_update(
-    repository,
     kimcode,
     tarfile_obj,
+    repository=cf.LOCAL_REPOSITORY_PATH,
     metadata_update_dict=None,
     provenance_comments=None,
     run_as_editor=False,
@@ -374,12 +380,13 @@ def version_update(
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository containing the item
     kimcode : str
         ID code of the item to be updated
     tarfile_obj : tarfile.Tarfile
         tarfile object containing the new version's content
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
     metadata_update_dict : dict, optional
         dict of any metadata keys to be changed in the new version, by default None
     provenance_comments : str, optional
@@ -538,10 +545,10 @@ def version_update(
 
 
 def fork(
-    repository,
     kimcode,
     new_kimcode,
     tarfile_obj,
+    repository=cf.LOCAL_REPOSITORY_PATH,
     metadata_update_dict=None,
     provenance_comments=None,
 ):
@@ -552,14 +559,15 @@ def fork(
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository containing the item
     kimcode : str
         ID code of the item to be forked
     new_kimcode : str
         id code the new item will be assigned
     tarfile_obj : tarfile.Tarfile
         tarfile object containing the new version's content
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
     metadata_update_dict : dict, optional
         dict of any metadata keys to be changed in the new version, by default None
     provenance_comments : str, optional
@@ -682,15 +690,16 @@ def fork(
     )
 
 
-def export(repository, kimcode):
+def export(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository containing the item
     kimcode: str
         id code of the item
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
 
     Returns
     -------
@@ -737,17 +746,18 @@ def export(repository, kimcode):
     return tarfile_objs
 
 
-def install(repository, kimcode):
+def install(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """Export the item, and also install it into the environment variable collection of the kim-api-collections-manager
 
     Environment variable locations set in default-environment
 
     Parameters
     ----------
-    repository : path-like
-        root directory of the KIMkit repository containing the item
     kimcode: str
         id code of the item
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
     """
     _ensure_KIM_API_environment_variable_collection_structure()
 
@@ -794,18 +804,21 @@ def install(repository, kimcode):
         obj.make()
 
 
-def update_makefile_kimcode(repository, old_kimcode, new_kimcode):
+def update_makefile_kimcode(
+    old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
+):
     """Search through the item's directory for makefiles containing kimcodes matching a previous version of the item,
     and attempt to replace them with the item's new kimcode.
 
     Parameters
     ----------
-    repository : path-like
-        Root directory of the repository on disk where the item is stored.
     old_kimcode : str
         previous id code of the item that may be lingering in makefiles
     new_kimcode : str
         new id code of the item to be written into makefiles
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        by default cf.LOCAL_REPOSITORY_DIRECTORY
     """
 
     item_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
