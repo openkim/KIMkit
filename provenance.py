@@ -50,48 +50,6 @@ kimprovenance_order = [
 ]
 
 
-class Provenance:
-    def __init__(
-        self,
-        kimcode,
-        repository,
-        event_type,
-        UUID,
-        comments=None,
-    ):
-        """provenance object used to track item history
-
-        The provenance file of an item stores a list of dicts,
-        where each dict corresponds to a single version of the item.
-        The first entry in each is itself a dict of hash values of all the files
-        in the item's directory (except for kimprovenace.edn itself),
-        followed by metadata specifying what kind of update happened,
-        who performed the update, and why.
-
-        Parameters
-        ----------
-        kimcode : str
-            ID code of the item
-        repository : path-like
-            root directory of the collection containing the item
-        event_type : str
-            reason for the update, valid options include:
-            "initial-creation", "version-update", "metadata-update", "fork", and "discontinued"
-        UUID : str
-            ID code of the person or entity performing the update in UUID4 format
-        comments : str, optional
-            Any comments about how the item was updated and/or why, by default None
-        """
-        self.kimcode = kimcode
-        self.event_type = event_type
-        self.UUID = UUID
-        self.comments = comments if comments is not None else None
-
-        path = kimcodes.kimcode_to_file_path(kimcode, repository)
-
-        add_kimprovenance_entry(path, self.UUID, self.event_type, self.comments)
-
-
 def add_kimprovenance_entry(path, user_id, event_type, comment):
     """Create a new kimprovenance.edn entry for a new instance of an item
 

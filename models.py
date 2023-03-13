@@ -234,7 +234,10 @@ def import_item(
 
         try:
             new_metadata = metadata.create_metadata(
-                repository, kimcode, metadata_dict, UUID
+                repository=repository,
+                kimcode=kimcode,
+                metadata_dict=metadata_dict,
+                UUID=UUID,
             )
         except cf.InvalidMetadataError as e:
             shutil.rmtree(tmp_dir)
@@ -247,12 +250,11 @@ def import_item(
                 "Import Failed due to invalid metadata."
             ) from e
 
-        provenance.Provenance(
-            kimcode,
-            repository,
-            event_type,
-            UUID,
-            comments=None,
+        provenance.add_kimprovenance_entry(
+            dest_dir,
+            user_id=UUID,
+            event_type=event_type,
+            comment=None,
         )
         shutil.rmtree(tmp_dir)
         logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
@@ -495,7 +497,7 @@ def version_update(
         dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
         shutil.copytree(tmp_dir, dest_dir)
 
-        update_makefile_kimcode(repository, kimcode, new_kimcode)
+        update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
         try:
             metadata.create_new_metadata_from_existing(
@@ -653,7 +655,7 @@ def fork(
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
     shutil.copytree(tmp_dir, dest_dir)
 
-    update_makefile_kimcode(repository, kimcode, new_kimcode)
+    update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
     try:
         metadata.create_new_metadata_from_existing(
