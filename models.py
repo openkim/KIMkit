@@ -501,11 +501,11 @@ def version_update(
 
         try:
             metadata.create_new_metadata_from_existing(
-                repository,
                 kimcode,
                 new_kimcode,
                 UUID,
                 metadata_update_dict=metadata_update_dict,
+                repository=repository,
             )
         except cf.InvalidMetadataError as e:
             shutil.rmtree(dest_dir)
@@ -659,11 +659,11 @@ def fork(
 
     try:
         metadata.create_new_metadata_from_existing(
-            repository,
             kimcode,
             new_kimcode,
             UUID,
             metadata_update_dict=metadata_update_dict,
+            repository=repository,
         )
     except cf.InvalidMetadataError as e:
         shutil.rmtree(dest_dir)

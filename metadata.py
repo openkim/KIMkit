@@ -698,7 +698,7 @@ def create_new_metadata_from_existing(
         cf.InvalidMetadataTypesError,
     ) as e:
         raise cf.InvalidMetadataError("Validating metadata failed.") from e
-    _write_metadata_to_file(repository, new_kimcode, valid_metadata)
+    _write_metadata_to_file(new_kimcode, valid_metadata, repository=repository)
     new_metadata = MetaData(repository, new_kimcode)
     logger.debug(
         f"Metadata for new item {new_kimcode} created from metadata of {old_kimcode} in {repository}"
