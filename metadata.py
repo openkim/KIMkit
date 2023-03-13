@@ -137,15 +137,18 @@ class MetaData:
             metadata_dict[key] = new_value
 
             _write_metadata_to_file(
-                self.repository, metadata_dict["extended-id"], metadata_dict
+                metadata_dict["extended-id"], metadata_dict, self.repository
             )
             event_type = "metadata-update"
-            provenance.Provenance(
-                metadata_dict["extended-id"],
-                self.repository,
-                event_type,
-                UUID,
-                comments=provenance_comments,
+
+            dest_dir = kimcodes.kimcode_to_file_path(
+                metadata_dict["extended-id"], self.repository
+            )
+            provenance.add_kimprovenance_entry(
+                dest_dir,
+                user_id=UUID,
+                event_type=event_type,
+                comment=provenance_comments,
             )
 
             logger.info(
@@ -243,15 +246,18 @@ class MetaData:
                 return
 
             _write_metadata_to_file(
-                self.repository, metadata_dict["extended-id"], metadata_dict
+                metadata_dict["extended-id"], metadata_dict, self.repository
             )
             event_type = "metadata-update"
-            provenance.Provenance(
-                metadata_dict["extended-id"],
-                self.repository,
-                event_type,
-                UUID,
-                comments=provenance_comments,
+
+            dest_dir = kimcodes.kimcode_to_file_path(
+                metadata_dict["extended-id"], self.repository
+            )
+            provenance.add_kimprovenance_entry(
+                dest_dir,
+                user_id=UUID,
+                event_type=event_type,
+                comment=provenance_comments,
             )
             logger.info(
                 f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
