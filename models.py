@@ -763,13 +763,14 @@ def install(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """
     _ensure_KIM_API_environment_variable_collection_structure()
 
-    tarfile_objs = export(repository, kimcode)
+    tarfile_objs = export(kimcode)
 
     # extract the item from its tar archive, along with any dependencies (e.g. drivers)
     for tar in tarfile_objs:
         path_name = tar.name
         file_name = os.path.split(path_name)[1]
-        obj_kimcode = file_name.removesuffix(".txz")
+        if file_name.endswith(".txz"):
+            obj_kimcode = file_name[:-4]
         __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
         if leader == "MO":
             install_dir = cf.KIM_API_PORTABLE_MODELS_DIR
