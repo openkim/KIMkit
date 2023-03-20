@@ -93,7 +93,7 @@ def format_kim_code(name, leader, num, version):
         return "{}_{}_{}".format(leader, num, version)
 
 
-def generate_kimcode(name, item_type, repository):
+def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
     """Generate a kimcode for a new KIMkit item
 
     kimcodes have format:
@@ -123,8 +123,9 @@ def generate_kimcode(name, item_type, repository):
     item_type : str
         type of KIMkit item to generate a kimcode for
         Valid options include 'portable-model', 'simulator-model', and 'model-driver'
-    repository : path-like
-        root directory of the KIMkit repo containing the item
+    repository : path-like, optional
+        root directory of the KIMkit repo containing the item,
+        default value cf.LOCAL_REPOSITORY_PATH
 
     Returns
     -------
@@ -161,24 +162,25 @@ def generate_kimcode(name, item_type, repository):
     while not valid_kimcode:
         id_number = "".join(["{}".format(random.randint(0, 9)) for num in range(0, n)])
         new_kimcode = format_kim_code(name, leader, id_number, version)
-        if is_kimcode_available(repository, new_kimcode):
+        if is_kimcode_available(new_kimcode, repository):
             kimcode = new_kimcode
             valid_kimcode = True
 
     return kimcode
 
 
-def is_kimcode_available(repository, kimcode):
+def is_kimcode_available(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """Check for kimcode collisions in the specified repository
 
     _extended_summary_
 
     Parameters
     ----------
-    repository : path-like
-        root directory of repo to install into
     kimcode : str
         id code of the item
+    repository : path-like, optional
+        root directory of repo to install into,
+        by default cf.LOCAL_REPOSITORY_PATH
 
     Returns
     -------
@@ -191,7 +193,7 @@ def is_kimcode_available(repository, kimcode):
         return False
 
 
-def kimcode_to_file_path(kimcode, repository):
+def kimcode_to_file_path(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """Convert a kimcode and repository to a location on disk
     to save the item.
 
@@ -203,8 +205,9 @@ def kimcode_to_file_path(kimcode, repository):
     ----------
     kimcode : str
         id code of the item
-    repository : path-like
-        root directory of repo to begin item's path at
+    repository : path-like, optional
+        root directory of repo to begin item's path at,
+        by default cf.LOCAL_REPOSITORY_PATH
 
     Returns
     -------

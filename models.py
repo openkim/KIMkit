@@ -185,7 +185,7 @@ def import_item(
             f"Leader of kimcode {kimcode} does not represent a valid item type"
         )
 
-    if not kimcodes.is_kimcode_available(repository, kimcode):
+    if not kimcodes.is_kimcode_available(kimcode, repository):
         raise cf.KimCodeAlreadyInUseError(
             f"kimcode {kimcode} is already in use, please select another."
         )
@@ -616,7 +616,7 @@ def fork(
             f"No item with kimcode {kimcode} exists, aborting."
         )
 
-    if not kimcodes.is_kimcode_available(repository, new_kimcode):
+    if not kimcodes.is_kimcode_available(new_kimcode, repository):
         raise cf.KimCodeAlreadyInUseError(
             f"kimcode {new_kimcode} is already in use, please select another."
         )
