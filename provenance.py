@@ -1,3 +1,10 @@
+"""This module contains methods for managing KIMkit item history, which is tracked via a file
+stored along with each item called kimprovenance.edn. This file is automatically created when
+a new item is imported into KIMkit, and updated whenever the item's content changes on disk.
+
+In general, users should not call any of the functions in this module directly,
+nor edit kimprovenance.edn for any KIMkit items."""
+
 import os
 import datetime
 import subprocess
@@ -10,14 +17,6 @@ import kim_edn
 
 from .logger import logging
 from . import kimcodes
-
-"""This module contains methods for managing KIMkit item history, which is tracked via a file
-stored along with each item called kimprovenance.edn. This file is automatically created when
-a new item is imported into KIMkit, and updated whenever the item's content changes on disk.
-
-In general, users should not call any of the functions in this module directly,
-nor edit kimprovenance.edn for any KIMkit items."""
-
 
 logger = logging.getLogger("KIMkit")
 
@@ -104,7 +103,6 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
     )
 
     if event_type != "initial-creation":
-
         with open(os.path.join(path, "kimprovenance.edn")) as f:
             kimprovenance_current = kim_edn.load(f)
 

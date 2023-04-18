@@ -1,11 +1,3 @@
-import uuid
-import kim_edn
-import os
-import getpass
-
-from . import config as cf
-from .logger import logging
-
 """ This module contains utility functions used to manager users and permissions in KIMkit.
 
 KIMkit defines 3 levels of user access: Administrator, Editor, and User.
@@ -14,7 +6,7 @@ There is only one Administrator per installation of KIMkit. Inside the KIMkit pa
 a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to.
 Indeed, KIMkit determines whether a given user is the Administrator by checking whether the operating system grants
 them write access to editors.txt. Therefore only the Administrator can elevate Users to Editors,
-or perfom certian other potenitally destructive actions (e.g. removing a required metadata field from all items).
+or perfom certian other potenitally destructive actions.
 
 editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, KIMkit recoggnizes them as an Editor, and allows them certian
@@ -23,11 +15,19 @@ Any user that is neither the Administrator nor listed as an Editor is a regular 
 
 The Administrator should be listed as an Editor for most use cases.
 
-Seperately from editors.txt, there should also be a file named user_uuids.edn, also in the KIMkit root directory,
-which stores information about all KIMkit users. This file contains an .edn dict where the keys are
+Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit root directory,
+if it does not exist, which stores information about all KIMkit users. This file contains an .edn dict where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
 and optionally their operating system username (if any).
 """
+
+import uuid
+import kim_edn
+import os
+import getpass
+
+from . import config as cf
+from .logger import logging
 
 logger = logging.getLogger("KIMkit")
 
@@ -278,7 +278,6 @@ def delete_user(user_id, run_as_editor=False):
             )
 
     if can_edit:
-
         with open(
             os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
         ) as file:

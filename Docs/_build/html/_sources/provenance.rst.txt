@@ -1,0 +1,7 @@
+.. _provenance:
+
+The Provenance Module
+======================
+
+.. automodule:: KIMkit.provenance
+    :members:

@@ -116,7 +116,7 @@ containing any additional or changed metadata fields relevant to the new item. F
 
 ## KIMkit Metadata
 
-All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in config.py.
+All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in metadata_config.edn.
 
 A dictionary of all required and any desired optional metadata fields conforming to the specification for that item type are required when the item is first imported into **KIMkit**. When creating new versions of **KIMkit** items, users may include a dictionary containing any desired edits to the new item's metadata, otherwise it will be created from the existing item's metadata.
 

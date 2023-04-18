@@ -1,3 +1,15 @@
+"""
+This module contains the classes corresponding to the various KIMkit items (portable-model, simulator-model, and model-driver),
+along with functions to manage them.
+
+In general, content is passed in and out of KIMkit as tarfile.TarFile objects, so that
+automated systems can submit and retrieve KIMkit content without needing to write to disk.
+
+When creating a new item, either importing it into KIMkit for the first time, or forking an existing item,
+you should first generate a kimcode for the item by calling kimcodes.generate_kimcode() with a human-readable prefix
+for the item, its item-type, and the repository it is to be saved in (to ensure that kimcode is not already in use).
+"""
+
 import os
 import shutil
 import tarfile
@@ -12,18 +24,6 @@ from . import kimobjects
 from . import kimcodes
 from . import config as cf
 
-
-"""
-This module contains the classes corresponding to the various KIMkit items (portable-model, simulator-model, and model-driver),
-along with functions to manage them.
-
-In general, content is passed in and out of KIMkit as tarfile.TarFile objects, so that
-automated systems can submit and retrieve KIMkit content without needing to write to disk.
-
-When creating a new item, either importing it into KIMkit for the first time, or forking an existing item,
-you should first generate a kimcode for the item by calling kimcodes.generate_kimcode() with a human-readable prefix
-for the item, its item-type, and the repository it is to be saved in (to ensure that kimcode is not already in use).
-"""
 logger = logging.getLogger("KIMkit")
 
 
@@ -90,6 +90,8 @@ class SimulatorModel(kimobjects.SimulatorModel):
 
 
 class ModelDriver(kimobjects.ModelDriver):
+    "Model Driver Class"
+
     def __init__(
         self,
         repository,
@@ -194,7 +196,6 @@ def import_item(
 
     event_type = "initial-creation"
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
-
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
         contents = os.listdir(tmp_dir)
@@ -341,7 +342,6 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             )
 
     if can_edit:
-
         shutil.rmtree(del_path)
 
         logger.info(
@@ -469,7 +469,6 @@ def version_update(
             )
 
     if can_edit:
-
         new_version = str(int(old_version) + 1)
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
@@ -537,7 +536,6 @@ def version_update(
         )
 
     else:
-
         logger.warning(
             f"User {this_user} requested a verion update of item {kimcode} in repository {repository}, but is neither the owner of the item nor an Editor."
         )

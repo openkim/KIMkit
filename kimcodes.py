@@ -1,9 +1,5 @@
 """
 This module is intended to handle anything related to KIM IDs, uuids, or jobids.
-
-Copyright 2014-2021 Alex Alemi, Matt Bierbaum, Woosong Choi, Daniel S. Karls, James P. Sethna
-
-Please do not distribute this code.
 """
 import re
 import os

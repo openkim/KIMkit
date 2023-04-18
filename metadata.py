@@ -1,3 +1,10 @@
+"""Module used to manage KIMkit metadata.
+
+Metadata is stored along with every KIMkit item in a file named kimspec.edn, which is organized
+as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
+and the types of data stored as the relevant values vary. The metadata standards specifying value types
+and key requirements are stored in config.py"""
+
 import datetime
 from pytz import timezone
 import os
@@ -15,15 +22,10 @@ central = timezone("US/Central")
 
 logger = logging.getLogger("KIMkit")
 
-"""Module used to manage KIMkit metadata.
-
-Metadata is stored along with every KIMkit item in a file named kimspec.edn, which is organized
-as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
-and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in config.py"""
-
 
 class MetaData:
+    "Metadata class for KIMkit items"
+
     def __init__(self, repository, kimcode):
         """Metadata class for KIMkit items, reads metadata from kimspec.edn stored
         in the item's directory. Newly imported items should have a kimspec.edn created
@@ -133,7 +135,6 @@ class MetaData:
                 )
 
         if can_edit:
-
             metadata_dict[key] = new_value
 
             _write_metadata_to_file(
@@ -234,7 +235,6 @@ class MetaData:
                 )
 
         if can_edit:
-
             removed_val = metadata_dict.pop(field, None)
 
             if removed_val == None:
@@ -441,7 +441,7 @@ def validate_metadata(metadata_dict):
     try:
         kim_item_type = metadata_dict["kim-item-type"]
 
-    except (KeyError) as e:
+    except KeyError as e:
         raise cf.MissingRequiredMetadataFieldError(
             f"Required metadata field 'kim-item-type' not specified."
         ) from e
@@ -548,11 +548,10 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     ) = _read_metadata_config()
 
     if not kim_item_type:
-
         try:
             kim_item_type = metadata_dict["kim-item-type"]
 
-        except (KeyError) as e:
+        except KeyError as e:
             raise cf.MissingRequiredMetadataFieldError(
                 f"Required metadata field 'kim-item-type' not specified."
             ) from e
@@ -846,11 +845,9 @@ def add_optional_metadata_key(
             kimspec_arrays_dicts[key_name] = dict_key_requirements
 
         elif value_type == "list":
-
             kimspec_arrays[key_name] = "list"
 
         elif value_type == "str":
-
             kimspec_strings.append(key_name)
             if is_uuid:
                 kimspec_uuid_fields.append(key_name)
@@ -956,7 +953,6 @@ def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
         key_set = False
 
         for item in all_item_types:
-
             if key_name in KIMkit_item_type_key_requirements[item]["optional"]:
                 key_set = True
 
@@ -966,7 +962,6 @@ def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
 
         # if this key is not set for any item, delete it from the metadata standard completely
         if key_set == False:
-
             lists = [kimspec_order, kimspec_strings, kimspec_uuid_fields]
             dicts = [kimspec_arrays, kimspec_arrays_dicts]
 
