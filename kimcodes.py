@@ -1,5 +1,13 @@
 """
-This module is intended to handle anything related to KIM IDs, uuids, or jobids.
+This module is intended to handle anything related to KIM IDs.
+
+Each KIMkit item is assigned a kimcode of format {name}__{leader}_{number}_{version}. The "name" prefix can be
+any combination of letters, numbers, and underscores, but must begin with a letter,
+and is meant to be a human-readable label for the item.
+The leader is a 2 letter code which specifies what type of kim item the kimcode refers to, where "MO" stands for "Portable Model",
+"SM" stands for "Simulator Model" and "MD" stands for "Model Driver". The 12 digit ID number is generated pseudorandomly,
+and used to destinguish KIMkit items, and assign them a directory location in the chosen repository. Finally,
+the 3 digit version number begins at 000 for all items, and is incremented with each version update.
 """
 import re
 import os
@@ -14,13 +22,6 @@ RE_KIMID = r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3
 RE_EXTENDEDKIMID = (
     r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3}))$"
 )
-RE_JOBID = (
-    r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})$"
-)
-RE_UUID = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-([tve]r)$"
-RE_TESTRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(tr)$"
-RE_VERIFICATIONRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(vr)$"
-RE_ERROR = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(er)$"
 
 
 def parse_kim_code(kim_code):
@@ -43,7 +44,7 @@ def parse_kim_code(kim_code):
 
 
 def get_leader(kimid):
-    """NOTE: This function is only to be used with KIM IDs, not UUIDs."""
+    """Return the 2 letter leader code of the given kimcode."""
     rekimid = re.match(RE_KIMID, kimid)
 
     if rekimid:
@@ -168,7 +169,10 @@ def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
 def is_kimcode_available(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     """Check for kimcode collisions in the specified repository
 
-    _extended_summary_
+    Search for a directory in the repository under /repository/XXXX/YYYY/ZZZZ/VVV/,
+    where example_kimcode__MO_XXXXYYYYZZZZ_VVV is the kimcode to check the availability of.
+    If the directory exists, an item in the specified repository has already been assigned the
+    ID number XXXXYYYYZZZZ, and this kimcode cannot be used again in the same repository.
 
     Parameters
     ----------
@@ -259,23 +263,3 @@ def iskimid(kimcode):
 
 def isextendedkimid(kimcode):
     return re.match(RE_EXTENDEDKIMID, kimcode) is not None
-
-
-def isuuid(kimcode):
-    return re.match(RE_UUID, kimcode) is not None
-
-
-def isjobid(kimcode):
-    return re.match(RE_JOBID, kimcode) is not None
-
-
-def istestresult(uuid):
-    return re.match(RE_TESTRESULT, uuid) is not None
-
-
-def isverificationresult(uuid):
-    return re.match(RE_VERIFICATIONRESULT, uuid) is not None
-
-
-def iserror(uuid):
-    return re.match(RE_ERROR, uuid) is not None

@@ -43,7 +43,14 @@
   <p id="kimcodes">Previous Section: <a class="reference internal" href="users.html"><span class="doc">The Users Module</span></a></p>
 <section id="module-KIMkit.kimcodes">
 <span id="the-kimcodes-module"></span><h1>The Kimcodes Module<a class="headerlink" href="#module-KIMkit.kimcodes" title="Permalink to this heading">¶</a></h1>
-<p>This module is intended to handle anything related to KIM IDs, uuids, or jobids.</p>
+<p>This module is intended to handle anything related to KIM IDs.</p>
+<p>Each KIMkit item is assigned a kimcode of format {name}__{leader}_{number}_{version}. The “name” prefix can be
+any combination of letters, numbers, and underscores, but must begin with a letter,
+and is meant to be a human-readable label for the item.
+The leader is a 2 letter code which specifies what type of kim item the kimcode refers to, where “MO” stands for “Portable Model”,
+“SM” stands for “Simulator Model” and “MD” stands for “Model Driver”. The 12 digit ID number is generated pseudorandomly,
+and used to destinguish KIMkit items, and assign them a directory location in the chosen repository. Finally,
+the 3 digit version number begins at 000 for all items, and is incremented with each version update.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.kimcodes.parse_kim_code">
 <span class="sig-prename descclassname"><span class="pre">KIMkit.kimcodes.</span></span><span class="sig-name descname"><span class="pre">parse_kim_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kim_code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.kimcodes.parse_kim_code" title="Permalink to this definition">¶</a></dt>
@@ -54,7 +61,7 @@ returns a tuple (name,leader,num,version)</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.kimcodes.get_leader">
 <span class="sig-prename descclassname"><span class="pre">KIMkit.kimcodes.</span></span><span class="sig-name descname"><span class="pre">get_leader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.kimcodes.get_leader" title="Permalink to this definition">¶</a></dt>
-<dd><p>NOTE: This function is only to be used with KIM IDs, not UUIDs.</p>
+<dd><p>Return the 2 letter leader code of the given kimcode.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -107,7 +114,10 @@ default value cf.LOCAL_REPOSITORY_PATH</p></li>
 <dt class="sig sig-object py" id="KIMkit.kimcodes.is_kimcode_available">
 <span class="sig-prename descclassname"><span class="pre">KIMkit.kimcodes.</span></span><span class="sig-name descname"><span class="pre">is_kimcode_available</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.kimcodes.is_kimcode_available" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check for kimcode collisions in the specified repository</p>
-<p>_extended_summary_</p>
+<p>Search for a directory in the repository under /repository/XXXX/YYYY/ZZZZ/VVV/,
+where example_kimcode__MO_XXXXYYYYZZZZ_VVV is the kimcode to check the availability of.
+If the directory exists, an item in the specified repository has already been assigned the
+ID number XXXXYYYYZZZZ, and this kimcode cannot be used again in the same repository.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
