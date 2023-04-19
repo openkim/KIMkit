@@ -1,24 +1,34 @@
-""" This module contains utility functions used to manager users and permissions in KIMkit.
+""" This module contains utility functions used to manager users and permissions in **KIMkit**.
 
-KIMkit defines 3 levels of user access: Administrator, Editor, and User.
+**KIMkit** defines 3 levels of user access: Administrator, Editor, and User.
 
-There is only one Administrator per installation of KIMkit. Inside the KIMkit package root directory there should be
-a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to.
-Indeed, KIMkit determines whether a given user is the Administrator by checking whether the operating system grants
+There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory the
+system administrator should create a file called 'editors.txt' which all users have read access to,
+but only the Administrator has write access to.
+Indeed, **KIMkit** determines whether a given user is the Administrator by checking whether the operating system grants
 them write access to editors.txt. Therefore only the Administrator can elevate Users to Editors,
 or perfom certian other potenitally destructive actions.
 
-editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
-If the current user is in editors.txt, KIMkit recoggnizes them as an Editor, and allows them certian
+editors.txt should contain a sequence of operating-system usernames as returned by ``getpass.getuser()``.
+If the current user is in editors.txt, **KIMkit** recoggnizes them as an Editor, and allows them certian
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.
 
 The Administrator should be listed as an Editor for most use cases.
 
-Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit root directory,
-if it does not exist, which stores information about all KIMkit users. This file contains an .edn dict where the keys are
+Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the **KIMkit** root directory,
+if it does not exist, which stores information about all **KIMkit** users. This file contains an .edn dictionary where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
-and optionally their operating system username (if any).
+and optionally their operating system username (if any). These UUID4s define the identities of **KIMkit** users, and
+whenever a user tries to modify content on disk, **KIMkit** will check if their operating system username is assigned
+to a UUID4 in user_uuids.edn, and if not the operation will fail with an exception that prompts the user to add themselves
+to the user list and be assigned a UUID4 by calling ``add_self_as_user()`` on their personal name. This is needed to track
+contributors, developers, maintainers, etc. which are stored as UUID4s in the metadata file kimspec.edn associated with
+each **KIMkit** item. If someone without a login on the system running **KIMkit** has contributed to an item, a user may
+assign them a UUID4 by calling ``add_person()`` on their personal name so that their contributions can be tracked and credited.
+
+This module also implements several utility functions to lookup users based on UUID4, personal name, or operating system
+username, whichever is available, as well as verifying that a given string parses to a correctly formatted hexadecimal UUID4.
 """
 
 import uuid

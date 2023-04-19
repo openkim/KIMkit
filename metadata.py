@@ -1,9 +1,56 @@
-"""Module used to manage KIMkit metadata.
+"""This module is used to manage **KIMkit** metadata.
 
-Metadata is stored along with every KIMkit item in a file named kimspec.edn, which is organized
+Metadata is stored along with every **KIMkit** item in a file named kimspec.edn, which is organized
 as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
 and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in config.py"""
+and key requirements are stored in metadata_config.edn
+
+When importing a new item, a dictionary of metadata is required to be passed in with the item's conent,
+which gets passed to ``create_metadata()``.
+This metadata must specify all fields which are required for the given item type, and may specify any metadata
+fields which are listed as optional for that item type. This dict of metadata is checked by ``validate_metadata()``,
+which checks that all required metadata fields are set, and then calls ``check_metadata_types()`` to verify that
+all metadata values are of the correct type and data structure. If no exceptions are raised, the metadata is written
+to a file called kimspec.edn, which is stored along with the item's content.
+
+The metadata of existing **KIMkit** items can be modified directly, without updating the item's source code, by first
+loading the relevant ``metadata.MetaData`` object into memory by invoking the class with the repository and kimcode,
+and then calling the class methods ``MetaData.edit_metadata_value()`` or ``MetaData.delete_metadata_field()``,
+although this will create a new entry in the item's kimprovenance.edn file that tracks the history of updates to the item.
+
+::
+
+        test_metadata = metadata.MetaData(
+            repository=cf.LOCAL_REPOSITORY_PATH,
+            kimcode="example_model__MO_123456789101_000",
+        )
+
+        test_metadata.edit_metadata_value(
+            "description",
+            "updated description string.",
+            provenance_comments="edited description",
+        )
+
+When creating a new **KIMkit** item from an existing item's content, either via ``models.version_update()`` or
+``models.fork()``, the new item's metadata will be populated based on the metadata of the existing item via
+``create_new_metadata_from_existing()``. This function performs the same checks for structure and type as ``create_metadata()``,
+but also takes an optional dictionary of metadata values, which will either be set or overwritten for the new item
+if they are different from its parent item.
+
+Finally, this module implements several functions to allow **KIMkit** Editors to configure the global metadata standard
+for this installation of **KIMkit**. There are two types of metadata fields: Required, which all items of a given type
+must have set, and Optional, which items of a given type may specify. The rationale of the functions managing the metadata
+standard is that **KIMkit** item types may have new Optional metadata fields specified via ``add_optional_metadata_key()``.
+If every item of a given type has an Optional metadata field set, the Optional field may be made Required via
+``make_optional_key_required()``. Similarly, ``make_required_key_optional()`` can demote a Required metadata
+field to Optional, and finally ``delete_optional_metadata_key()`` can remove an optional field completely.
+Required keys are not set or deleted directly, but must be made Optional first to avoid the issue where previously imported
+items may not have the new Required key set, or similarly when deleting a Required key, needing to remove that metadata field
+from all items immediately. By passing through Optional first, **KIMkit** Editors can perform metadata updates to
+add/remove keys as needed while items are allowed to specify the key, but not required to. NOTE: metadata fields that
+are neither Required or Optional are simply ignored, and not recorded, so if an optional key is deleted it may still
+be set for some items, but the next time their metadata is updated it will be unset.
+"""
 
 import datetime
 from pytz import timezone

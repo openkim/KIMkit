@@ -47,15 +47,75 @@
   <p id="metadata">Previous Section: <a class="reference internal" href="models.html"><span class="doc">The Models Module</span></a></p>
 <section id="module-KIMkit.metadata">
 <span id="the-metadata-module"></span><h1>The Metadata Module<a class="headerlink" href="#module-KIMkit.metadata" title="Permalink to this heading">¶</a></h1>
-<p>Module used to manage KIMkit metadata.</p>
-<p>Metadata is stored along with every KIMkit item in a file named kimspec.edn, which is organized
+<p>This module is used to manage <strong>KIMkit</strong> metadata.</p>
+<p>Metadata is stored along with every <strong>KIMkit</strong> item in a file named kimspec.edn, which is organized
 as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
 and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in config.py</p>
+and key requirements are stored in metadata_config.edn</p>
+<p>When importing a new item, a dictionary of metadata is required to be passed in with the item’s conent,
+which gets passed to <code class="docutils literal notranslate"><span class="pre">create_metadata()</span></code>.
+This metadata must specify all fields which are required for the given item type, and may specify any metadata
+fields which are listed as optional for that item type. This dict of metadata is checked by <code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code>,
+which checks that all required metadata fields are set, and then calls <code class="docutils literal notranslate"><span class="pre">check_metadata_types()</span></code> to verify that
+all metadata values are of the correct type and data structure. If no exceptions are raised, the metadata is written
+to a file called kimspec.edn, which is stored along with the item’s content.</p>
+<p>The metadata of existing <strong>KIMkit</strong> items can be modified directly, without updating the item’s source code, by first
+loading the relevant <code class="docutils literal notranslate"><span class="pre">metadata.MetaData</span></code> object into memory by invoking the class with the repository and kimcode,
+and then calling the class methods <code class="docutils literal notranslate"><span class="pre">MetaData.edit_metadata_value()</span></code> or <code class="docutils literal notranslate"><span class="pre">MetaData.delete_metadata_field()</span></code>,
+although this will create a new entry in the item’s kimprovenance.edn file that tracks the history of updates to the item.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">test_metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">MetaData</span><span class="p">(</span>
+    <span class="n">repository</span><span class="o">=</span><span class="n">cf</span><span class="o">.</span><span class="n">LOCAL_REPOSITORY_PATH</span><span class="p">,</span>
+    <span class="n">kimcode</span><span class="o">=</span><span class="s2">&quot;example_model__MO_123456789101_000&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">test_metadata</span><span class="o">.</span><span class="n">edit_metadata_value</span><span class="p">(</span>
+    <span class="s2">&quot;description&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;updated description string.&quot;</span><span class="p">,</span>
+    <span class="n">provenance_comments</span><span class="o">=</span><span class="s2">&quot;edited description&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>When creating a new <strong>KIMkit</strong> item from an existing item’s content, either via <code class="docutils literal notranslate"><span class="pre">models.version_update()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">models.fork()</span></code>, the new item’s metadata will be populated based on the metadata of the existing item via
+<code class="docutils literal notranslate"><span class="pre">create_new_metadata_from_existing()</span></code>. This function performs the same checks for structure and type as <code class="docutils literal notranslate"><span class="pre">create_metadata()</span></code>,
+but also takes an optional dictionary of metadata values, which will either be set or overwritten for the new item
+if they are different from its parent item.</p>
+<p>Finally, this module implements several functions to allow <strong>KIMkit</strong> Editors to configure the global metadata standard
+for this installation of <strong>KIMkit</strong>. There are two types of metadata fields: Required, which all items of a given type
+must have set, and Optional, which items of a given type may specify. The rationale of the functions managing the metadata
+standard is that <strong>KIMkit</strong> item types may have new Optional metadata fields specified via <code class="docutils literal notranslate"><span class="pre">add_optional_metadata_key()</span></code>.
+If every item of a given type has an Optional metadata field set, the Optional field may be made Required via
+<code class="docutils literal notranslate"><span class="pre">make_optional_key_required()</span></code>. Similarly, <code class="docutils literal notranslate"><span class="pre">make_required_key_optional()</span></code> can demote a Required metadata
+field to Optional, and finally <code class="docutils literal notranslate"><span class="pre">delete_optional_metadata_key()</span></code> can remove an optional field completely.
+Required keys are not set or deleted directly, but must be made Optional first to avoid the issue where previously imported
+items may not have the new Required key set, or similarly when deleting a Required key, needing to remove that metadata field
+from all items immediately. By passing through Optional first, <strong>KIMkit</strong> Editors can perform metadata updates to
+add/remove keys as needed while items are allowed to specify the key, but not required to. NOTE: metadata fields that
+are neither Required or Optional are simply ignored, and not recorded, so if an optional key is deleted it may still
+be set for some items, but the next time their metadata is updated it will be unset.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="KIMkit.metadata.MetaData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.metadata.</span></span><span class="sig-name descname"><span class="pre">MetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.metadata.MetaData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Metadata class for KIMkit items</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="KIMkit.metadata.MetaData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.metadata.MetaData.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metadata class for KIMkit items, reads metadata from kimspec.edn stored
+in the item’s directory. Newly imported items should have a kimspec.edn created
+for them via the create_metadata() function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repository</strong> (<em>path-like</em>) – repository where the item is saved</p></li>
+<li><p><strong>kimcode</strong> (<em>str</em>) – kimcode ID string of the item</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – No kimspec.edn found in the item’s directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="KIMkit.metadata.MetaData.edit_metadata_value">
 <span class="sig-name descname"><span class="pre">edit_metadata_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance_comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.metadata.MetaData.edit_metadata_value" title="Permalink to this definition">¶</a></dt>
@@ -347,6 +407,7 @@ and edit the metadata spec, by default False</p></li>
     <ul>
 <li><a class="reference internal" href="#">The Metadata Module</a><ul>
 <li><a class="reference internal" href="#KIMkit.metadata.MetaData"><code class="docutils literal notranslate"><span class="pre">MetaData</span></code></a><ul>
+<li><a class="reference internal" href="#KIMkit.metadata.MetaData.__init__"><code class="docutils literal notranslate"><span class="pre">MetaData.__init__()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.metadata.MetaData.edit_metadata_value"><code class="docutils literal notranslate"><span class="pre">MetaData.edit_metadata_value()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.metadata.MetaData.delete_metadata_field"><code class="docutils literal notranslate"><span class="pre">MetaData.delete_metadata_field()</span></code></a></li>
 </ul>

@@ -1,14 +1,35 @@
 """
-This module contains the classes corresponding to the various KIMkit items (portable-model, simulator-model, and model-driver),
+This module contains the classes corresponding to the various **KIMkit** items (portable-model, simulator-model, and model-driver),
 along with functions to manage them.
 
-In general, content is passed in and out of KIMkit as tarfile.TarFile objects, so that
+In general, content is passed in and out of **KIMkit** as tarfile.TarFile objects, so that
 automated systems can submit and retrieve KIMkit content without needing to write to disk.
 
-When creating a new item, either importing it into KIMkit for the first time, or forking an existing item,
-you should first generate a kimcode for the item by calling kimcodes.generate_kimcode() with a human-readable prefix
+When creating a new item, either importing it into **KIMkit** for the first time, or forking an existing item,
+you should first generate a kimcode for the item by calling ``kimcodes.generate_kimcode()`` with a human-readable prefix
 for the item, its item-type, and the repository it is to be saved in (to ensure that kimcode is not already in use).
-"""
+
+New content may be added by calling ``import_item()`` with a tarfile.TarFile object containing the item's source code and
+associated files, a kimcode, and a dict of metadata. The item's content will be unpacked, assigned a directory in the
+repository based on its kimcode ID number, the content and structure of its metadata will be verified and written into
+the kimspec.edn file that stores metadata for the item. Additionally, the initial entry in the item's history file
+kimprovenance.edn will be created and stored in the item's directory for record keeping.
+
+New items may be created from existing **KIMkit** items via either the ``version_update()`` or ``fork()`` functions,
+both of which take the kimcode of an existing item and a tarfile.TarFile of new content to do the update,
+along with optional dicts of metadata changes and comments about what was updated and why. The major difference
+betwen these functions is that ``version_update()`` creates a new version of the same item, maintained by the same
+individual, just with its version number incremented, while ``fork()`` copies the item's content into version 000
+of a new item, with whoever called ``fork()`` set as the maintainer of the new item. This allows the initial contributor
+of a given item to retain ownership of it, but all collaborators can use that content to base their own items on.
+
+Contributors or maintainers of items may modify or delete their own content, otherwise a **KIMkit** Editor must run those
+functions with ``run_as_editor=True`` to modify content they don't own.
+
+This module also exposes an ``export()`` function that returns an item's content as a tarfile.TarFile object, and an
+``install()`` function, that unpacks the tar object into the KIM API environment variable collection,
+on a path specified in default-environment, builds the item, and installs it into the KIM API so that its executable
+code is available for simulations."""
 
 import os
 import shutil
