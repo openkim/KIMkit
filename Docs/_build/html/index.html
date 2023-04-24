@@ -69,19 +69,19 @@ Additonally, contains utility functions allowing <strong>KIMkit</strong> Editors
 </div></blockquote>
 <p>Configuration Files:</p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">editors.txt</span></code></p>
-<blockquote>
-<div><p>Should be created by the system administrator after <strong>KIMkit</strong> is installed. <code class="docutils literal notranslate"><span class="pre">editors.txt</span></code> should only be writable by the <strong>KIMkit</strong> Administrator, and contain a list of operating system usernames to be granted Editor privleges.</p>
-</div></blockquote>
-<p><code class="docutils literal notranslate"><span class="pre">default-environment</span></code></p>
+<div><p><code class="docutils literal notranslate"><span class="pre">default-environment</span></code></p>
 <blockquote>
 <div><p>Contains default file paths and environment variables used to configure various global behaviors of <strong>KIMkit</strong>. Settings can be overridden by a file called <code class="docutils literal notranslate"><span class="pre">KIMkit-env</span></code> stored in the <strong>KIMkit</strong> install directory for for finer control of settings per installation.</p>
 </div></blockquote>
-<p><code class="docutils literal notranslate"><span class="pre">metadata_config.edn</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">settings/editors.txt</span></code></p>
+<blockquote>
+<div><p>Should be created inside KIMkit/settings by the system administrator after <strong>KIMkit</strong> is installed. <code class="docutils literal notranslate"><span class="pre">editors.txt</span></code> should only be writable by the <strong>KIMkit</strong> Administrator, and contain a list of operating system usernames to be granted Editor privleges.</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">settings/metadata_config.edn</span></code></p>
 <blockquote>
 <div><p>Contains several arrays specifying which metadata fields are required or optional for each <strong>KIMkit</strong> item type, and their internal data structures. Users should not modify <code class="docutils literal notranslate"><span class="pre">metadata_config.edn</span></code> directly, but <strong>KIMkit</strong> Editors can adjust the default metadata settings via the utility functions in <code class="docutils literal notranslate"><span class="pre">metadata.py</span></code></p>
 </div></blockquote>
-<p><code class="docutils literal notranslate"><span class="pre">user_uuids.edn</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">settings/user_uuids.edn</span></code></p>
 <blockquote>
 <div><p>Used to track all <strong>KIMkit</strong> Users, and associate each with a unique UUID4. This file will be created if it does not exist when the first user adds themselves via <code class="docutils literal notranslate"><span class="pre">KIMkit.users.add_self_as_user(personal_name)</span></code>.</p>
 </div></blockquote>

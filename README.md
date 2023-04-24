@@ -37,7 +37,7 @@ edits to content contributed by or maintained by other users.
 **KIMkit** defines 3 levels of user access: Administrator, Editor, and User.
 
 There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory there should be
-a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
+a subdirectory "settings", which should contain a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, **KIMkit** recognizes them as an Editor, and allows them certain
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.
@@ -48,7 +48,7 @@ The default-environment file contains paths and settings to be used as default e
 
 ## First Time Using KIMkit
 
-Seperately from editors.txt, there is also a file named user_uuids.edn, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
+Seperately from editors.txt, there is also a file in KIMkit/settings named user_uuids.edn, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
 This file stores information about all **KIMkit** users in an .edn dict where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
 and optionally their operating system username (if any).
@@ -116,7 +116,7 @@ containing any additional or changed metadata fields relevant to the new item. F
 
 ## KIMkit Metadata
 
-All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in metadata_config.edn.
+All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in KIMkit/settings/metadata_config.edn.
 
 A dictionary of all required and any desired optional metadata fields conforming to the specification for that item type are required when the item is first imported into **KIMkit**. When creating new versions of **KIMkit** items, users may include a dictionary containing any desired edits to the new item's metadata, otherwise it will be created from the existing item's metadata.
 

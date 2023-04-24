@@ -38,12 +38,14 @@ import re
 import warnings
 
 from . import metadata
-from . import provenance
 from . import users
-from .logger import logging
-from . import kimobjects
 from . import kimcodes
-from . import config as cf
+
+from .src import provenance
+from .src import logger
+from .src.logger import logging
+from .src import kimobjects
+from .src import config as cf
 
 logger = logging.getLogger("KIMkit")
 

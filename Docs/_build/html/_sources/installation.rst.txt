@@ -36,7 +36,7 @@ whitespace enabling easier templating.
 Configuring User Privleges
 ---------------------------
 
-Inside the **KIMkit** package root directory the system administrator should create
+Inside the KIMkit/settings/ the system administrator should create
 a file called 'editors.txt' which all users have read access to, but only one user,
 the **KIMkit** Administrator has write access to.
 

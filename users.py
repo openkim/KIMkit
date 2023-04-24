@@ -2,7 +2,7 @@
 
 **KIMkit** defines 3 levels of user access: Administrator, Editor, and User.
 
-There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory the
+There is only one Administrator per installation of **KIMkit**. Inside the KIMkit/settings/ directory the
 system administrator should create a file called 'editors.txt' which all users have read access to,
 but only the Administrator has write access to.
 Indeed, **KIMkit** determines whether a given user is the Administrator by checking whether the operating system grants
@@ -16,7 +16,7 @@ Any user that is neither the Administrator nor listed as an Editor is a regular 
 
 The Administrator should be listed as an Editor for most use cases.
 
-Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the **KIMkit** root directory,
+Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit/settings/ directory,
 if it does not exist, which stores information about all **KIMkit** users. This file contains an .edn dictionary where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
 and optionally their operating system username (if any). These UUID4s define the identities of **KIMkit** users, and
@@ -36,8 +36,9 @@ import kim_edn
 import os
 import getpass
 
-from . import config as cf
-from .logger import logging
+from .src import config as cf
+from .src import logger
+from .src.logger import logging
 
 logger = logging.getLogger("KIMkit")
 
@@ -65,7 +66,7 @@ def is_administrator():
 
     try:
         # attempt to append an empty string to editors.txt to check if user has write permissions to the editors file
-        with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a") as test:
+        with open(cf.KIMKIT_EDITORS_FILE, "a") as test:
             test.write("")
         is_admin = True
     except PermissionError:
@@ -87,9 +88,7 @@ def is_editor():
 
     identity = whoami()
 
-    with open(
-        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "r"
-    ) as editor_file:
+    with open(cf.KIMKIT_EDITORS_FILE, "r") as editor_file:
         if identity in editor_file.read():
             editor = True
         else:
@@ -128,9 +127,7 @@ def add_editor(editor_name, run_as_administrator=False):
             )
 
     if can_edit:
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "editors.txt"), "a"
-        ) as editor_file:
+        with open(cf.KIMKIT_EDITORS_FILE, "a") as editor_file:
             editor_file.write(editor_name + "\n")
         logger.info(f"The Administrator added {editor_name} as a KIMkit editor.")
     else:
@@ -167,9 +164,7 @@ def add_self_as_user(name):
     new_uuid_key = new_uuid.hex
 
     try:
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
-        ) as file:
+        with open(cf.KIMKIT_USERS_FILE, "r") as file:
             user_data_dict = kim_edn.load(file)
 
         existing_uuid = get_uuid(system_username=system_username, personal_name=name)
@@ -187,10 +182,15 @@ def add_self_as_user(name):
         "system-username": system_username,
     }
 
-    with open("user_data_tmp.edn", "w") as outfile:
+    with open(
+        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"), "w"
+    ) as outfile:
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
-    os.rename("user_data_tmp.edn", "user_uuids.edn")
+    os.rename(
+        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
+        cf.KIMKIT_USERS_FILE,
+    )
 
     logger.info(
         f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
@@ -220,9 +220,7 @@ def add_person(name):
     new_uuid_key = new_uuid.hex
 
     try:
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
-        ) as file:
+        with open(cf.KIMKIT_USERS_FILE, "r") as file:
             user_data_dict = kim_edn.load(file)
 
         existing_uuid = get_uuid(personal_name=name)
@@ -242,8 +240,8 @@ def add_person(name):
         kim_edn.dump(user_data_dict, outfile, indent=4)
 
     os.rename(
-        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"),
-        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"),
+        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
+        cf.KIMKIT_USERS_FILE,
     )
 
     logger.info(
@@ -288,9 +286,7 @@ def delete_user(user_id, run_as_editor=False):
             )
 
     if can_edit:
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
-        ) as file:
+        with open(cf.KIMKIT_USERS_FILE, "r") as file:
             user_data_dict = kim_edn.load(file)
 
         if is_user(user_id=user_id):
@@ -307,8 +303,8 @@ def delete_user(user_id, run_as_editor=False):
             kim_edn.dump(user_data_dict, outfile, indent=4)
 
         os.rename(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"),
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"),
+            os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
+            cf.KIMKIT_USERS_FILE,
         )
 
     else:
@@ -345,9 +341,7 @@ def get_name_of_user(user_id):
         raise TypeError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
-        ) as file:
+        with open(cf.KIMKIT_USERS_FILE, "r") as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["personal-name"]
             return name
@@ -380,9 +374,7 @@ def get_system_username_of_user(user_id):
         raise TypeError("user id is not a valid UUID4")
 
     if is_user(user_id=user_id):
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r"
-        ) as file:
+        with open(cf.KIMKIT_USERS_FILE, "r") as file:
             user_data_dict = kim_edn.load(file)
             name = user_data_dict[user_id]["system-username"]
             return name
@@ -407,7 +399,7 @@ def get_uuid(system_username=None, personal_name=None):
         unique id assigned to the user in UUID4 format
     """
 
-    with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r") as file:
+    with open(cf.KIMKIT_USERS_FILE, "r") as file:
         user_data_dict = kim_edn.load(file)
         user_data = user_data_dict.items()
         found_user = False
@@ -477,7 +469,7 @@ def is_user(system_username=None, personal_name=None, user_id=None):
         user_id is not a valid UUID4
     """
     found_user = False
-    with open(os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_uuids.edn"), "r") as file:
+    with open(cf.KIMKIT_USERS_FILE, "r") as file:
         user_data_dict = kim_edn.load(file)
 
         if user_id:

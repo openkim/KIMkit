@@ -49,7 +49,7 @@
 <span id="the-users-module"></span><h1>The Users Module<a class="headerlink" href="#module-KIMkit.users" title="Permalink to this heading">¶</a></h1>
 <p>This module contains utility functions used to manager users and permissions in <strong>KIMkit</strong>.</p>
 <p><strong>KIMkit</strong> defines 3 levels of user access: Administrator, Editor, and User.</p>
-<p>There is only one Administrator per installation of <strong>KIMkit</strong>. Inside the <strong>KIMkit</strong> package root directory the
+<p>There is only one Administrator per installation of <strong>KIMkit</strong>. Inside the KIMkit/settings/ directory the
 system administrator should create a file called ‘editors.txt’ which all users have read access to,
 but only the Administrator has write access to.
 Indeed, <strong>KIMkit</strong> determines whether a given user is the Administrator by checking whether the operating system grants
@@ -60,7 +60,7 @@ If the current user is in editors.txt, <strong>KIMkit</strong> recoggnizes them 
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.</p>
 <p>The Administrator should be listed as an Editor for most use cases.</p>
-<p>Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the <strong>KIMkit</strong> root directory,
+<p>Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit/settings/ directory,
 if it does not exist, which stores information about all <strong>KIMkit</strong> users. This file contains an .edn dictionary where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user’s personal name,
 and optionally their operating system username (if any). These UUID4s define the identities of <strong>KIMkit</strong> users, and

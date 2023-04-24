@@ -51,7 +51,7 @@
 <p>Metadata is stored along with every <strong>KIMkit</strong> item in a file named kimspec.edn, which is organized
 as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
 and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in metadata_config.edn</p>
+and key requirements are stored in KIMkit/settings/metadata_config.edn</p>
 <p>When importing a new item, a dictionary of metadata is required to be passed in with the item’s conent,
 which gets passed to <code class="docutils literal notranslate"><span class="pre">create_metadata()</span></code>.
 This metadata must specify all fields which are required for the given item type, and may specify any metadata

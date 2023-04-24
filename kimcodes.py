@@ -13,10 +13,7 @@ import re
 import os
 import random
 
-from . import config as cf
-from .logger import logging
-
-logger = logging.getLogger("pipeline").getChild("kimcodes")
+from .src import config as cf
 
 RE_KIMID = r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3}))?$"
 RE_EXTENDEDKIMID = (
@@ -28,15 +25,9 @@ def parse_kim_code(kim_code):
     """Parse a kim code into it's pieces,
     returns a tuple (name,leader,num,version)"""
     rekimid = re.match(RE_KIMID, kim_code)
-    rejobid = re.match(RE_JOBID, kim_code)
-    reuuid = re.match(RE_UUID, kim_code)
 
     if rekimid:
         return rekimid.groups()
-    elif rejobid:
-        return rejobid.groups()
-    elif reuuid:
-        return reuuid.groups()
     else:
         raise cf.InvalidKIMCode(
             "{} is not a valid KIM ID, job id, or uuid".format(kim_code)

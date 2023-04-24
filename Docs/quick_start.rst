@@ -8,7 +8,7 @@ Getting Started
 First Time Using KIMkit
 ------------------------
 
-There is a file named `user_uuids.edn`, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
+There is a file named `user_uuids.edn`, also in the KIMkit/settings/ directory, which will be created the first time a user is added if it does not exist.
 This file stores information about all **KIMkit** users in an .edn dict where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
 and optionally their operating system username (if any).
@@ -92,7 +92,7 @@ All **KIMkit** items have associated metadata stored along with them in a file c
 which contains a dictionary of metadata keys and associated data values.
 Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them,
 and these various metadata fields take different datatypes and/or structures as their values.
-The current metadata specification is stored in a series of arrays in metadata_config.edn.
+The current metadata specification is stored in a series of arrays in KIMkit/settings/metadata_config.edn.
 
 A dictionary of all required and any desired optional metadata fields conforming to the specification
 for that item type are required when the item is first imported into **KIMkit**.

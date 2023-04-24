@@ -3,7 +3,7 @@
 Metadata is stored along with every **KIMkit** item in a file named kimspec.edn, which is organized
 as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
 and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in metadata_config.edn
+and key requirements are stored in KIMkit/settings/metadata_config.edn
 
 When importing a new item, a dictionary of metadata is required to be passed in with the item's conent,
 which gets passed to ``create_metadata()``.
@@ -60,9 +60,10 @@ import kim_edn
 from collections import OrderedDict
 
 from . import users
-from . import provenance
-from . import config as cf
-from .logger import logging
+from .src import provenance
+from .src import config as cf
+from .src import logger
+from .src.logger import logging
 from . import kimcodes
 
 central = timezone("US/Central")
@@ -778,9 +779,7 @@ def _read_metadata_config():
             metadata fields that are Required or Optional for the specified item type.
     """
 
-    with open(
-        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn"), "r"
-    ) as configfile:
+    with open(cf.KIMKIT_METADATA_CONFIG_FILE, "r") as configfile:
         config = kim_edn.load(configfile)
         kimspec_order = config["kimspec-order"]
         kimspec_strings = config["kimspec-strings"]
@@ -915,13 +914,13 @@ def add_optional_metadata_key(
         }
 
         tmp_dest_file = os.path.join(
-            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+            cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
 
         with open(tmp_dest_file, "w") as outfile:
             kim_edn.dump(final_dict, outfile, indent=4)
 
-        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         id = users.whoami()
         logger.info(
@@ -1033,13 +1032,13 @@ def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
         }
 
         tmp_dest_file = os.path.join(
-            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+            cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
 
         with open(tmp_dest_file, "w") as outfile:
             kim_edn.dump(final_dict, outfile, indent=4)
 
-        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
 
     else:
@@ -1115,13 +1114,13 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
         }
 
         tmp_dest_file = os.path.join(
-            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+            cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
 
         with open(tmp_dest_file, "w") as outfile:
             kim_edn.dump(final_dict, outfile, indent=4)
 
-        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         id = users.whoami()
         logger.info(
@@ -1195,13 +1194,13 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         }
 
         tmp_dest_file = os.path.join(
-            cf.KIMKIT_DATA_DIRECTORY, "tmp_metadata_config.edn"
+            cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
 
         with open(tmp_dest_file, "w") as outfile:
             kim_edn.dump(final_dict, outfile, indent=4)
 
-        dest_file = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "metadata_config.edn")
+        dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         id = users.whoami()
         logger.info(

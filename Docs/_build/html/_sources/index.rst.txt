@@ -33,19 +33,20 @@ Python Files:
 
 Configuration Files:
 
-   ``editors.txt``
-
-      Should be created by the system administrator after **KIMkit** is installed. ``editors.txt`` should only be writable by the **KIMkit** Administrator, and contain a list of operating system usernames to be granted Editor privleges.
 
    ``default-environment``
 
       Contains default file paths and environment variables used to configure various global behaviors of **KIMkit**. Settings can be overridden by a file called ``KIMkit-env`` stored in the **KIMkit** install directory for for finer control of settings per installation.
 
-   ``metadata_config.edn``
+   ``settings/editors.txt``
+
+      Should be created inside KIMkit/settings by the system administrator after **KIMkit** is installed. ``editors.txt`` should only be writable by the **KIMkit** Administrator, and contain a list of operating system usernames to be granted Editor privleges.
+
+   ``settings/metadata_config.edn``
 
       Contains several arrays specifying which metadata fields are required or optional for each **KIMkit** item type, and their internal data structures. Users should not modify ``metadata_config.edn`` directly, but **KIMkit** Editors can adjust the default metadata settings via the utility functions in ``metadata.py``
 
-   ``user_uuids.edn``
+   ``settings/user_uuids.edn``
 
       Used to track all **KIMkit** Users, and associate each with a unique UUID4. This file will be created if it does not exist when the first user adds themselves via ``KIMkit.users.add_self_as_user(personal_name)``.
 
