@@ -12,6 +12,7 @@ the 3 digit version number begins at 000 for all items, and is incremented with 
 import re
 import os
 import random
+import uuid
 
 from .src import config as cf
 
@@ -55,6 +56,27 @@ def get_short_id(kim_code):
             "Supplied KIM ID does not contain the information "
             "necessary to form a short ID"
         )
+
+
+def is_valid_uuid4(val):
+    """Check whether a given string can be converted
+    to a valid UUID4
+
+    Parameters
+    ----------
+    val : str
+        UUID string to be checked
+
+    Returns
+    -------
+    bool
+        whether the val is a valid UUID4
+    """
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
 
 def format_kim_code(name, leader, num, version):

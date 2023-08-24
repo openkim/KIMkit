@@ -1,9 +1,12 @@
 """This module is used to manage **KIMkit** metadata.
 
 Metadata is stored along with every **KIMkit** item in a file named kimspec.edn, which is organized
-as a dict of key-value pairs. Some keys are required for specific item types, while others are optional,
+as a dict of key-value pairs. A copy of each KIMkit item's metadata is also maintained in a collection
+in a mongodb database to allow for efficient sorting and querying of subsets of KIMkit items.
+
+Some keys are required for specific item types, while others are optional,
 and the types of data stored as the relevant values vary. The metadata standards specifying value types
-and key requirements are stored in KIMkit/settings/metadata_config.edn
+and key requirements are stored in KIMkit/settings/metadata_config.edn.
 
 When importing a new item, a dictionary of metadata is required to be passed in with the item's conent,
 which gets passed to ``create_metadata()``.
@@ -64,6 +67,7 @@ from .src import provenance
 from .src import config as cf
 from .src import logger
 from .src.logger import logging
+from .src import mongodb
 from . import kimcodes
 
 central = timezone("US/Central")
@@ -143,8 +147,8 @@ class MetaData:
             of an item they are not the contributor or maintainer of.
         """
         this_user = users.whoami()
-        if users.is_user(system_username=this_user):
-            UUID = users.get_uuid(system_username=this_user)
+        if users.is_user(username=this_user):
+            UUID = users.get_user_info(username=this_user)["uuid"]
         else:
             raise cf.KIMkitUserNotFoundError(
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
@@ -193,6 +197,7 @@ class MetaData:
             dest_dir = kimcodes.kimcode_to_file_path(
                 metadata_dict["extended-id"], self.repository
             )
+
             provenance.add_kimprovenance_entry(
                 dest_dir,
                 user_id=UUID,
@@ -201,7 +206,7 @@ class MetaData:
             )
 
             logger.info(
-                f"User {UUID} updated metadata field {key} of item {kimcode} in repository {self.repository} from {metadata_dict[key]} to {new_value}"
+                f"User {UUID} updated metadata field '{key}' of item {kimcode} in repository {self.repository} from '{metadata_dict[key]}' to '{new_value}'"
             )
 
         else:
@@ -243,8 +248,8 @@ class MetaData:
             they are not the contributor or maintainer of.
         """
         this_user = users.whoami()
-        if users.is_user(system_username=this_user):
-            UUID = users.get_uuid(system_username=this_user)
+        if users.is_user(username=this_user):
+            UUID = users.get_user_info(username=this_user)["uuid"]
         else:
             raise cf.KIMkitUserNotFoundError(
                 "Only KIMkit users can edit metadata of items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
@@ -308,7 +313,7 @@ class MetaData:
                 comment=provenance_comments,
             )
             logger.info(
-                f"User {UUID} deleted metadata field {field} of item {kimcode} in repository {self.repository}"
+                f"User {UUID} deleted metadata field '{field}' of item {kimcode} in repository {self.repository}"
             )
 
         else:
@@ -388,7 +393,8 @@ def _write_metadata_to_file(
     repository=cf.LOCAL_REPOSITORY_PATH,
 ):
     """Internal function used to write a KIMkit item's metadata to disk
-    once its metadata has been validated and created.
+    once its metadata has been validated and created. Also calls methods
+    from mongodb to inserts or update the item's metadata in the database.
 
     Parameters
     ----------
@@ -439,6 +445,8 @@ def _write_metadata_to_file(
             os.path.join(dest_path, "kimspec_tmp.edn"),
             os.path.join(dest_path, "kimspec.edn"),
         )
+
+        mongodb.upsert_item(kimcode)
 
     else:
         raise cf.KIMkitItemNotFoundError(
@@ -636,7 +644,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                         raise TypeError(f"Metadata field {field} must be list of str.")
 
                     if field in kimspec_uuid_fields:
-                        if not users.is_valid_uuid4(item):
+                        if not kimcodes.is_valid_uuid4(item):
                             raise TypeError(
                                 f"Metadata Field {field} should be a list of UUID4 strings"
                             )

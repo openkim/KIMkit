@@ -16,19 +16,17 @@ Any user that is neither the Administrator nor listed as an Editor is a regular 
 
 The Administrator should be listed as an Editor for most use cases.
 
-Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit/settings/ directory,
-if it does not exist, which stores information about all **KIMkit** users. This file contains an .edn dictionary where the keys are
-UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
-and optionally their operating system username (if any). These UUID4s define the identities of **KIMkit** users, and
+Seperately from editors.txt, there is also a "users" collection in the KIMkit mongodb database,
+which stores information about all **KIMkit** users. This collection stores UUID4s assigned to each user,
+the user's personal name, and optionally their operating system username (if any).
+
+These UUID4s define the identities of **KIMkit** users, and
 whenever a user tries to modify content on disk, **KIMkit** will check if their operating system username is assigned
-to a UUID4 in user_uuids.edn, and if not the operation will fail with an exception that prompts the user to add themselves
+to a UUID4 in the database, and if not the operation will fail with an exception that prompts the user to add themselves
 to the user list and be assigned a UUID4 by calling ``add_self_as_user()`` on their personal name. This is needed to track
 contributors, developers, maintainers, etc. which are stored as UUID4s in the metadata file kimspec.edn associated with
 each **KIMkit** item. If someone without a login on the system running **KIMkit** has contributed to an item, a user may
 assign them a UUID4 by calling ``add_person()`` on their personal name so that their contributions can be tracked and credited.
-
-This module also implements several utility functions to lookup users based on UUID4, personal name, or operating system
-username, whichever is available, as well as verifying that a given string parses to a correctly formatted hexadecimal UUID4.
 """
 
 import uuid
@@ -38,7 +36,9 @@ import getpass
 
 from .src import config as cf
 from .src import logger
+from .src import mongodb
 from .src.logger import logging
+from . import kimcodes
 
 logger = logging.getLogger("KIMkit")
 
@@ -163,37 +163,18 @@ def add_self_as_user(name):
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
-    try:
-        with open(cf.KIMKIT_USERS_FILE, "r") as file:
-            user_data_dict = kim_edn.load(file)
+    if is_user(personal_name=name):
+        user_data = get_user_info(personal_name=name)
+        print(user_data)
+        existing_uuid = user_data["uuid"]
+        raise RuntimeError(
+            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+        )
 
-        existing_uuid = get_uuid(system_username=system_username, personal_name=name)
-
-        if existing_uuid != None:
-            raise RuntimeError(
-                f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
-            )
-
-    except FileNotFoundError:
-        user_data_dict = {}
-
-    user_data_dict[new_uuid_key] = {
-        "personal-name": name,
-        "system-username": system_username,
-    }
-
-    with open(
-        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"), "w"
-    ) as outfile:
-        kim_edn.dump(user_data_dict, outfile, indent=4)
-
-    os.rename(
-        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
-        cf.KIMKIT_USERS_FILE,
-    )
+    mongodb.insert_user(new_uuid_key, name, username=system_username)
 
     logger.info(
-        f"New user {name} (system username {system_username}) assigned UUID {new_uuid} and added to list of approved KIMkit users"
+        f"New user {name} (system username {system_username}) assigned UUID {new_uuid_key} and added to list of approved KIMkit users"
     )
 
 
@@ -219,34 +200,44 @@ def add_person(name):
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
-    try:
-        with open(cf.KIMKIT_USERS_FILE, "r") as file:
-            user_data_dict = kim_edn.load(file)
+    if is_user(personal_name=name):
+        user_data = mongodb.find_user(personal_name=name)
+        existing_uuid = user_data["uuid"]
+        raise RuntimeError(
+            f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
+        )
 
-        existing_uuid = get_uuid(personal_name=name)
-
-        if existing_uuid != None:
-            raise RuntimeError(
-                f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
-            )
-    except FileNotFoundError:
-        user_data_dict = {}
-
-    user_data_dict[new_uuid_key] = {"personal-name": name}
-
-    with open(
-        os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"), "w"
-    ) as outfile:
-        kim_edn.dump(user_data_dict, outfile, indent=4)
-
-    os.rename(
-        os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
-        cf.KIMKIT_USERS_FILE,
-    )
+    mongodb.insert_user(new_uuid_key, name)
 
     logger.info(
-        f"New user {name} assigned UUID {new_uuid} and added to list of approved KIMkit users"
+        f"New user {name} assigned UUID {new_uuid_key} and added to list of approved KIMkit users"
     )
+
+
+def add_own_username(uuid):
+    """Intened for users who have been added to the
+    KIMkit users database before they had an account
+    on the system KIMkit is running on. Such users may
+    call this function to have their username added
+    to their entry in the users collection the before the
+    first time they run a KIMkit command that requires a UUID.
+
+    Parameters
+    ----------
+    uuid : uuid4 as str
+        id code of the user
+    """
+
+    if not is_user(uuid=uuid):
+        raise RuntimeError("UUID4 not recognized as a KIMkit user.")
+
+    username = whoami()
+
+    user_info = get_user_info(uuid=uuid)
+
+    name = user_info["personal-name"]
+
+    mongodb.update_user(uuid, name, username=username)
 
 
 def delete_user(user_id, run_as_editor=False):
@@ -272,7 +263,7 @@ def delete_user(user_id, run_as_editor=False):
     NotAnEditorError
         A user who is not a KIMkit editor attempted to delete a user
     """
-    if not is_valid_uuid4(user_id):
+    if not kimcodes.is_valid_uuid4(user_id):
         raise TypeError("user id is not a valid UUID4")
 
     can_edit = False
@@ -286,26 +277,13 @@ def delete_user(user_id, run_as_editor=False):
             )
 
     if can_edit:
-        with open(cf.KIMKIT_USERS_FILE, "r") as file:
-            user_data_dict = kim_edn.load(file)
-
-        if is_user(user_id=user_id):
-            del user_data_dict[user_id]
+        if is_user(uuid=user_id):
+            mongodb.delete_one_database_entry(user_id)
 
         else:
             raise cf.KIMkitUserNotFoundError(f"UUID {user_id} not found in user data.")
 
-        logger.info(f"User {user_id}) deleted from KIMkit approved users")
-
-        with open(
-            os.path.join(cf.KIMKIT_DATA_DIRECTORY, "user_data_tmp.edn"), "w"
-        ) as outfile:
-            kim_edn.dump(user_data_dict, outfile, indent=4)
-
-        os.rename(
-            os.path.join(cf.KIMKIT_SETTINGS_DIRECTORY, "user_data_tmp.edn"),
-            cf.KIMKIT_USERS_FILE,
-        )
+        logger.info(f"User {user_id} deleted from KIMkit approved users")
 
     else:
         username = whoami()
@@ -317,137 +295,22 @@ def delete_user(user_id, run_as_editor=False):
         )
 
 
-def get_name_of_user(user_id):
-    """get the personal name of a user from their uuid
+def get_user_info(uuid=None, username=None, personal_name=None):
+    if uuid:
+        if not kimcodes.is_valid_uuid4(uuid):
+            raise (cf.InvalidKIMCode("Invalid UUID"))
 
-    Parameters
-    ----------
-    user_id : str
-        uuid of the user
+    data = mongodb.find_user(uuid=uuid, username=username, personal_name=personal_name)
 
-    Returns
-    -------
-    name: str
-        name of the user corresponding to the uuid
-
-    Raises
-    ------
-    TypeError
-        Invalid UUID4
-    KIMkitUserNotFoundError
-        Specified user_id not found in the user data file
-    """
-    if not is_valid_uuid4(user_id):
-        raise TypeError("user id is not a valid UUID4")
-
-    if is_user(user_id=user_id):
-        with open(cf.KIMKIT_USERS_FILE, "r") as file:
-            user_data_dict = kim_edn.load(file)
-            name = user_data_dict[user_id]["personal-name"]
-            return name
-
-    else:
-        raise cf.KIMkitUserNotFoundError(f"uuid {user_id} not in authorized users")
+    return data
 
 
-def get_system_username_of_user(user_id):
-    """get the operating system username of a user from their uuid
-
-    Parameters
-    ----------
-    user_id : str
-        uuid of the user
-
-    Returns
-    -------
-    name: str
-        operating system username of the user corresponding to the uuid
-
-    Raises
-    ------
-    TypeError
-        Invalid UUID4
-    KIMkitUserNotFoundError
-        Specified user_id not found in the user data file
-    """
-    if not is_valid_uuid4(user_id):
-        raise TypeError("user id is not a valid UUID4")
-
-    if is_user(user_id=user_id):
-        with open(cf.KIMKIT_USERS_FILE, "r") as file:
-            user_data_dict = kim_edn.load(file)
-            name = user_data_dict[user_id]["system-username"]
-            return name
-
-    else:
-        raise cf.KIMkitUserNotFoundError(f"uuid {user_id} not in authorized users")
-
-
-def get_uuid(system_username=None, personal_name=None):
-    """Given a personal name or system username, return the associated UUID (if any)
-
-    Parameters
-    ----------
-    system_username : str, optional
-        unix username of the user account, by default None
-    personal_name : str, optional
-        personal name of a user, by default None
-
-    Returns
-    -------
-    UUID : str
-        unique id assigned to the user in UUID4 format
-    """
-
-    with open(cf.KIMKIT_USERS_FILE, "r") as file:
-        user_data_dict = kim_edn.load(file)
-        user_data = user_data_dict.items()
-        found_user = False
-        for item in user_data:
-            UUID = item[0]
-            names = item[1]
-
-            if system_username:
-                if names["system-username"] == system_username:
-                    found_user = True
-                    break
-
-            if personal_name:
-                if names["personal-name"] == personal_name:
-                    found_user = True
-                    break
-        if found_user:
-            return UUID
-        else:
-            return None
-
-
-def is_valid_uuid4(val):
-    """Check whether a given string can be converted
-    to a valid UUID4
-
-    Parameters
-    ----------
-    val : str
-        UUID string to be checked
-
-    Returns
-    -------
-    bool
-        whether the val is a valid UUID4
-    """
-    try:
-        uuid.UUID(str(val))
-        return True
-    except ValueError:
-        return False
-
-
-def is_user(system_username=None, personal_name=None, user_id=None):
+def is_user(uuid=None, username=None, personal_name=None):
     """Return True if the user currently logged in is in the list of approved users
     stored in the user data file.
 
-    Generally, only one of system_username, personal_name, or user_id should be specified.
+    It is possible to search for users matching any of a specified uuid4,
+    personal name, or operating system username.
 
     Parameters
     ----------
@@ -469,25 +332,11 @@ def is_user(system_username=None, personal_name=None, user_id=None):
         user_id is not a valid UUID4
     """
     found_user = False
-    with open(cf.KIMKIT_USERS_FILE, "r") as file:
-        user_data_dict = kim_edn.load(file)
+    if uuid:
+        if not kimcodes.is_valid_uuid4(uuid):
+            raise (cf.InvalidKIMCode("Invalid UUID"))
 
-        if user_id:
-            if is_valid_uuid4(user_id):
-                if user_id in user_data_dict:
-                    found_user = True
-            else:
-                raise TypeError(f"User ID {user_id} is not a valid UUID4.")
-        user_data = user_data_dict.items()
-        for item in user_data:
-            UUID = item[0]
-            names = item[1]
-            if system_username:
-                if names["system-username"] == system_username:
-                    found_user = True
-                    break
-            if personal_name:
-                if names["personal-name"] == personal_name:
-                    found_user = True
-                    break
+    data = mongodb.find_user(uuid=uuid, username=username, personal_name=personal_name)
+    if data:
+        found_user = True
     return found_user

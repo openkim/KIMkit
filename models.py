@@ -188,8 +188,8 @@ def import_item(
     """
 
     this_user = users.whoami()
-    if users.is_user(system_username=this_user):
-        UUID = users.get_uuid(system_username=this_user)
+    if users.is_user(username=this_user):
+        UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
@@ -321,8 +321,8 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     """
 
     this_user = users.whoami()
-    if users.is_user(system_username=this_user):
-        UUID = users.get_uuid(system_username=this_user)
+    if users.is_user(username=this_user):
+        UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can delete items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
@@ -438,7 +438,7 @@ def version_update(
 
     this_user = users.whoami()
     if users.is_user(system_username=this_user):
-        UUID = users.get_uuid(system_username=this_user)
+        UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can update items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
@@ -612,7 +612,7 @@ def fork(
 
     this_user = users.whoami()
     if users.is_user(system_username=this_user):
-        UUID = users.get_uuid(system_username=this_user)
+        UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can fork items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
