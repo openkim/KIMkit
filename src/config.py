@@ -11,9 +11,9 @@ def tostr(cls):
 # First, record the current version of the pipeline and KIM API installed
 __kim_api_version__ = "2.2.1"
 
-# The following clauses specify what kim-api-versions that the KIM API currently installed
-# on the pipeline Directors/Workers can actually compile and use.
-#
+# The following clauses specify what kim-api-versions that
+# the KIM API currently installed can actually compile and use.
+
 __kim_api_version_support_clauses__ = [(1, 6, 0), (1, 9, 0), (2, 0, 0)]
 
 __kim_api_version_support_spec__ = ">= " + tostr(__kim_api_version_support_clauses__[2])

@@ -2,10 +2,6 @@
 Methods that deal with the KIM API directly.  Currently these are methods
 that build the libraries and use the Python interface kimpy
 to test if tests and models match.
-
-Copyright 2014-2021 Alex Alemi, Matt Bierbaum, Woosong Choi, Daniel S. Karls, James P. Sethna
-
-Please do not distribute this code.
 """
 import os
 from subprocess import check_call, CalledProcessError
@@ -101,6 +97,5 @@ def make_object(obj, approved=True):
                 check_call(["touch", "built-by-%s" % cf.UUID], stdout=log, stderr=log)
 
             except CalledProcessError:
-
                 logger.exception("Could not build %r, check %s" % (obj, MAKE_LOG))
                 raise cf.KIMBuildError("Could not build %r, check %s" % (obj, MAKE_LOG))

@@ -7,8 +7,6 @@ In doing so, we'll have access to all of the constants as well as the logger whi
 made a child of each::
 
     logger = logger.getChild("<child name>")
-
-Copyright 2014-2021 Alex Alemi, Matt Bierbaum, Woosong Choi, Daniel S. Karls, James P. Sethna
 """
 import re
 from pygments.lexer import RegexLexer, include
