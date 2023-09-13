@@ -165,7 +165,7 @@ def add_self_as_user(name):
 
     if is_user(personal_name=name):
         user_data = get_user_info(personal_name=name)
-        print(user_data)
+
         existing_uuid = user_data["uuid"]
         raise RuntimeError(
             f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
