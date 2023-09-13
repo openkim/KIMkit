@@ -664,7 +664,7 @@ def fork(
 
     tmp_dir = os.path.join(repository, new_kimcode)
     if tarfile_obj:
-        tarfile_obj.extract(path=tmp_dir)
+        tarfile_obj.extractall(path=tmp_dir)
     else:
         # copy the existing item without editing it
         # if no new content supplied
