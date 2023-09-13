@@ -253,6 +253,8 @@ def kimcode_to_file_path(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     else:
         path = os.path.join(prefix, *subdirs, version)
 
+    path = os.path.join(path, kimcode)
+
     return path
 
 
