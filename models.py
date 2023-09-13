@@ -668,8 +668,8 @@ def fork(
     else:
         # copy the existing item without editing it
         # if no new content supplied
-        tarfile_obj = export(kimcode)
-        for item in tarfile_obj:
+        old_tarfile_obj = export(kimcode)
+        for item in old_tarfile_obj:
             if kimcode in item.getnames():
                 item.extractall(path=tmp_dir)
     contents = os.listdir(tmp_dir)
