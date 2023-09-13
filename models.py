@@ -225,7 +225,6 @@ def import_item(
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
         contents = os.listdir(tmp_dir)
-        # print(contents)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
         if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
@@ -233,7 +232,13 @@ def import_item(
             if os.path.isdir(inner_dir):
                 inner_contents = os.listdir(inner_dir)
                 for item in inner_contents:
-                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                    item_path = os.path.join(inner_dir, item)
+                    if os.path.isdir(item_path):
+                        shutil.copytree(
+                            item_path, os.path.join(tmp_dir, item), dirs_exist_ok=True
+                        )
+                    else:
+                        shutil.copy(os.path.join(inner_dir, item), tmp_dir)
                 shutil.rmtree(inner_dir)
 
         executables = []
@@ -513,7 +518,13 @@ def version_update(
             if os.path.isdir(inner_dir):
                 inner_contents = os.listdir(inner_dir)
                 for item in inner_contents:
-                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                    item_path = os.path.join(inner_dir, item)
+                    if os.path.isdir(item_path):
+                        shutil.copytree(
+                            item_path, os.path.join(tmp_dir, item), dirs_exist_ok=True
+                        )
+                    else:
+                        shutil.copy(os.path.join(inner_dir, item), tmp_dir)
                 shutil.rmtree(inner_dir)
 
         executables = []
@@ -597,7 +608,7 @@ def version_update(
 def fork(
     kimcode,
     new_kimcode,
-    tarfile_obj,
+    tarfile_obj=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
     metadata_update_dict=None,
     provenance_comments=None,
@@ -613,7 +624,7 @@ def fork(
         ID code of the item to be forked
     new_kimcode : str
         id code the new item will be assigned
-    tarfile_obj : tarfile.Tarfile
+    tarfile_obj : tarfile.Tarfile, optional
         tarfile object containing the new version's content
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
@@ -679,7 +690,15 @@ def fork(
         kim_item_type = "model-driver"
 
     tmp_dir = os.path.join(repository, new_kimcode)
-    tarfile_obj.extractall(path=tmp_dir)
+    if tarfile_obj:
+        tarfile_obj.extract(path=tmp_dir)
+    else:
+        # copy the existing item without editing it
+        # if no new content supplied
+        tarfile_obj = export(kimcode)
+        for item in tarfile_obj:
+            if kimcode in item.getnames():
+                item.extractall(path=tmp_dir)
     contents = os.listdir(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
@@ -688,7 +707,13 @@ def fork(
         if os.path.isdir(inner_dir):
             inner_contents = os.listdir(inner_dir)
             for item in inner_contents:
-                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                item_path = os.path.join(inner_dir, item)
+                if os.path.isdir(item_path):
+                    shutil.copytree(
+                        item_path, os.path.join(tmp_dir, item), dirs_exist_ok=True
+                    )
+                else:
+                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
             shutil.rmtree(inner_dir)
 
     executables = []
@@ -967,7 +992,6 @@ def _create_workflow_dir(
     tmp_dir = os.path.join(item_path, "tmp")
     workflow_tarfile.extractall(path=tmp_dir)
     contents = os.listdir(tmp_dir)
-
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
     if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
@@ -975,7 +999,13 @@ def _create_workflow_dir(
         if os.path.isdir(inner_dir):
             inner_contents = os.listdir(inner_dir)
             for item in inner_contents:
-                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                item_path = os.path.join(inner_dir, item)
+                if os.path.isdir(item_path):
+                    shutil.copytree(
+                        item_path, os.path.join(tmp_dir, item), dirs_exist_ok=True
+                    )
+                else:
+                    shutil.copy(os.path.join(inner_dir, item), tmp_dir)
             shutil.rmtree(inner_dir)
 
     shutil.copytree(tmp_dir, workflow_dir)
