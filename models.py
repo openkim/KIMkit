@@ -397,6 +397,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
 def version_update(
     kimcode,
     tarfile_obj,
+    workflow_tarfile=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
     metadata_update_dict=None,
     provenance_comments=None,
@@ -415,6 +416,8 @@ def version_update(
         ID code of the item to be updated
     tarfile_obj : tarfile.Tarfile
         tarfile object containing the new version's content
+    workflow_tarfile: tarfile.TarFile, optional
+        TarFile object containing all files needed to recreate the workflow that created the item
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
@@ -526,6 +529,24 @@ def version_update(
         shutil.copytree(tmp_dir, dest_dir)
 
         update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
+
+        if workflow_tarfile:
+            _create_workflow_dir(new_kimcode, workflow_tarfile, repository)
+
+        else:
+            # copy the previous version's workflow, if any, if no new workflow supplied
+            old_workflow_path = os.path.join(current_dir, "workflow")
+            if os.path.isdir(old_workflow_path):
+                workflow_tar = export_workflow(kimcode, repository)
+                _create_workflow_dir(new_kimcode, workflow_tar, repository)
+                new_workflow_dir = os.path.join(dest_dir, "workflow")
+                with open(
+                    os.path.join(new_workflow_dir, "previous.txt"), "w"
+                ) as witness_file:
+                    witness_file.write(kimcode)
+                logger.info(
+                    f"Copying existing workflow from previous version {kimcode}"
+                )
 
         try:
             metadata.create_new_metadata_from_existing(
@@ -959,3 +980,57 @@ def _create_workflow_dir(
 
     shutil.copytree(tmp_dir, workflow_dir)
     shutil.rmtree(tmp_dir)
+
+
+def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
+    """Export the contents of the "workflow" subdirectory for a given item,
+    if it exists as a tarfile.TarFile object.
+
+    Parameters
+    ----------
+    kimcode : str
+        id code of the item
+    repository : path like, optional
+        root directory of the repository containing the item,
+        by default cf.LOCAL_REPOSITORY_PATH
+
+    Returns
+    -------
+    tarfile.TarFile
+        compressed file object of all workflow files
+        associated with the item
+
+    Raises
+    ------
+    cf.KIMkitItemNotFoundError
+        no item with specified kimcode found
+    cf.KIMkitItemNotFoundError
+        no workflow found associated with specified item
+    """
+    src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if not os.path.isdir(src_dir):
+        raise cf.KIMkitItemNotFoundError(
+            f"No item with kimcode {kimcode} exists, aborting."
+        )
+
+    workflow_dir = os.path.join(src_dir, "workflow")
+
+    if not os.path.isdir(workflow_dir):
+        raise cf.KIMkitItemNotFoundError(
+            f"No workflow is associated with item {kimcode}, aborting."
+        )
+
+    logger.debug(
+        f"Exporting workflow used to create item {kimcode} from repository {repository}"
+    )
+
+    with tarfile.open(
+        os.path.join(workflow_dir, kimcode + "_workflow.txz"), "w:xz"
+    ) as tar:
+        tar.add(workflow_dir, arcname=kimcode + "_workflow")
+    contents = os.listdir(workflow_dir)
+    for item in contents:
+        if ".txz" in item:
+            tarfile_obj = tarfile.open(os.path.join(workflow_dir, item))
+            os.remove(os.path.join(workflow_dir, item))
+    return tarfile_obj
