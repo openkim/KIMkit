@@ -609,6 +609,7 @@ def fork(
     kimcode,
     new_kimcode,
     tarfile_obj=None,
+    workflow_tarfile=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
     metadata_update_dict=None,
     provenance_comments=None,
@@ -691,12 +692,12 @@ def fork(
 
     tmp_dir = os.path.join(repository, new_kimcode)
     if tarfile_obj:
-        tarfile_obj.extract(path=tmp_dir)
+        tarfile_obj.extractall(path=tmp_dir)
     else:
         # copy the existing item without editing it
         # if no new content supplied
-        tarfile_obj = export(kimcode)
-        for item in tarfile_obj:
+        old_tarfile_obj = export(kimcode)
+        for item in old_tarfile_obj:
             if kimcode in item.getnames():
                 item.extractall(path=tmp_dir)
     contents = os.listdir(tmp_dir)
@@ -727,6 +728,26 @@ def fork(
             metadata_update_dict["executables"] = executables
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
     shutil.copytree(tmp_dir, dest_dir)
+    print(tarfile_obj)
+    if workflow_tarfile:
+        _create_workflow_dir(new_kimcode, workflow_tarfile, repository)
+
+    else:
+        if not tarfile_obj:
+            # if the previous item had a workflow dir it was already copied
+            # when the old item's contents were copied
+            # just add a witness file with the old item's kimcode
+            # if there was a workflow to copy
+            new_workflow_dir = os.path.join(dest_dir, "workflow")
+            print(new_workflow_dir)
+            if os.path.isdir(new_workflow_dir):
+                with open(
+                    os.path.join(new_workflow_dir, "previous.txt"), "w"
+                ) as witness_file:
+                    witness_file.write(kimcode)
+                logger.info(
+                    f"Copying existing workflow from previous version {kimcode}"
+                )
 
     update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
@@ -1008,7 +1029,7 @@ def _create_workflow_dir(
                     shutil.copy(os.path.join(inner_dir, item), tmp_dir)
             shutil.rmtree(inner_dir)
 
-    shutil.copytree(tmp_dir, workflow_dir)
+    shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)
 
 
