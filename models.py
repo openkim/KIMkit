@@ -728,7 +728,7 @@ def fork(
             metadata_update_dict["executables"] = executables
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
     shutil.copytree(tmp_dir, dest_dir)
-    print(tarfile_obj)
+
     if workflow_tarfile:
         _create_workflow_dir(new_kimcode, workflow_tarfile, repository)
 
@@ -739,7 +739,7 @@ def fork(
             # just add a witness file with the old item's kimcode
             # if there was a workflow to copy
             new_workflow_dir = os.path.join(dest_dir, "workflow")
-            print(new_workflow_dir)
+
             if os.path.isdir(new_workflow_dir):
                 with open(
                     os.path.join(new_workflow_dir, "previous.txt"), "w"
