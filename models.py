@@ -147,6 +147,7 @@ def import_item(
     kimcode,
     metadata_dict,
     previous_item_name=None,
+    workflow_tarfile=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
 ):
     """Create a directory in the selected repository for the item based on its kimcode,
@@ -169,6 +170,8 @@ def import_item(
         Used to search through makefiles and attempt to replace with the item's new kimcode.
         If not set, the item's makefiles will need to have their item name manually set to the new kimcode.
         By default None
+    workflow_tarfile: tarfile.TarFile, optional
+        TarFile object containing all files needed to recreate the workflow that created the item
     repository : path-like, optional
         root directory of collection to install into,
         by default set to cf.LOCAL_REPOSITORY_PATH
@@ -225,7 +228,7 @@ def import_item(
         # print(contents)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
-        if len(contents) == 1:
+        if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
             inner_dir = os.path.join(tmp_dir, contents[0])
             if os.path.isdir(inner_dir):
                 inner_contents = os.listdir(inner_dir)
@@ -255,6 +258,9 @@ def import_item(
             warnings.warn(
                 "No previous item name supplied, item name in makefiles may need to be updated to new kimcode"
             )
+
+        if workflow_tarfile:
+            _create_workflow_dir(kimcode, workflow_tarfile, repository)
 
         try:
             new_metadata = metadata.create_metadata(
@@ -437,7 +443,7 @@ def version_update(
     """
 
     this_user = users.whoami()
-    if users.is_user(system_username=this_user):
+    if users.is_user(username=this_user):
         UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
@@ -499,7 +505,7 @@ def version_update(
         contents = os.listdir(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
-        if len(contents) == 1:
+        if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
             inner_dir = os.path.join(tmp_dir, contents[0])
             if os.path.isdir(inner_dir):
                 inner_contents = os.listdir(inner_dir)
@@ -611,7 +617,7 @@ def fork(
     """
 
     this_user = users.whoami()
-    if users.is_user(system_username=this_user):
+    if users.is_user(username=this_user):
         UUID = users.get_user_info(username=this_user)["uuid"]
     else:
         raise cf.KIMkitUserNotFoundError(
@@ -656,7 +662,7 @@ def fork(
     contents = os.listdir(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
-    if len(contents) == 1:
+    if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
         inner_dir = os.path.join(tmp_dir, contents[0])
         if os.path.isdir(inner_dir):
             inner_contents = os.listdir(inner_dir)
@@ -913,3 +919,43 @@ def _ensure_KIM_API_environment_variable_collection_structure():
     for dir in target_dirs:
         if not os.path.isdir(dir):
             os.mkdir(dir)
+
+
+def _create_workflow_dir(
+    kimcode, workflow_tarfile, repository=cf.LOCAL_REPOSITORY_PATH
+):
+    """Create a "workflow" subdirectory within the item's directory,
+    store all workflow-defining files (taining scripts, hyperparameters,
+    dependencies, etc.) inside it for future reference.
+
+    Parameters
+    ----------
+    kimcode : str
+        id code of the item
+    workflow_tarfile : tarfile.TarFile
+        TarFile object containing all the files
+        needed to recontstruct the workflow
+    repository : path like, optional
+        root dir of the kimkit repository storing the item,
+        by default cf.LOCAL_REPOSITORY_PATH
+    """
+    item_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+
+    workflow_dir = os.path.join(item_path, "workflow")
+
+    tmp_dir = os.path.join(item_path, "tmp")
+    workflow_tarfile.extractall(path=tmp_dir)
+    contents = os.listdir(tmp_dir)
+
+    # if the contents of the item are enclosed in a directory, copy them out
+    # then delete the directory
+    if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
+        inner_dir = os.path.join(tmp_dir, contents[0])
+        if os.path.isdir(inner_dir):
+            inner_contents = os.listdir(inner_dir)
+            for item in inner_contents:
+                shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+            shutil.rmtree(inner_dir)
+
+    shutil.copytree(tmp_dir, workflow_dir)
+    shutil.rmtree(tmp_dir)
