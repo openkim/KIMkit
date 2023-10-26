@@ -14,6 +14,8 @@ logger = logging.getLogger("KIMkit")
 client = pymongo.MongoClient(
     host=cf.MONGODB_HOSTNAME,
     port=cf.MONGODB_PORT,
+    username=cf.MONGODB_USERNAME,
+    password=cf.MONGODB_PASSWORD,
 )
 db = client[cf.MONGODB_DATABASE]
 
