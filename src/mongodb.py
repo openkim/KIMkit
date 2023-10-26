@@ -16,7 +16,7 @@ password = cf.MONGODB_PASSWORD
 host = cf.MONGODB_HOSTNAME
 port = cf.MONGODB_PORT
 db_name = cf.MONGODB_DATABASE
-args = cf.MONGODB_ARGS
+args = "ssl=true&tlsAllowInvalidCertificates=true"
 
 db_uri = "mongodb://%s:%s@%s:%s/%s?%s" % (user, password, host, port, db_name, args)
 
