@@ -11,7 +11,10 @@ from .. import kimcodes
 
 logger = logging.getLogger("KIMkit")
 
-client = pymongo.MongoClient(host=cf.MONGODB_HOSTNAME)
+client = pymongo.MongoClient(
+    host=cf.MONGODB_HOSTNAME,
+    port=cf.MONGODB_PORT,
+)
 db = client[cf.MONGODB_DATABASE]
 
 BADKEYS = {"kimspec", "profiling", "inserted_on", "latest"}
