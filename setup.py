@@ -7,5 +7,5 @@ setup(
     author="Brendon Waters",
     author_email="bwaters@umn.edu",
     packages=find_packages("KIMkit"),
-    install_requires=["pytz", "kim_edn", "packaging", "pygments"],
+    install_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo"],
 )
