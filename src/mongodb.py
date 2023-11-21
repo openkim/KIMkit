@@ -235,15 +235,15 @@ def find_item_by_kimcode(kimcode):
     return data
 
 def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
-    """_summary_
+    """Pass a query to the KIMkit items database via pymongo.find()
 
     Args:
         filter (dict): filter to query for matching documents
         projection (dict, optional): dict specifying which fields to return,
-        {field:1} returns that field, {field:0} Defaults to None.
-        skip (int, optional): _description_. Defaults to 0.
-        limit (int, optional): _description_. Defaults to 0.
-        sort (_type_, optional): _description_. Defaults to None.
+            {field:1} returns that field, {field:0} Defaults to None.
+        skip (int, optional): how many documents to skip. Defaults to 0.
+        limit (int, optional): limit how many results to return. Defaults to 0, which returns all
+        sort (list, optional): a list of (key, direction) pairs specifying the sort order for this query. Defaults to None.
     """
 
     data= db.items.find(filter,projection=projection,skip=skip,limit=limit,sort=sort)
