@@ -381,7 +381,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         return
 
     if can_edit:
-        shutil.rmtree(del_path)
+        os.removedirs(del_path)
         mongodb.delete_one_database_entry(kimcode)
 
         logger.info(
