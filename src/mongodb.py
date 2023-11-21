@@ -132,6 +132,10 @@ def update_item(kimcode):
     """Update the db entry of this item with
     new metadata read from disc.
 
+    Additionally, if the item being updated is a driver,
+    update all the items that use the driver, since they
+    have a copy of the driver's db entry in their own entries.
+
     Parameters
     ----------
     kimcode : str
@@ -149,6 +153,17 @@ def update_item(kimcode):
     except:
         logger.error("Error updating db entry of item %s", kimcode)
 
+    __, leader, __, __ =kimcodes.parse_kim_code(kimcode)
+
+    if leader=="MD":
+        # if this item is a driver, update the db entries
+        # of all the items that use this driver
+        # since they contain a copy of its information
+        data=query_database(filter={"model-driver":"EAM_Dynamo__MD_120291908751_005"},
+                             projection={"kimcode":1,"_id":0})
+        for item in data:
+            item_kimcode=item["kimcode"]
+            update_item(item_kimcode)
 
 def upsert_item(kimcode):
     """Wrapper method to help with managing metadata in the database.
@@ -216,6 +231,25 @@ def find_item_by_kimcode(kimcode):
         raise ValueError("Invalid KIMkit ID code.")
 
     return data
+
+def query_database(filter, projection=None, skip=0, limit=0, sort=None):
+    """_summary_
+
+    Args:
+        filter (dict): filter to query for matching documents
+        projection (dict, optional): dict specifying which fields to return,
+        {field:1} returns that field, {field:0} Defaults to None.
+        skip (int, optional): _description_. Defaults to 0.
+        limit (int, optional): _description_. Defaults to 0.
+        sort (_type_, optional): _description_. Defaults to None.
+    """
+
+    data= db.items.find(filter,projection)
+    results=[]
+    for result in data:
+        results.append(result)
+
+    return results
 
 
 def find_user(uuid=None, personal_name=None, username=None):
