@@ -248,8 +248,9 @@ def import_item(
             metadata_dict["executables"] = executables
 
         dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
+        copy_tmp_dir=os.path.join(tmp_dir,kimcode)
 
-        shutil.copytree(tmp_dir, dest_dir)
+        shutil.copytree(copy_tmp_dir, dest_dir)
 
         if previous_item_name != None:
             update_makefile_kimcode(repository, previous_item_name, kimcode)
@@ -527,8 +528,17 @@ def version_update(
         if executables:
             if metadata_update_dict:
                 metadata_update_dict["executables"] = executables
+            else:
+                metadata_update_dict={"executables":executables}
+
+        if metadata_update_dict:
+            metadata_update_dict["content-origin"]=kimcode
+        else:
+            metadata_update_dict={"content-origin":kimcode}
+        
+        copy_tmp_dir=os.path.join(tmp_dir,kimcode)
         dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-        shutil.copytree(tmp_dir, dest_dir)
+        shutil.copytree(copy_tmp_dir,dest_dir)
 
         update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
@@ -698,8 +708,17 @@ def fork(
     if executables:
         if metadata_update_dict:
             metadata_update_dict["executables"] = executables
+        else:
+            metadata_update_dict={"executables":executables}
+
+    if metadata_update_dict:
+        metadata_update_dict["content-origin"]=kimcode
+    else:
+        metadata_update_dict={"content-origin":kimcode}
+    
+    copy_tmp_dir=os.path.join(tmp_dir,kimcode)
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    shutil.copytree(tmp_dir, dest_dir)
+    shutil.copytree(copy_tmp_dir, dest_dir)
 
     update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
