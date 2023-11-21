@@ -143,7 +143,7 @@ def update_item(kimcode):
     """
     logger.info("Updating metadata of item %s", kimcode)
 
-    info = kimcode_to_dict(kimcode)
+    info = rmbadkeys(kimcode_to_dict(kimcode))
 
     info.pop("_id", None)
 
@@ -159,11 +159,13 @@ def update_item(kimcode):
         # if this item is a driver, update the db entries
         # of all the items that use this driver
         # since they contain a copy of its information
-        data=query_database(filter={"model-driver":kimcode},
+
+        data=query_database(filter={"driver.kimcode":kimcode},
                              projection={"kimcode":1,"_id":0})
         for item in data:
             item_kimcode=item["kimcode"]
-            update_item(item_kimcode)
+            db.items.update_one({"kimcode":item_kimcode},{"$set":{"driver":info}})
+            logger.info("Updating metadata of item %s", item_kimcode)
 
 def upsert_item(kimcode):
     """Wrapper method to help with managing metadata in the database.
