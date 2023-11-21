@@ -160,7 +160,7 @@ def update_item(kimcode):
         # of all the items that use this driver
         # since they contain a copy of its information
 
-        data=query_database(filter={"driver.kimcode":kimcode},
+        data=query_item_database(filter={"driver.kimcode":kimcode},
                              projection={"kimcode":1,"_id":0})
         for item in data:
             item_kimcode=item["kimcode"]
@@ -234,7 +234,7 @@ def find_item_by_kimcode(kimcode):
 
     return data
 
-def query_database(filter, projection=None, skip=0, limit=0, sort=None):
+def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
     """_summary_
 
     Args:
@@ -246,7 +246,7 @@ def query_database(filter, projection=None, skip=0, limit=0, sort=None):
         sort (_type_, optional): _description_. Defaults to None.
     """
 
-    data= db.items.find(filter,projection)
+    data= db.items.find(filter,projection=projection,skip=skip,limit=limit,sort=sort)
     results=[]
     for result in data:
         results.append(result)
