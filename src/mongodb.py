@@ -159,7 +159,7 @@ def update_item(kimcode):
         # if this item is a driver, update the db entries
         # of all the items that use this driver
         # since they contain a copy of its information
-        data=query_database(filter={"model-driver":"EAM_Dynamo__MD_120291908751_005"},
+        data=query_database(filter={"model-driver":kimcode},
                              projection={"kimcode":1,"_id":0})
         for item in data:
             item_kimcode=item["kimcode"]
