@@ -46,7 +46,7 @@ from .src import logger
 from .src.logger import logging
 from .src import kimobjects
 from .src import config as cf
-from .src.mongodb import db
+from .src import mongodb
 
 logger = logging.getLogger("KIMkit")
 
@@ -371,7 +371,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
         
-    previous_items=db.items.find_one({"content-origin":kimcode},projection={"kimcode":1,"_id":0})
+    previous_items=mongodb.db.items.find_one({"content-origin":kimcode},projection={"kimcode":1,"_id":0})
     if previous_items is not None:
         can_edit=False
         dependent_kimcode=previous_items["kimcode"]
@@ -382,6 +382,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
 
     if can_edit:
         shutil.rmtree(del_path)
+        mongodb.delete_one_database_entry(kimcode)
 
         logger.info(
             f"User {this_user} deleted item {kimcode} from repository {repository}"
