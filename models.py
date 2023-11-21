@@ -46,6 +46,7 @@ from .src import logger
 from .src.logger import logging
 from .src import kimobjects
 from .src import config as cf
+from .src.mongodb import db
 
 logger = logging.getLogger("KIMkit")
 
@@ -369,6 +370,15 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
+        
+    previous_items=db.items.find_one({"content-origin":kimcode},projection={"kimcode":1,"_id":0})
+    if previous_items is not None:
+        can_edit=False
+        dependent_kimcode=previous_items["kimcode"]
+        print(dependent_kimcode)
+        msg=f"This item is part of the legacy of item {dependent_kimcode} (and possibly others), do not delete."
+        warnings.warn(msg)
+        return
 
     if can_edit:
         shutil.rmtree(del_path)
