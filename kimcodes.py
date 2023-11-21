@@ -15,6 +15,7 @@ import random
 import uuid
 
 from .src import config as cf
+from .src import mongodb
 
 RE_KIMID = r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3}))?$"
 RE_EXTENDEDKIMID = (
@@ -179,13 +180,11 @@ def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
     return kimcode
 
 
-def is_kimcode_available(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
-    """Check for kimcode collisions in the specified repository
+def is_kimcode_available(kimcode):
+    """Check for kimcode collisions in this KIMkit installation
 
-    Search for a directory in the repository under /repository/XXXX/YYYY/ZZZZ/VVV/,
-    where example_kimcode__MO_XXXXYYYYZZZZ_VVV is the kimcode to check the availability of.
-    If the directory exists, an item in the specified repository has already been assigned the
-    ID number XXXXYYYYZZZZ, and this kimcode cannot be used again in the same repository.
+    Query the database for existing items with this kimcodde,
+    return True if none are found, otherwise return False
 
     Parameters
     ----------
@@ -200,7 +199,8 @@ def is_kimcode_available(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     bool
         whether the kimcode is unused
     """
-    if not os.path.exists(kimcode_to_file_path(kimcode, repository)):
+    data=mongodb.find_item_by_kimcode(kimcode)
+    if not data:
         return True
     else:
         return False
