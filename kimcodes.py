@@ -173,7 +173,7 @@ def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
     while not valid_kimcode:
         id_number = "".join(["{}".format(random.randint(0, 9)) for num in range(0, n)])
         new_kimcode = format_kim_code(name, leader, id_number, version)
-        if is_kimcode_available(new_kimcode, repository):
+        if is_kimcode_available(new_kimcode):
             kimcode = new_kimcode
             valid_kimcode = True
 
