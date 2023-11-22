@@ -222,13 +222,13 @@ def import_item(
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
-        contents = os.listdir(tmp_dir)
+        contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
         if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
             inner_dir = os.path.join(tmp_dir, contents[0])
             if os.path.isdir(inner_dir):
-                inner_contents = os.listdir(inner_dir)
+                inner_contents = listdir_nohidden(inner_dir)
                 for item in inner_contents:
                     item_path = os.path.join(inner_dir, item)
                     if os.path.isdir(item_path):
@@ -240,7 +240,7 @@ def import_item(
                 shutil.rmtree(inner_dir)
 
         executables = []
-        for file in os.listdir(tmp_dir):
+        for file in listdir_nohidden(tmp_dir):
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -249,9 +249,8 @@ def import_item(
             metadata_dict["executables"] = executables
 
         dest_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
-        copy_tmp_dir=os.path.join(tmp_dir,kimcode)
 
-        shutil.copytree(copy_tmp_dir, dest_dir)
+        shutil.copytree(tmp_dir, dest_dir)
 
         if previous_item_name != None:
             update_makefile_kimcode(repository, previous_item_name, kimcode)
@@ -375,13 +374,12 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     if previous_items is not None:
         can_edit=False
         dependent_kimcode=previous_items["kimcode"]
-        print(dependent_kimcode)
         msg=f"This item is part of the legacy of item {dependent_kimcode} (and possibly others), do not delete."
         warnings.warn(msg)
         return
 
     if can_edit:
-        os.removedirs(del_path)
+        shutil.rmtree(del_path)
         mongodb.delete_one_database_entry(kimcode)
 
         logger.info(
@@ -389,11 +387,12 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         )
 
         try:
+            empty_dirs_path=os.path.split(del_path)[0]
+            try: 
+                os.remove(os.path.join(empty_dirs_path,".DS_store"))
+            except FileNotFoundError:
+                pass
             os.removedirs(os.path.split(del_path)[0])
-            kimcode_without_version = kimcodes.strip_version(kimcode)
-            logger.info(
-                f"All versions of {kimcode_without_version} deleted, deleting the item."
-            )
         except OSError:
             pass
     else:
@@ -468,7 +467,7 @@ def version_update(
         )
 
     outer_dir = os.path.split(current_dir)[0]
-    versions = os.listdir(outer_dir)
+    versions = listdir_nohidden(outer_dir)
     most_recent_version = max(versions)
 
     most_recent_dir = os.path.join(outer_dir, most_recent_version)
@@ -513,13 +512,13 @@ def version_update(
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
         tarfile_obj.extractall(path=tmp_dir)
-        contents = os.listdir(tmp_dir)
+        contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
         if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
             inner_dir = os.path.join(tmp_dir, contents[0])
             if os.path.isdir(inner_dir):
-                inner_contents = os.listdir(inner_dir)
+                inner_contents = listdir_nohidden(inner_dir)
                 for item in inner_contents:
                     item_path = os.path.join(inner_dir, item)
                     if os.path.isdir(item_path):
@@ -531,7 +530,7 @@ def version_update(
                 shutil.rmtree(inner_dir)
 
         executables = []
-        for file in os.listdir(tmp_dir):
+        for file in listdir_nohidden(tmp_dir):
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -547,9 +546,8 @@ def version_update(
         else:
             metadata_update_dict={"content-origin":kimcode}
         
-        copy_tmp_dir=os.path.join(tmp_dir,kimcode)
         dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-        shutil.copytree(copy_tmp_dir,dest_dir)
+        shutil.copytree(tmp_dir,dest_dir)
 
         update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
@@ -693,13 +691,13 @@ def fork(
         for item in old_tarfile_obj:
             if kimcode in item.getnames():
                 item.extractall(path=tmp_dir)
-    contents = os.listdir(tmp_dir)
+    contents = listdir_nohidden(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
     if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
         inner_dir = os.path.join(tmp_dir, contents[0])
         if os.path.isdir(inner_dir):
-            inner_contents = os.listdir(inner_dir)
+            inner_contents = listdir_nohidden(inner_dir)
             for item in inner_contents:
                 item_path = os.path.join(inner_dir, item)
                 if os.path.isdir(item_path):
@@ -711,7 +709,7 @@ def fork(
             shutil.rmtree(inner_dir)
 
     executables = []
-    for file in os.listdir(tmp_dir):
+    for file in listdir_nohidden(tmp_dir):
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -727,9 +725,8 @@ def fork(
     else:
         metadata_update_dict={"content-origin":kimcode}
     
-    copy_tmp_dir=os.path.join(tmp_dir,kimcode)
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-    shutil.copytree(copy_tmp_dir, dest_dir)
+    shutil.copytree(tmp_dir, dest_dir)
 
     update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
@@ -807,7 +804,7 @@ def export(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
             os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
         ) as tar:
             tar.add(driver_src_dir, arcname=req_driver)
-        contents = os.listdir(driver_src_dir)
+        contents = listdir_nohidden(driver_src_dir)
         for item in contents:
             if ".txz" in item:
                 tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
@@ -815,7 +812,7 @@ def export(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
                 os.remove(os.path.join(driver_src_dir, item))
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
-    contents = os.listdir(src_dir)
+    contents = listdir_nohidden(src_dir)
     for item in contents:
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
@@ -968,3 +965,10 @@ def _ensure_KIM_API_environment_variable_collection_structure():
     for dir in target_dirs:
         if not os.path.isdir(dir):
             os.mkdir(dir)
+
+def listdir_nohidden(path):
+    good_files_and_dirs=[]
+    for f in os.listdir(path):
+        if not f.startswith('.'):
+            good_files_and_dirs.append(f)
+    return(good_files_and_dirs)
