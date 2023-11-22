@@ -388,11 +388,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
 
         try:
             empty_dirs_path=os.path.split(del_path)[0]
-            try: 
-                os.remove(os.path.join(empty_dirs_path,".DS_store"))
-            except FileNotFoundError:
-                pass
-            os.removedirs(os.path.split(del_path)[0])
+            os.removedirs(empty_dirs_path)
         except OSError:
             pass
     else:
