@@ -142,6 +142,10 @@ def update_item(kimcode):
     """Update the db entry of this item with
     new metadata read from disc.
 
+    Additionally, if the item being updated is a driver,
+    update all the items that use the driver, since they
+    have a copy of the driver's db entry in their own entries.
+
     Parameters
     ----------
     kimcode : str
@@ -149,7 +153,7 @@ def update_item(kimcode):
     """
     logger.info("Updating metadata of item %s", kimcode)
 
-    info = kimcode_to_dict(kimcode)
+    info = rmbadkeys(kimcode_to_dict(kimcode))
 
     info.pop("_id", None)
 
@@ -159,6 +163,19 @@ def update_item(kimcode):
     except:
         logger.error("Error updating db entry of item %s", kimcode)
 
+    __, leader, __, __ =kimcodes.parse_kim_code(kimcode)
+
+    if leader=="MD":
+        # if this item is a driver, update the db entries
+        # of all the items that use this driver
+        # since they contain a copy of its information
+
+        data=query_item_database(filter={"driver.kimcode":kimcode},
+                             projection={"kimcode":1,"_id":0})
+        for item in data:
+            item_kimcode=item["kimcode"]
+            db.items.update_one({"kimcode":item_kimcode},{"$set":{"driver":info}})
+            logger.info("Updating metadata of item %s", item_kimcode)
 
 def upsert_item(kimcode):
     """Wrapper method to help with managing metadata in the database.
@@ -226,6 +243,25 @@ def find_item_by_kimcode(kimcode):
         raise ValueError("Invalid KIMkit ID code.")
 
     return data
+
+def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
+    """Pass a query to the KIMkit items database via pymongo.find()
+
+    Args:
+        filter (dict): filter to query for matching documents
+        projection (dict, optional): dict specifying which fields to return,
+            {field:1} returns that field, {field:0} Defaults to None.
+        skip (int, optional): how many documents to skip. Defaults to 0.
+        limit (int, optional): limit how many results to return. Defaults to 0, which returns all
+        sort (list, optional): a list of (key, direction) pairs specifying the sort order for this query. Defaults to None.
+    """
+
+    data= db.items.find(filter,projection=projection,skip=skip,limit=limit,sort=sort)
+    results=[]
+    for result in data:
+        results.append(result)
+
+    return results
 
 
 def find_user(uuid=None, personal_name=None, username=None):
