@@ -3,6 +3,15 @@ import re
 import subprocess
 import uuid
 
+    """This file stores various KIMkit config options, and parses environment options from default-environment.
+
+    If the values in default-environment are not desired for your installation of KIMkit, simply create a
+    file in the KIMkit install directory called KIMkit-env, where you may specify alternative values that
+    override the defaults. 
+
+    Additionally, this file contains some custom KIMkit exception types used for internal error handeling.
+    """
+
 
 def tostr(cls):
     return ".".join(map(str, cls))

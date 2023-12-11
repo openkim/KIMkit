@@ -9,11 +9,10 @@ A pure python object wrapper for the pipeline stuff
 
 Has a base ``KIMObject`` class and
 
- * Test
- * Model
- * TestDriver
- * ModelDriver
- * VerificationCheck
+ * Portable Model
+ * Simulator Model
+ * Model Driver
+ 
 
 classes, all of which inherit from ``KIMObject`` and aim to know how to handle themselves.
 """

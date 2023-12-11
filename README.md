@@ -29,6 +29,12 @@ superset to [**JSON**](https://en.wikipedia.org/wiki/JSON) with the
 enhancements being that it (1) allows for comments and (2) treats commas as
 whitespace enabling easier templating.
 
+- MongoDB
+
+**KIMkit** uses a MongoDB database backend to store user information, and 
+metadata about items stored in **KIMkit**. Official installation instructions
+for your system can be found at https://www.mongodb.com/docs/manual/installation/
+
 ## Post-Install Setup
 
 **KIMkit** allows for a subset of users with elevated privleges, used to manage global configuration settings, and
@@ -48,14 +54,9 @@ The default-environment file contains paths and settings to be used as default e
 
 ## First Time Using KIMkit
 
-Seperately from editors.txt, there is also a file in KIMkit/settings named user_uuids.edn, also in the **KIMkit** root directory, which will be created the first time a user is added if it does not exist.
-This file stores information about all **KIMkit** users in an .edn dict where the keys are
-UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
-and optionally their operating system username (if any).
-
 Users attempting to contribute or edit **KIMkit** data will be prompted to add themselves to the approved users list
 by calling users.add_self_as_user(), which simply takes their personal name as an input, associates it with their
-operating system username, assigns them a UUID4, and adds this to user_uuids.edn.
+operating system username, assigns them a UUID4, and adds this to the users collection in the MongoDB database.
 
 ## Importing New Content
 
@@ -116,7 +117,8 @@ containing any additional or changed metadata fields relevant to the new item. F
 
 ## KIMkit Metadata
 
-All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in KIMkit/settings/metadata_config.edn.
+All **KIMkit** items have associated metadata stored along with them in a file called kimspec.edn, which contains a dictionary of metadata keys and associated data values. Different **KIMkit** item types have different subsets of metadata fields required or optional to specify for them, and these various metadata fields take different datatypes and/or structures as their values. The current metadata specification is stored in a series of arrays in KIMkit/settings/metadata_config.edn, and can be examined by calling ``metadata.get_metadata_template_for_item_type()`` on 
+a specific **KIMkit** item type.
 
 A dictionary of all required and any desired optional metadata fields conforming to the specification for that item type are required when the item is first imported into **KIMkit**. When creating new versions of **KIMkit** items, users may include a dictionary containing any desired edits to the new item's metadata, otherwise it will be created from the existing item's metadata.
 

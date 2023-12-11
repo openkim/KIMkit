@@ -1,3 +1,12 @@
+    """Methods for managing KIMkit metadata and user data stored in a MongoDB database.
+
+    KIMkit uses two main collections in the database, "items" and "users". "users" only
+    stores personal names, operating system usernames, and a UUID4 that is the unique
+    ID for each user.
+
+    "items" stores all metadata fields associated with KIMkit items, to enable users
+    to easily query for subsets of items with various properties.
+    """
 import pymongo
 import os
 import datetime
@@ -193,6 +202,14 @@ def upsert_item(kimcode):
 
 
 def insert_user(uuid, name, username=None):
+    """Backend method to add user to database
+
+    Args:
+        uuid (str): UUID4 unique to the user
+        name (str): personal name of the user
+        username (str, optional): operating system username of the user.
+                                 Defaults to None.
+    """
     user_entry = {"uuid": uuid, "personal-name": name}
 
     if username:
@@ -202,6 +219,14 @@ def insert_user(uuid, name, username=None):
 
 
 def update_user(uuid, name, username=None):
+    """Backend method to update user's database entry
+
+    Args:
+        uuid (str): UUID4 unique to the user
+        name (str): personal name of the user
+        username (str, optional): operating system username of the user.
+                                 Defaults to None.
+    """
     user_entry = {"uuid": uuid, "personal-name": name}
 
     if username:
@@ -211,6 +236,14 @@ def update_user(uuid, name, username=None):
 
 
 def drop_tables(ask=True):
+    """DO NOT CALL IN PRODUCTION!
+
+    backend method to clear the database
+
+    Args:
+        ask (bool, optional): whether to prompt for confirmation. 
+                              Defaults to True.
+    """
     if ask:
         check = eval(input("Are you sure? [y/n] "))
     else:
@@ -222,15 +255,31 @@ def drop_tables(ask=True):
 
 
 def delete_one_database_entry(id_code):
+    """Backend method to delete an item's/user's database entry
+
+    Args:
+        id_code (str): kimcode or UUID4 to be deleted
+    """
     db.items.delete_one({"kimcode": id_code})
     db.users.delete_one({"uuid": id_code})
 
 
 def find_item_by_kimcode(kimcode):
+    """Do a query to find a single item with the given kimcode
+
+    Args:
+        kimcode (str): ID code of the item
+
+    Raises:
+        InvalidKIMCode: Invalid kimcode
+
+    Returns:
+        dict: metadata of the item matching the kimcode
+    """
     if kimcodes.iskimid(kimcode):
         data = db.items.find_one({"kimcode": kimcode})
     else:
-        raise ValueError("Invalid KIMkit ID code.")
+        raise cf.InvalidKIMCode("Invalid KIMkit ID code.")
 
     return data
 
@@ -255,6 +304,19 @@ def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
 
 
 def find_user(uuid=None, personal_name=None, username=None):
+    """Query the database for a user matching the input
+
+    Can query based on personal name, operating system username,
+    or UUID.
+
+    Args:
+        uuid (str, optional): UUID4 assigned to the user. Defaults to None.
+        personal_name (str, optional): User's name. Defaults to None.
+        username (str, optional): User's operating system username. Defaults to None.
+
+    Returns:
+        dict: matching user information
+    """
     if uuid:
         if kimcodes.is_valid_uuid4(uuid):
             data = db.users.find_one({"uuid": uuid})
@@ -272,4 +334,11 @@ def find_user(uuid=None, personal_name=None, username=None):
 
 
 def rmbadkeys(dd):
+    """Helper function to prune keys that shouldn't be frequently updated
+
+    Args:
+        dd (dict): mongodb formatted dict of metadata
+    Returns:
+        dict: the same dict without any keys specified in BADKEYS
+    """
     return {k: v for k, v in list(dd.items()) if k not in BADKEYS}
