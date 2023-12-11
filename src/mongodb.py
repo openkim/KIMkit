@@ -1,11 +1,11 @@
-    """Methods for managing KIMkit metadata and user data stored in a MongoDB database.
+"""Methods for managing KIMkit metadata and user data stored in a MongoDB database.
 
-    KIMkit uses two main collections in the database, "items" and "users". "users" only
-    stores personal names, operating system usernames, and a UUID4 that is the unique
-    ID for each user.
+KIMkit uses two main collections in the database, "items" and "users". "users" only
+stores personal names, operating system usernames, and a UUID4 that is the unique
+ID for each user.
 
-    "items" stores all metadata fields associated with KIMkit items, to enable users
-    to easily query for subsets of items with various properties.
+"items" stores all metadata fields associated with KIMkit items, to enable users
+to easily query for subsets of items with various properties.
     """
 import pymongo
 import os
@@ -172,19 +172,21 @@ def update_item(kimcode):
     except:
         logger.error("Error updating db entry of item %s", kimcode)
 
-    __, leader, __, __ =kimcodes.parse_kim_code(kimcode)
+    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
-    if leader=="MD":
+    if leader == "MD":
         # if this item is a driver, update the db entries
         # of all the items that use this driver
         # since they contain a copy of its information
 
-        data=query_item_database(filter={"driver.kimcode":kimcode},
-                             projection={"kimcode":1,"_id":0})
+        data = query_item_database(
+            filter={"driver.kimcode": kimcode}, projection={"kimcode": 1, "_id": 0}
+        )
         for item in data:
-            item_kimcode=item["kimcode"]
-            db.items.update_one({"kimcode":item_kimcode},{"$set":{"driver":info}})
+            item_kimcode = item["kimcode"]
+            db.items.update_one({"kimcode": item_kimcode}, {"$set": {"driver": info}})
             logger.info("Updating metadata of item %s", item_kimcode)
+
 
 def upsert_item(kimcode):
     """Wrapper method to help with managing metadata in the database.
@@ -251,7 +253,7 @@ def drop_tables(ask=True):
     backend method to clear the database
 
     Args:
-        ask (bool, optional): whether to prompt for confirmation. 
+        ask (bool, optional): whether to prompt for confirmation.
                               Defaults to True.
     """
     if ask:
@@ -293,6 +295,7 @@ def find_item_by_kimcode(kimcode):
 
     return data
 
+
 def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
     """Pass a query to the KIMkit items database via pymongo.find()
 
@@ -305,8 +308,10 @@ def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
         sort (list, optional): a list of (key, direction) pairs specifying the sort order for this query. Defaults to None.
     """
 
-    data= db.items.find(filter,projection=projection,skip=skip,limit=limit,sort=sort)
-    results=[]
+    data = db.items.find(
+        filter, projection=projection, skip=skip, limit=limit, sort=sort
+    )
+    results = []
     for result in data:
         results.append(result)
 
