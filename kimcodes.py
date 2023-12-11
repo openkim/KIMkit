@@ -1,13 +1,20 @@
 """
 This module is intended to handle anything related to KIM IDs.
 
-Each KIMkit item is assigned a kimcode of format {name}__{leader}_{number}_{version}. The "name" prefix can be
-any combination of letters, numbers, and underscores, but must begin with a letter,
-and is meant to be a human-readable label for the item.
-The leader is a 2 letter code which specifies what type of kim item the kimcode refers to, where "MO" stands for "Portable Model",
-"SM" stands for "Simulator Model" and "MD" stands for "Model Driver". The 12 digit ID number is generated pseudorandomly,
-and used to destinguish KIMkit items, and assign them a directory location in the chosen repository. Finally,
-the 3 digit version number begins at 000 for all items, and is incremented with each version update.
+Each KIMkit item is assigned a kimcode of format {name}__{leader}_{number}_{version}. 
+
+The "name" prefix can be any combination of letters, numbers, and underscores, 
+but must begin with a letter, and is meant to be a human-readable label for the item.
+
+The leader is a 2 letter code which specifies what type of kim item the kimcode
+refers to, where "MO" stands for "Portable Model", "SM" stands for 
+"Simulator Model" and "MD" stands for "Model Driver".
+
+The 12 digit ID number is generated pseudorandomly,
+and used to destinguish KIMkit items, and assign them a directory location in the chosen repository. 
+
+Finally, the 3 digit version number begins at 000 for all items, and is incremented with each 
+version update.
 """
 import re
 import os
@@ -199,7 +206,7 @@ def is_kimcode_available(kimcode):
     bool
         whether the kimcode is unused
     """
-    data=mongodb.find_item_by_kimcode(kimcode)
+    data = mongodb.find_item_by_kimcode(kimcode)
     if not data:
         return True
     else:
