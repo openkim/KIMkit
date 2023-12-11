@@ -362,6 +362,8 @@ def create_metadata(
     metadata_dict["contributor-id"] = UUID
     if not "maintainer-id" in metadata_dict:
         metadata_dict["maintainer-id"] = UUID
+    if not "developer" in metadata_dict:
+        metadata_dict["developer"] = [UUID]
     metadata_dict["domain"] = "KIMkit"
 
     # TODO: assign DOI?
@@ -804,6 +806,87 @@ def _read_metadata_config():
         kimspec_arrays_dicts,
         KIMkit_item_type_key_requirements,
     )
+
+
+def get_metadata_template_for_item_type(item_type):
+    """Return a template for the metadata fields needed
+    to create a KIMkit item of a given type.
+
+    Item types may be specified with their full name,
+    or their 2 letter leader code found in their kimcode.
+
+    Args:
+        item_type (str): type of KIMkit item to generate
+        metadata template for
+    Returns:
+        dict of required/optional metadata fields
+        top level keys are "required" and "optional"
+        under each key are subkeys for the various metadata
+        fields. The values associated with these are lists of strings specifying
+        what data types they should be, and for certain conditionally required keys
+        that are added by KIMkit if they are not specifed at item creation.
+    """
+
+    item_type = item_type.lower()
+
+    (
+        kimspec_order,
+        kimspec_strings,
+        kimspec_uuid_fields,
+        kimspec_arrays,
+        kimspec_arrays_dicts,
+        KIMkit_item_type_key_requirements,
+    ) = _read_metadata_config()
+
+    all_item_types = KIMkit_item_type_key_requirements.keys()
+
+    if item_type not in all_item_types:
+        # include item type short codes
+        item_type_short_codes = ["mo", "sm", "md"]
+
+        if item_type in item_type_short_codes:
+            if item_type == "mo":
+                item_type = "portable-model"
+            elif item_type == "sm":
+                item_type = "simulator-model"
+            elif item_type == "md":
+                item_type = "model-driver"
+        else:
+            raise cf.InvalidItemTypeError(
+                f"Item type {item_type} not recognized, aborting."
+            )
+
+    metadata_template = KIMkit_item_type_key_requirements[item_type]
+
+    extended_metadata_template = {}
+
+    automatically_added_fields = [
+        "developer",
+        "contributor-id",
+        "maintainer-id",
+        "date",
+        "domain",
+    ]
+
+    for key in metadata_template:
+        extended_metadata_template[key] = {}
+        for subkey in metadata_template[key]:
+            type_value = []
+            if subkey in kimspec_strings:
+                type_value.append("str")
+
+            elif subkey in kimspec_arrays:
+                type_value.append(kimspec_arrays[subkey])
+
+            if subkey in kimspec_uuid_fields:
+                type_value.append("UUID4")
+
+            if subkey in automatically_added_fields:
+                type_value.append("conditionally-required")
+
+            extended_metadata_template[key][subkey] = type_value
+
+    return extended_metadata_template
 
 
 def add_optional_metadata_key(

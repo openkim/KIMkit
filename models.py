@@ -145,7 +145,6 @@ class ModelDriver(kimobjects.ModelDriver):
 
 def import_item(
     tarfile_obj,
-    kimcode,
     metadata_dict,
     previous_item_name=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
@@ -187,6 +186,8 @@ def import_item(
     AttributeError
         One or more inputs required for import is missing.
     """
+
+    kimcode = metadata_dict["extended-id"]
 
     this_user = users.whoami()
     if users.is_user(username=this_user):
@@ -369,12 +370,14 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
-        
-    previous_items=mongodb.db.items.find_one({"content-origin":kimcode},projection={"kimcode":1,"_id":0})
+
+    previous_items = mongodb.db.items.find_one(
+        {"content-origin": kimcode}, projection={"kimcode": 1, "_id": 0}
+    )
     if previous_items is not None:
-        can_edit=False
-        dependent_kimcode=previous_items["kimcode"]
-        msg=f"This item is part of the legacy of item {dependent_kimcode} (and possibly others), do not delete."
+        can_edit = False
+        dependent_kimcode = previous_items["kimcode"]
+        msg = f"This item is part of the legacy of item {dependent_kimcode} (and possibly others), do not delete."
         warnings.warn(msg)
         return
 
@@ -387,7 +390,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         )
 
         try:
-            empty_dirs_path=os.path.split(del_path)[0]
+            empty_dirs_path = os.path.split(del_path)[0]
             os.removedirs(empty_dirs_path)
         except OSError:
             pass
@@ -535,15 +538,15 @@ def version_update(
             if metadata_update_dict:
                 metadata_update_dict["executables"] = executables
             else:
-                metadata_update_dict={"executables":executables}
+                metadata_update_dict = {"executables": executables}
 
         if metadata_update_dict:
-            metadata_update_dict["content-origin"]=kimcode
+            metadata_update_dict["content-origin"] = kimcode
         else:
-            metadata_update_dict={"content-origin":kimcode}
-        
+            metadata_update_dict = {"content-origin": kimcode}
+
         dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
-        shutil.copytree(tmp_dir,dest_dir)
+        shutil.copytree(tmp_dir, dest_dir)
 
         update_makefile_kimcode(kimcode, new_kimcode, repository=repository)
 
@@ -714,13 +717,13 @@ def fork(
         if metadata_update_dict:
             metadata_update_dict["executables"] = executables
         else:
-            metadata_update_dict={"executables":executables}
+            metadata_update_dict = {"executables": executables}
 
     if metadata_update_dict:
-        metadata_update_dict["content-origin"]=kimcode
+        metadata_update_dict["content-origin"] = kimcode
     else:
-        metadata_update_dict={"content-origin":kimcode}
-    
+        metadata_update_dict = {"content-origin": kimcode}
+
     dest_dir = kimcodes.kimcode_to_file_path(new_kimcode, repository)
     shutil.copytree(tmp_dir, dest_dir)
 
@@ -962,9 +965,10 @@ def _ensure_KIM_API_environment_variable_collection_structure():
         if not os.path.isdir(dir):
             os.mkdir(dir)
 
+
 def listdir_nohidden(path):
-    good_files_and_dirs=[]
+    good_files_and_dirs = []
     for f in os.listdir(path):
-        if not f.startswith('.'):
+        if not f.startswith("."):
             good_files_and_dirs.append(f)
-    return(good_files_and_dirs)
+    return good_files_and_dirs
