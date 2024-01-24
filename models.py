@@ -774,13 +774,16 @@ def fork(
     )
 
 
-def export(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
+def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PATH):
     """Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run
 
     Parameters
     ----------
     kimcode: str
         id code of the item
+    include_dependencies : bool, optional
+        Flag to allow exports of KIMkit content without included dependencies,
+        e.g. drivers, by default True
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
@@ -807,18 +810,19 @@ def export(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
-        req_driver = this_item.driver
-        driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
-        with tarfile.open(
-            os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
-        ) as tar:
-            tar.add(driver_src_dir, arcname=req_driver)
-        contents = listdir_nohidden(driver_src_dir)
-        for item in contents:
-            if ".txz" in item:
-                tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                tarfile_objs.append(tarfile_obj)
-                os.remove(os.path.join(driver_src_dir, item))
+        if include_dependencies:
+            req_driver = this_item.driver
+            driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
+            with tarfile.open(
+                os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
+            ) as tar:
+                tar.add(driver_src_dir, arcname=req_driver)
+            contents = listdir_nohidden(driver_src_dir)
+            for item in contents:
+                if ".txz" in item:
+                    tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
+                    tarfile_objs.append(tarfile_obj)
+                    os.remove(os.path.join(driver_src_dir, item))
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
     contents = listdir_nohidden(src_dir)
