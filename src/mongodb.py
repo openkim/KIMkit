@@ -142,7 +142,7 @@ def insert_item(kimcode):
 
     try:
         db.items.insert_one(info)
-        # TODO: add set_latest_version_object() equivalent once querys work
+        set_latest_version_object(info["kimid-number"])
     except:
         logger.error("Already have %s", kimcode)
 
@@ -296,17 +296,34 @@ def find_item_by_kimcode(kimcode):
     return data
 
 
-def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
+def query_item_database(
+    filter, projection=None, skip=0, limit=0, sort=None, include_old_versions=False
+):
     """Pass a query to the KIMkit items database via pymongo.find()
 
     Args:
         filter (dict): filter to query for matching documents
+
         projection (dict, optional): dict specifying which fields to return,
             {field:1} returns that field, {field:0} Defaults to None.
+
         skip (int, optional): how many documents to skip. Defaults to 0.
-        limit (int, optional): limit how many results to return. Defaults to 0, which returns all
-        sort (list, optional): a list of (key, direction) pairs specifying the sort order for this query. Defaults to None.
+
+        limit (int, optional): limit how many results to return.
+            Defaults to 0, which returns all
+
+        sort (list, optional): a list of (key, direction) pairs specifying the sort order for this query.
+            Defaults to None.
+
+        include_old_versions: bool, optional, if True return all matching items, not
+            just the item with the highest version number
+
+    Returns: dict
     """
+
+    # by default, only return most recent versions of items
+    if not include_old_versions:
+        filter["latest"] = True
 
     data = db.items.find(
         filter, projection=projection, skip=skip, limit=limit, sort=sort
@@ -316,6 +333,63 @@ def query_item_database(filter, projection=None, skip=0, limit=0, sort=None):
         results.append(result)
 
     return results
+
+
+def rebuild_latest_tags():
+    """
+    Build the latest: True/False tags for all test results in the database
+    by finding the latest versions of all results
+    """
+    logger.info("Updating all object latest...")
+    objs = db.items.find(
+        {"type": {"$in": ["te", "td", "mo", "md", "sm", "vc"]}}, {"kimid-number": 1}
+    )
+    objs = set([o.get("kimid-number") for o in objs if "kimid-number" in o])
+    for o in objs:
+        set_latest_version_object(o)
+
+    logger.info(
+        "Updating 'latest' attribute for all Test Results, Verification Results, and Errors"
+    )
+    objs = db.items.find(
+        {"type": {"$in": ["tr", "vr", "er"]}},
+        {"runner.kimid-number": 1, "subject.kimid-number": 1},
+    )
+    objs = [(o.get("runner.kimid-number"), o.get("subject.kimid-number")) for o in objs]
+
+    # Only retain unique (runner_num, subject_num) combinations
+    objs = list(set([tuple(sorted(t)) for t in objs]))
+    for o in objs:
+        set_latest_version_result_or_error(o[0], o[1])
+
+
+def set_latest_version_object(id_num):
+    """
+    Sets KIM Objects with the highest version in their lineage to have 'latest'=True,
+    and the rest to have 'latest'=False
+    """
+    query = {"kimid-number": id_num}
+    fields = {"kimid-version": 1, "extended-id": 1}
+    sort = [("kimid-version", -1)]
+
+    objs = list(db.items.find(query, fields, sort=sort))
+
+    if len(objs) == 0:
+        logger.debug(
+            "Object %r not found in database, skipping `latest` update" % id_num
+        )
+        return
+
+    objids = [i["extended-id"] for i in objs if "extended-id" in i]
+
+    db.items.update_many(
+        {"extended-id": {"$in": objids}},
+        {"$set": {"latest": False}},
+    )
+    db.items.update_many(
+        {"extended-id": objids[0]},
+        {"$set": {"latest": True}},
+    )
 
 
 def find_user(uuid=None, personal_name=None, username=None):
