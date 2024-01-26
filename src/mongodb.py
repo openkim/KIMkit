@@ -341,26 +341,10 @@ def rebuild_latest_tags():
     by finding the latest versions of all results
     """
     logger.info("Updating all object latest...")
-    objs = db.items.find(
-        {"type": {"$in": ["te", "td", "mo", "md", "sm", "vc"]}}, {"kimid-number": 1}
-    )
+    objs = db.items.find({"type": {"$in": ["mo", "md", "sm"]}}, {"kimid-number": 1})
     objs = set([o.get("kimid-number") for o in objs if "kimid-number" in o])
     for o in objs:
         set_latest_version_object(o)
-
-    logger.info(
-        "Updating 'latest' attribute for all Test Results, Verification Results, and Errors"
-    )
-    objs = db.items.find(
-        {"type": {"$in": ["tr", "vr", "er"]}},
-        {"runner.kimid-number": 1, "subject.kimid-number": 1},
-    )
-    objs = [(o.get("runner.kimid-number"), o.get("subject.kimid-number")) for o in objs]
-
-    # Only retain unique (runner_num, subject_num) combinations
-    objs = list(set([tuple(sorted(t)) for t in objs]))
-    for o in objs:
-        set_latest_version_result_or_error(o[0], o[1])
 
 
 def set_latest_version_object(id_num):
