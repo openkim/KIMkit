@@ -182,6 +182,8 @@ def add_self_as_user(name):
         f"New user {name} (system username {system_username}) assigned UUID {new_uuid_key} and added to list of approved KIMkit users"
     )
 
+    return new_uuid_key
+
 
 def add_person(name):
     """Assign a UUID to a person without a user account on the system running KIMkit for attribution,
@@ -217,6 +219,8 @@ def add_person(name):
     logger.info(
         f"New user {name} assigned UUID {new_uuid_key} and added to list of approved KIMkit users"
     )
+
+    return new_uuid_key
 
 
 def add_own_username(uuid):

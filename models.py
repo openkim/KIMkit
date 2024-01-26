@@ -264,7 +264,7 @@ def import_item(
         shutil.copytree(tmp_dir, dest_dir)
 
         if previous_item_name != None:
-            update_makefile_kimcode(repository, previous_item_name, kimcode)
+            update_makefile_kimcode(previous_item_name, kimcode)
         else:
             logger.warning(
                 f"Kimcode update not requested when importing item {kimcode}"
