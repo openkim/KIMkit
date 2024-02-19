@@ -1,17 +1,23 @@
 """_summary_
 """
+
 import pprint
 import tarfile
 import os
+import shutil
 import time
 
 import KIMkit.models as models
 import KIMkit.metadata as metadata
 import KIMkit.users as users
 import KIMkit.kimcodes as kimcodes
+import KIMkit.src.config as cf
+
+EXAMPLE_MO_KIMCODE = "EAM_Dynamo_AcklandTichyVitek_1987_Ag__MO_212700056563_005"
+EXAMPLE_MD_KIMCODE = "EAM_Dynamo__MD_120291908751_005"
 
 
-def test_import_item(test_item_type, test_kimcode, driver_name=None):
+def test_import_item(test_item_type, test_kimcode, previous_name, driver_name=None):
     # TODO: move to user testing
     # try:
     #     assert users.is_user(personal_name="test_user") is True
@@ -53,34 +59,64 @@ def test_import_item(test_item_type, test_kimcode, driver_name=None):
         test_model_metadata["model-driver"] = str(driver_name)
 
     dirname = os.path.dirname(__file__)
-    test_tarfile_path = os.path.join(dirname, "test_model.txz")
+    test_tarfile_path = os.path.join(dirname, previous_name + ".txz")
 
     with tarfile.open(test_tarfile_path) as test_tarfile:
         models.import_item(
-            test_tarfile, test_model_metadata, previous_item_name="test_model"
+            test_tarfile, test_model_metadata, previous_item_name=previous_name
         )
 
 
 def test_version_update(test_kimcode):
-    test_item_path = kimcodes.kimcode_to_file_path(test_kimcode)
-
     dirname = os.path.dirname(__file__)
+    test_tarfile_path = os.path.join(dirname, EXAMPLE_MO_KIMCODE + ".txz")
 
-    # generate a tarfile of content from the previous version
-    # KIMkit doesn't generally inspect file contents so its moot
-    # except that version update and fork attempt to edit kimcodes in makefiles and metadata
-    with tarfile.open(
-        os.path.join(dirname, test_kimcode + ".txz"), "w:xz"
-    ) as test_update_tarfile:
-        test_update_tarfile.add(test_item_path, arcname=test_kimcode)
+    with tarfile.open(test_tarfile_path) as test_tarfile:
+
+        update_dict = {"description": "updated test model version description"}
+
+        comment = "test version update"
+
+        models.version_update(
+            test_kimcode,
+            test_tarfile,
+            metadata_update_dict=update_dict,
+            provenance_comments=comment,
+        )
+
+        name, leader, num, ver = kimcodes.parse_kim_code(test_kimcode)
+        ver = int(ver)
+        ver = ver + 1
+        ver = str(ver)
+        ver = "00" + ver
+        new_kimcode = kimcodes.format_kim_code(name, leader, num, ver)
+
+        models.update_makefile_kimcode(EXAMPLE_MO_KIMCODE, new_kimcode)
 
 
-def test_fork():
-    pass
+def test_fork(test_kimcode, new_test_kimcode):
+    dirname = os.path.dirname(__file__)
+    test_tarfile_path = os.path.join(dirname, EXAMPLE_MO_KIMCODE + ".txz")
+
+    with tarfile.open(test_tarfile_path) as test_tarfile:
+
+        update_dict = {"description": "forked test model description"}
+
+        comment = "test fork"
+
+        models.fork(
+            test_kimcode,
+            new_test_kimcode,
+            test_tarfile,
+            metadata_update_dict=update_dict,
+            provenance_comments=comment,
+        )
+
+        models.update_makefile_kimcode(EXAMPLE_MO_KIMCODE, new_test_kimcode)
 
 
-def test_install():
-    pass
+def test_install(test_kimcode):
+    models.install(test_kimcode)
 
 
 def test_delete(test_kimcode):
@@ -89,16 +125,6 @@ def test_delete(test_kimcode):
 
 def test_models():
     test_name = "KIMkit_example_Su_2024"
-    test_item_type1 = "simulator-model"
-
-    test_sm_kimcode = kimcodes.generate_kimcode(
-        name=test_name, item_type=test_item_type1
-    )
-
-    assert kimcodes.isextendedkimid(test_sm_kimcode) is True
-
-    test_import_item(test_item_type1, test_sm_kimcode)
-    test_delete(test_sm_kimcode)
 
     test_item_type2 = "model-driver"
 
@@ -108,7 +134,9 @@ def test_models():
 
     assert kimcodes.isextendedkimid(test_md_kimcode) is True
 
-    test_import_item(test_item_type2, test_md_kimcode)
+    test_import_item(
+        test_item_type2, test_md_kimcode, "EAM_Dynamo__MD_120291908751_005"
+    )
 
     test_item_type3 = "portable-model"
 
@@ -118,4 +146,50 @@ def test_models():
 
     assert kimcodes.isextendedkimid(test_mo_kimcode) is True
 
-    test_import_item(test_item_type3, test_mo_kimcode, driver_name=test_md_kimcode)
+    try:
+        test_import_item(
+            test_item_type3,
+            test_mo_kimcode,
+            "EAM_Dynamo_AcklandTichyVitek_1987_Ag__MO_212700056563_005",
+            driver_name=test_md_kimcode,
+            workflow_tarfile="workflow_test.txz",
+        )
+    except TypeError:
+
+        test_import_item(
+            test_item_type3,
+            test_mo_kimcode,
+            "EAM_Dynamo_AcklandTichyVitek_1987_Ag__MO_212700056563_005",
+            driver_name=test_md_kimcode,
+        )
+
+    test_version_update(test_mo_kimcode)
+
+    name, leader, num, __ = kimcodes.parse_kim_code(test_mo_kimcode)
+    new_version = "001"
+
+    updated_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
+
+    fork_kimcode = kimcodes.generate_kimcode(name=test_name, item_type=test_item_type3)
+
+    test_fork(test_mo_kimcode, fork_kimcode)
+
+    test_install(fork_kimcode)
+
+    models.delete(fork_kimcode)
+    models.delete(updated_kimcode)
+
+    portable_install_dir = cf.KIM_API_PORTABLE_MODELS_DIR
+    driver_install_dir = cf.KIM_API_MODEL_DRIVERS_DIR
+
+    test_model_install_dir = os.path.join(portable_install_dir, fork_kimcode)
+    test_driver_install_dir = os.path.join(driver_install_dir, test_md_kimcode)
+
+    shutil.rmtree(test_model_install_dir)
+    shutil.rmtree(test_driver_install_dir)
+
+    models.delete(test_mo_kimcode)
+    models.delete(test_md_kimcode)
+
+
+test_models()

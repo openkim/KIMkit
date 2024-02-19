@@ -352,7 +352,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             f"No item {kimcode} found in repository {repository}"
         )
 
-    __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
+    __, leader, num, __ = kimcodes.parse_kim_code(kimcode)
 
     if leader == "MO":
         item = PortableModel(kimcode=kimcode, repository=repository)
@@ -411,6 +411,8 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         raise cf.NotAnEditorError(
             "Only KIMkit Editors or the Administrator may delete items belonging to other users."
         )
+
+    mongodb.set_latest_version_object(num)
 
 
 def version_update(

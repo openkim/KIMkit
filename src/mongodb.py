@@ -7,6 +7,7 @@ ID for each user.
 "items" stores all metadata fields associated with KIMkit items, to enable users
 to easily query for subsets of items with various properties.
     """
+
 import pymongo
 import os
 import datetime
@@ -156,9 +157,11 @@ def update_item(kimcode):
 
     info.pop("_id", None)
 
+    __, __, num, __ = kimcodes.parse_kim_code(kimcode)
+
     try:
         db.items.replace_one({"kimcode": kimcode}, info)
-        # TODO: add set_latest_version_object() equivalent once querys work
+        set_latest_version_object(num)
     except:
         logger.error("Error updating db entry of item %s", kimcode)
 
