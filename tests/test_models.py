@@ -1,4 +1,4 @@
-"""_summary_
+"""Initial unit testing framework for KIMkit. To run, simply call with test_models().
 """
 
 import pprint
@@ -18,24 +18,6 @@ EXAMPLE_MD_KIMCODE = "EAM_Dynamo__MD_120291908751_005"
 
 
 def test_import_item(test_item_type, test_kimcode, previous_name, driver_name=None):
-    # TODO: move to user testing
-    # try:
-    #     assert users.is_user(personal_name="test_user") is True
-    #     test_uuid = users.get_user_info(personal_name="test_user")["uuid"]
-    #     have_test_user = True
-    # except AssertionError:
-    #     test_uuid = users.add_person("test_user")
-    #     assert users.is_user(personal_name="test_user") is True
-
-    # TODO: move to metadata testing
-    # template = metadata.get_metadata_template_for_item_type(test_item_type)
-
-    # required_keys = template["required"]
-
-    # mandatory_keys = {}
-    # for key in required_keys:
-    #     if "conditionally-required" not in required_keys[key]:
-    #         mandatory_keys[key] = required_keys[key]
 
     test_model_metadata = {}
 
