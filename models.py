@@ -189,6 +189,8 @@ def import_item(
         The user attempting to import the item isn't in the list of KIMkit users.
     InvalidItemTypeError
         The leader of the kimcode is invalid.
+    InvalidKIMCode
+        Item type not consistient with kimcode leader item type
     KimCodeAlreadyInUseError
         Specified kimcode is already in use by another item in the same repository.
     InvalidMetadataError
@@ -197,8 +199,6 @@ def import_item(
         One or more inputs required for import is missing.
     """
 
-    kimcode = metadata_dict["extended-id"]
-
     this_user = users.whoami()
     if users.is_user(username=this_user):
         UUID = users.get_user_info(username=this_user)["uuid"]
@@ -206,28 +206,33 @@ def import_item(
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
+
+    kimcode = metadata_dict["extended-id"]
+    kim_item_type=metadata_dict["kim-item-type"]
+
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
     if leader == "MO":
-        kim_item_type = "portable-model"
+        kimcode_item_type = "portable-model"
 
     elif leader == "SM":
-        kim_item_type = "simulator-model"
+        kimcode_item_type = "simulator-model"
 
     elif leader == "MD":
-        kim_item_type = "model-driver"
+        kimcode_item_type = "model-driver"
 
     else:
         raise cf.InvalidItemTypeError(
             f"Leader of kimcode {kimcode} does not represent a valid item type"
         )
+    
+    if kim_item_type != kimcode_item_type:
+        raise cf.InvalidKIMCode("Invalid Kimcode: Item type does not match kimcode leader.")
 
     if not kimcodes.is_kimcode_available(kimcode):
         raise cf.KimCodeAlreadyInUseError(
             f"kimcode {kimcode} is already in use, please select another."
         )
-
-    metadata_dict["extended-id"] = kimcode
 
     event_type = "initial-creation"
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
@@ -835,66 +840,6 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             os.remove(os.path.join(src_dir, item))
     return tarfile_objs
 
-
-def install(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
-    """Export the item, and also install it into the environment variable collection of the kim-api-collections-manager
-
-    Environment variable locations set in default-environment
-
-    Parameters
-    ----------
-    kimcode: str
-        id code of the item
-    repository : path-like, optional
-        root directory of the KIMkit repo containing the item,
-        by default cf.LOCAL_REPOSITORY_DIRECTORY
-    """
-    _ensure_KIM_API_environment_variable_collection_structure()
-
-    tarfile_objs = export(kimcode)
-
-    # extract the item from its tar archive, along with any dependencies (e.g. drivers)
-    for tar in tarfile_objs:
-        path_name = tar.name
-        file_name = os.path.split(path_name)[1]
-        if file_name.endswith(".txz"):
-            obj_kimcode = file_name[:-4]
-        __, leader, __, __ = kimcodes.parse_kim_code(obj_kimcode)
-        if leader == "MO":
-            install_dir = cf.KIM_API_PORTABLE_MODELS_DIR
-            tar.extractall(path=install_dir)
-            tar.close()
-            obj = PortableModel(
-                repository=None,
-                kimcode=obj_kimcode,
-                abspath=os.path.join(install_dir, obj_kimcode),
-            )
-        elif leader == "SM":
-            install_dir = cf.KIM_API_SIMULATOR_MODELS_DIR
-            tar.extractall(path=install_dir)
-            tar.close()
-            obj = SimulatorModel(
-                repository=None,
-                kimcode=obj_kimcode,
-                abspath=os.path.join(install_dir, obj_kimcode),
-            )
-        elif leader == "MD":
-            install_dir = cf.KIM_API_MODEL_DRIVERS_DIR
-            tar.extractall(path=install_dir)
-            tar.close()
-            obj = ModelDriver(
-                repository=None,
-                kimcode=obj_kimcode,
-                abspath=os.path.join(install_dir, obj_kimcode),
-            )
-
-        logger.debug(
-            f"Item {kimcode} from repository {repository} installed into kim-api-collection in directory {install_dir}"
-        )
-
-        obj.make()
-
-
 def update_makefile_kimcode(
     old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
 ):
@@ -957,32 +902,17 @@ def update_makefile_kimcode(
             so that KIMkit can edit them by regex when managing items."""
         )
 
-
-def _ensure_KIM_API_environment_variable_collection_structure():
-    """Create the expected directory structure within the KIM API
-    environment variable install directory, if it does not already exist
-
-    Environment variables are set in default-environment, and can be
-    overridden in KIMkit-env
-    """
-
-    root_path = cf.KIM_API_PREFIX_DIR
-
-    if not os.path.isdir(root_path):
-        os.mkdir(root_path)
-
-    target_dirs = [
-        cf.KIM_API_PORTABLE_MODELS_DIR,
-        cf.KIM_API_SIMULATOR_MODELS_DIR,
-        cf.KIM_API_MODEL_DRIVERS_DIR,
-    ]
-
-    for dir in target_dirs:
-        if not os.path.isdir(dir):
-            os.mkdir(dir)
-
-
 def listdir_nohidden(path):
+    """List the files and directories in a given path,
+    ignoring hiden files/directories.
+
+    Args:
+        path (path-like): directory who's conents to list
+
+    Returns:
+       list: list of all files and directories in path,
+       excluding hidden files/directories
+    """
     good_files_and_dirs = []
     for f in os.listdir(path):
         if not f.startswith("."):

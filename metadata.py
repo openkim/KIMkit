@@ -658,31 +658,27 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     )
         elif field in kimspec_arrays:
             if kimspec_arrays[field] == "list":
-                for item in metadata_dict[field]:
-                    if isinstance(item, str):
-                        pass
-                    else:
-                        raise TypeError(f"Metadata field {field} must be list of str.")
+                if isinstance(metadata_dict[field],list):
+                    for item in metadata_dict[field]:
+                        if isinstance(item, str):
+                            pass
+                        else:
+                            raise TypeError(f"Metadata field {field} must be list of str.")
 
-                    if field in kimspec_uuid_fields:
-                        if not kimcodes.is_valid_uuid4(item):
-                            raise TypeError(
-                                f"Metadata Field {field} should be a list of UUID4 strings"
-                            )
-                        if not users.is_user(uuid=item):
-                            raise cf.KIMkitUserNotFoundError(
-                                f"UUID {item} not recognized as a KIMkit user"
-                            )
-            elif kimspec_arrays[field] == "dict":
-                keys_to_remove = []
-                for key in metadata_dict[field]:
-                    if key not in kimspec_arrays_dicts[field]:
-                        keys_to_remove.append(key)
-                        warnings.warn(
-                            f"Metadata field '{key}' in field {field} not used for kim item type {kim_item_type}, ignoring."
+                        if field in kimspec_uuid_fields:
+                            if not kimcodes.is_valid_uuid4(item):
+                                raise TypeError(
+                                    f"Metadata Field {field} should be a list of UUID4 strings"
+                                )
+                            if not users.is_user(uuid=item):
+                                raise cf.KIMkitUserNotFoundError(
+                                    f"UUID {item} not recognized as a KIMkit user"
+                                )
+                else:
+                    raise TypeError(
+                            f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
                         )
-                for key in keys_to_remove:
-                    metadata_dict[field].pop(key, None)
+            elif kimspec_arrays[field] == "dict":
 
                 if isinstance(metadata_dict[field], dict):
                     for key in kimspec_arrays_dicts[field]:
@@ -711,6 +707,18 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
                     )
+                
+                keys_to_remove = []
+                for key in metadata_dict[field]:
+                    if key not in kimspec_arrays_dicts[field]:
+                        keys_to_remove.append(key)
+                        warnings.warn(
+                            f"Metadata field '{key}' in field {field} not used for kim item type {kim_item_type}, ignoring."
+                        )
+                for key in keys_to_remove:
+                    metadata_dict[field].pop(key, None)
+
+                
 
     return metadata_dict
 
