@@ -35,8 +35,6 @@ that their contributions can be tracked and credited.
 """
 
 import uuid
-import kim_edn
-import os
 import getpass
 
 from .src import config as cf
