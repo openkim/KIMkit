@@ -206,7 +206,7 @@ def is_kimcode_available(kimcode):
     bool
         whether the kimcode is unused
     """
-    data = mongodb.find_item_by_kimcode(kimcode)
+    data = mongodb.find_item_by_kimnum(kimcode)
     if not data:
         return True
     else:

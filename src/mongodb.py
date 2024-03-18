@@ -288,6 +288,26 @@ def find_item_by_kimcode(kimcode):
 
     return data
 
+def find_item_by_kimnum(kimcode):
+    """Do a query to find items with the given ID number in their kimcode
+
+    Args:
+        kimcode (str): ID code of the item
+
+    Raises:
+        InvalidKIMCode: Invalid kimcode
+
+    Returns:
+        dict: metadata of the item matching the kimcode
+    """
+    if kimcodes.iskimid(kimcode):
+        __,__,num,__=kimcodes.parse_kim_code(kimcode)
+        data = db.items.find({"kimnum":num})
+    else:
+        raise cf.InvalidKIMCode("Invalid KIMkit ID code.")
+    
+    return data
+
 
 def query_item_database(
     filter, projection=None, skip=0, limit=0, sort=None, include_old_versions=False
