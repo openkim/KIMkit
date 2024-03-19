@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>The Users Module &#8212; KIMkit 0.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -46,35 +45,38 @@
             
   <p id="users">Previous Section: <a class="reference internal" href="metadata.html"><span class="doc">The Metadata Module</span></a></p>
 <section id="module-KIMkit.users">
-<span id="the-users-module"></span><h1>The Users Module<a class="headerlink" href="#module-KIMkit.users" title="Permalink to this heading">¶</a></h1>
+<span id="the-users-module"></span><h1>The Users Module<a class="headerlink" href="#module-KIMkit.users" title="Link to this heading">¶</a></h1>
 <p>This module contains utility functions used to manager users and permissions in <strong>KIMkit</strong>.</p>
 <p><strong>KIMkit</strong> defines 3 levels of user access: Administrator, Editor, and User.</p>
-<p>There is only one Administrator per installation of <strong>KIMkit</strong>. Inside the KIMkit/settings/ directory the
-system administrator should create a file called ‘editors.txt’ which all users have read access to,
-but only the Administrator has write access to.
-Indeed, <strong>KIMkit</strong> determines whether a given user is the Administrator by checking whether the operating system grants
-them write access to editors.txt. Therefore only the Administrator can elevate Users to Editors,
-or perfom certian other potenitally destructive actions.</p>
-<p>editors.txt should contain a sequence of operating-system usernames as returned by <code class="docutils literal notranslate"><span class="pre">getpass.getuser()</span></code>.
-If the current user is in editors.txt, <strong>KIMkit</strong> recoggnizes them as an Editor, and allows them certian
-elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
+<p>There is only one Administrator per installation of <strong>KIMkit</strong>.
+Inside the KIMkit/settings/ directory the system administrator should create a file called
+‘editors.txt’ which all users have read access to, but only the Administrator has write
+access to. Indeed, <strong>KIMkit</strong> determines whether a given user is the Administrator by
+checking whether the operating system grants them write access to editors.txt.
+Therefore only the Administrator can elevate Users to Editors, or perfom certian other
+potenitally destructive actions.</p>
+<p>editors.txt should contain a sequence of operating-system usernames as returned by
+<code class="docutils literal notranslate"><span class="pre">getpass.getuser()</span></code>. If the current user is in editors.txt, <strong>KIMkit</strong> recognizes
+them as an Editor, and allows them certian elevated permissions
+(e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.</p>
 <p>The Administrator should be listed as an Editor for most use cases.</p>
-<p>Seperately from editors.txt, there is also a file named user_uuids.edn which will be created in the KIMkit/settings/ directory,
-if it does not exist, which stores information about all <strong>KIMkit</strong> users. This file contains an .edn dictionary where the keys are
-UUID4s assigned to each user, and the values are an array that contain strings, with the user’s personal name,
-and optionally their operating system username (if any). These UUID4s define the identities of <strong>KIMkit</strong> users, and
-whenever a user tries to modify content on disk, <strong>KIMkit</strong> will check if their operating system username is assigned
-to a UUID4 in user_uuids.edn, and if not the operation will fail with an exception that prompts the user to add themselves
-to the user list and be assigned a UUID4 by calling <code class="docutils literal notranslate"><span class="pre">add_self_as_user()</span></code> on their personal name. This is needed to track
-contributors, developers, maintainers, etc. which are stored as UUID4s in the metadata file kimspec.edn associated with
-each <strong>KIMkit</strong> item. If someone without a login on the system running <strong>KIMkit</strong> has contributed to an item, a user may
-assign them a UUID4 by calling <code class="docutils literal notranslate"><span class="pre">add_person()</span></code> on their personal name so that their contributions can be tracked and credited.</p>
-<p>This module also implements several utility functions to lookup users based on UUID4, personal name, or operating system
-username, whichever is available, as well as verifying that a given string parses to a correctly formatted hexadecimal UUID4.</p>
+<p>Seperately from editors.txt, there is also a “users” collection in the KIMkit mongodb database,
+which stores information about all <strong>KIMkit</strong> users. This collection stores UUID4s assigned to
+each user, the user’s personal name, and optionally their operating system username (if any).</p>
+<p>These UUID4s define the identities of <strong>KIMkit</strong> users, and whenever a user tries to modify
+content on disk, <strong>KIMkit</strong> will check if their operating system username is assigned
+to a UUID4 in the database, and if not the operation will fail with an exception that prompts
+the user to add themselves to the user list and be assigned a UUID4 by calling
+<code class="docutils literal notranslate"><span class="pre">add_self_as_user()</span></code> on their personal name. This is needed to track contributors,
+developers, maintainers, etc. which are stored as UUID4s in the metadata file kimspec.edn
+associated with each <strong>KIMkit</strong> item and their respective database entries.
+If someone without a login on the system running <strong>KIMkit</strong> has contributed to an item,
+a user may assign them a UUID4 by calling <code class="docutils literal notranslate"><span class="pre">add_person()</span></code> on their personal name so
+that their contributions can be tracked and credited.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.whoami">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">whoami</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.whoami" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">whoami</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.whoami" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>operating system username of the current user</p>
@@ -87,7 +89,7 @@ username, whichever is available, as well as verifying that a given string parse
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.is_administrator">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_administrator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_administrator" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_administrator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_administrator" title="Link to this definition">¶</a></dt>
 <dd><p>Check whether this user has write permissions from the operating system for the editors file,
 if so, this user is the administrator.</p>
 <dl class="field-list simple">
@@ -102,7 +104,7 @@ if so, this user is the administrator.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.is_editor">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_editor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_editor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_editor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_editor" title="Link to this definition">¶</a></dt>
 <dd><p>Read the editors.txt file to check if the current user’s
 operating system username is present, if so, the current user is an editor,
 and is_editor() returns True.</p>
@@ -118,7 +120,7 @@ and is_editor() returns True.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.add_editor">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_editor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">editor_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_administrator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_editor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_editor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">editor_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_administrator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_editor" title="Link to this definition">¶</a></dt>
 <dd><p>A function for the Administrator to add users to the set of approved KIMkit Editors</p>
 <p>Requires Administrator Priveleges.</p>
 <dl class="field-list simple">
@@ -139,7 +141,7 @@ and is_editor() returns True.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.add_self_as_user">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_self_as_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_self_as_user" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_self_as_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_self_as_user" title="Link to this definition">¶</a></dt>
 <dd><p>Function to be used when a new user uses KIMkit for the first time,
 to assign themselves a UUID4 and adds them to the list of approved KIMkit users.</p>
 <p>Checks if this user has already been added to the user file.</p>
@@ -156,7 +158,7 @@ to assign themselves a UUID4 and adds them to the list of approved KIMkit users.
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.add_person">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_person</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_person" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_person</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_person" title="Link to this definition">¶</a></dt>
 <dd><p>Assign a UUID to a person without a user account on the system running KIMkit for attribution,
 and add them to the list of approved users.</p>
 <p>This function is intended to allow individuals who contributed to content in KIMkit,
@@ -173,8 +175,24 @@ by assigning them a UUID4 and associating it to ther personal name.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="KIMkit.users.add_own_username">
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_own_username</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_own_username" title="Link to this definition">¶</a></dt>
+<dd><p>Intened for users who have been added to the
+KIMkit users database before they had an account
+on the system KIMkit is running on. Such users may
+call this function to have their username added
+to their entry in the users collection the before the
+first time they run a KIMkit command that requires a UUID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>uuid</strong> (<em>uuid4 as str</em>) – id code of the user</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.delete_user">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">delete_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.delete_user" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">delete_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.delete_user" title="Link to this definition">¶</a></dt>
 <dd><p>Remove a user from the list of approved users.</p>
 <p>Requires editor privleges.</p>
 <dl class="field-list simple">
@@ -196,95 +214,35 @@ by assigning them a UUID4 and associating it to ther personal name.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="KIMkit.users.get_name_of_user">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">get_name_of_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.get_name_of_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>get the personal name of a user from their uuid</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>user_id</strong> (<em>str</em>) – uuid of the user</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>name</strong> – name of the user corresponding to the uuid</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>TypeError</strong> – Invalid UUID4</p></li>
-<li><p><strong>KIMkitUserNotFoundError</strong> – Specified user_id not found in the user data file</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="KIMkit.users.get_system_username_of_user">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">get_system_username_of_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.get_system_username_of_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>get the operating system username of a user from their uuid</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>user_id</strong> (<em>str</em>) – uuid of the user</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>name</strong> – operating system username of the user corresponding to the uuid</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>TypeError</strong> – Invalid UUID4</p></li>
-<li><p><strong>KIMkitUserNotFoundError</strong> – Specified user_id not found in the user data file</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="KIMkit.users.get_uuid">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">get_uuid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system_username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">personal_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.get_uuid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a personal name or system username, return the associated UUID (if any)</p>
+<dt class="sig sig-object py" id="KIMkit.users.get_user_info">
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">get_user_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">personal_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.get_user_info" title="Link to this definition">¶</a></dt>
+<dd><p>Return the UUID, username, and personal name associated
+with a given KIMkit user, which can be queried by any of the
+above fields.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system_username</strong> (<em>str</em><em>, </em><em>optional</em>) – unix username of the user account, by default None</p></li>
-<li><p><strong>personal_name</strong> (<em>str</em><em>, </em><em>optional</em>) – personal name of a user, by default None</p></li>
+<li><p><strong>uuid</strong> (<em>str</em><em> (</em><em>UUID4</em><em>)</em><em>, </em><em>optional</em>) – UUID assigned to a user. Defaults to None.</p></li>
+<li><p><strong>username</strong> (<em>str</em><em>, </em><em>optional</em>) – operating system username of the user. Defaults to None.</p></li>
+<li><p><strong>personal_name</strong> (<em>str</em><em>, </em><em>optional</em>) – persona name of the user. Defaults to None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>UUID</strong> – unique id assigned to the user in UUID4 format</p>
+<dd class="field-even"><p>user identity information</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="KIMkit.users.is_valid_uuid4">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_valid_uuid4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_valid_uuid4" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check whether a given string can be converted
-to a valid UUID4</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – UUID string to be checked</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>whether the val is a valid UUID4</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.users.is_user">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system_username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">personal_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_user" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">personal_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_user" title="Link to this definition">¶</a></dt>
 <dd><p>Return True if the user currently logged in is in the list of approved users
 stored in the user data file.</p>
-<p>Generally, only one of system_username, personal_name, or user_id should be specified.</p>
+<p>It is possible to search for users matching any of a specified uuid4,
+personal name, or operating system username.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -325,11 +283,9 @@ stored in the user data file.</p>
 <li><a class="reference internal" href="#KIMkit.users.add_editor"><code class="docutils literal notranslate"><span class="pre">add_editor()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.users.add_self_as_user"><code class="docutils literal notranslate"><span class="pre">add_self_as_user()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.users.add_person"><code class="docutils literal notranslate"><span class="pre">add_person()</span></code></a></li>
+<li><a class="reference internal" href="#KIMkit.users.add_own_username"><code class="docutils literal notranslate"><span class="pre">add_own_username()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.users.delete_user"><code class="docutils literal notranslate"><span class="pre">delete_user()</span></code></a></li>
-<li><a class="reference internal" href="#KIMkit.users.get_name_of_user"><code class="docutils literal notranslate"><span class="pre">get_name_of_user()</span></code></a></li>
-<li><a class="reference internal" href="#KIMkit.users.get_system_username_of_user"><code class="docutils literal notranslate"><span class="pre">get_system_username_of_user()</span></code></a></li>
-<li><a class="reference internal" href="#KIMkit.users.get_uuid"><code class="docutils literal notranslate"><span class="pre">get_uuid()</span></code></a></li>
-<li><a class="reference internal" href="#KIMkit.users.is_valid_uuid4"><code class="docutils literal notranslate"><span class="pre">is_valid_uuid4()</span></code></a></li>
+<li><a class="reference internal" href="#KIMkit.users.get_user_info"><code class="docutils literal notranslate"><span class="pre">get_user_info()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.users.is_user"><code class="docutils literal notranslate"><span class="pre">is_user()</span></code></a></li>
 </ul>
 </li>
@@ -387,8 +343,8 @@ stored in the user data file.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2023, Brendon Waters.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2023, Brendon Waters.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

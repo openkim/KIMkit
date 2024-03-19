@@ -190,7 +190,8 @@ def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
 def is_kimcode_available(kimcode):
     """Check for kimcode collisions in this KIMkit installation
 
-    Query the database for existing items with this kimcodde,
+    Query the database for existing items with the same 12
+    digit pseudorandom id number in their kimcode,
     return True if none are found, otherwise return False
 
     Parameters

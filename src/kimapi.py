@@ -11,7 +11,7 @@ import packaging.specifiers, packaging.version
 from . import config as cf
 from .logger import logging
 
-logger = logging.getLogger("pipeline").getChild("kimapi")
+logger = logging.getLogger("KIMkit")
 
 # ======================================
 # API build utilities

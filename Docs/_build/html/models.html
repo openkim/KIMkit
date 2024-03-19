@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>The Models Module &#8212; KIMkit 0.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -46,39 +45,49 @@
             
   <p id="models">Previous Section: <a class="reference internal" href="quick_start.html"><span class="doc">Getting Started</span></a></p>
 <section id="module-KIMkit.models">
-<span id="the-models-module"></span><h1>The Models Module<a class="headerlink" href="#module-KIMkit.models" title="Permalink to this heading">¶</a></h1>
-<p>This module contains the classes corresponding to the various <strong>KIMkit</strong> items (portable-model, simulator-model, and model-driver),
-along with functions to manage them.</p>
+<span id="the-models-module"></span><h1>The Models Module<a class="headerlink" href="#module-KIMkit.models" title="Link to this heading">¶</a></h1>
+<p>This module contains the classes corresponding to the various <strong>KIMkit</strong> items
+(portable-model, simulator-model, and model-driver), along with functions to manage them.</p>
 <p>In general, content is passed in and out of <strong>KIMkit</strong> as tarfile.TarFile objects, so that
 automated systems can submit and retrieve KIMkit content without needing to write to disk.</p>
-<p>When creating a new item, either importing it into <strong>KIMkit</strong> for the first time, or forking an existing item,
-you should first generate a kimcode for the item by calling <code class="docutils literal notranslate"><span class="pre">kimcodes.generate_kimcode()</span></code> with a human-readable prefix
-for the item, its item-type, and the repository it is to be saved in (to ensure that kimcode is not already in use).</p>
-<p>New content may be added by calling <code class="docutils literal notranslate"><span class="pre">import_item()</span></code> with a tarfile.TarFile object containing the item’s source code and
-associated files, a kimcode, and a dict of metadata. The item’s content will be unpacked, assigned a directory in the
-repository based on its kimcode ID number, the content and structure of its metadata will be verified and written into
-the kimspec.edn file that stores metadata for the item. Additionally, the initial entry in the item’s history file
+<p>When creating a new item, either importing it into <strong>KIMkit</strong> for the first time,
+or forking an existing item, you should first generate a kimcode for the item by
+calling <code class="docutils literal notranslate"><span class="pre">kimcodes.generate_kimcode()</span></code> with a human-readable prefix for the item,
+its item-type, and the repository it is to be saved in
+(to ensure that kimcode is not already in use).</p>
+<p>New content may be added by calling <code class="docutils literal notranslate"><span class="pre">import_item()</span></code> with a tarfile.TarFile object
+containing the item’s source code and associated files and a dict of metadata.
+The item’s content will be unpacked, assigned a directory in the
+repository based on its kimcode ID number, the content and structure of its
+metadata will be verified and written into the kimspec.edn file that stores metadata
+for the item, and a copy of this metadata will be inserted into the KIMkit MongoDB
+database for easy querying. Additionally, the initial entry in the item’s history file
 kimprovenance.edn will be created and stored in the item’s directory for record keeping.</p>
-<p>New items may be created from existing <strong>KIMkit</strong> items via either the <code class="docutils literal notranslate"><span class="pre">version_update()</span></code> or <code class="docutils literal notranslate"><span class="pre">fork()</span></code> functions,
-both of which take the kimcode of an existing item and a tarfile.TarFile of new content to do the update,
-along with optional dicts of metadata changes and comments about what was updated and why. The major difference
-betwen these functions is that <code class="docutils literal notranslate"><span class="pre">version_update()</span></code> creates a new version of the same item, maintained by the same
-individual, just with its version number incremented, while <code class="docutils literal notranslate"><span class="pre">fork()</span></code> copies the item’s content into version 000
-of a new item, with whoever called <code class="docutils literal notranslate"><span class="pre">fork()</span></code> set as the maintainer of the new item. This allows the initial contributor
-of a given item to retain ownership of it, but all collaborators can use that content to base their own items on.</p>
-<p>Contributors or maintainers of items may modify or delete their own content, otherwise a <strong>KIMkit</strong> Editor must run those
+<p>New items may be created from existing <strong>KIMkit</strong> items via either the
+<code class="docutils literal notranslate"><span class="pre">version_update()</span></code> or <code class="docutils literal notranslate"><span class="pre">fork()</span></code> functions, both of which take the kimcode of an
+existing item, and a tarfile.TarFile of new content to do the update, along with
+optional dicts of metadata changes and comments about what was updated and why. The major difference
+betwen these functions is that <code class="docutils literal notranslate"><span class="pre">version_update()</span></code> creates a new version of the same item,
+maintained by the same individual, just with its version number incremented, while <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
+copies the item’s content into version 000 of a new item, with whoever called <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
+set as the maintainer of the new item. This allows the initial contributor
+of a given item to retain ownership of it, but all collaborators can use that content
+to base their own items on.</p>
+<p>Contributors or maintainers of items may modify or delete their own content,
+otherwise a <strong>KIMkit</strong> Editor must run those
 functions with <code class="docutils literal notranslate"><span class="pre">run_as_editor=True</span></code> to modify content they don’t own.</p>
-<p>This module also exposes an <code class="docutils literal notranslate"><span class="pre">export()</span></code> function that returns an item’s content as a tarfile.TarFile object, and an
-<code class="docutils literal notranslate"><span class="pre">install()</span></code> function, that unpacks the tar object into the KIM API environment variable collection,
-on a path specified in default-environment, builds the item, and installs it into the KIM API so that its executable
+<p>This module also exposes an <code class="docutils literal notranslate"><span class="pre">export()</span></code> function that returns an item’s content as a
+tarfile.TarFile object, and an <code class="docutils literal notranslate"><span class="pre">install()</span></code> function, that unpacks the tar object into
+the KIM API environment variable collection on a path specified in default-environment,
+builds the item, and installs it into the KIM API so that its executable
 code is available for simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="KIMkit.models.PortableModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">PortableModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.PortableModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">PortableModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.PortableModel" title="Link to this definition">¶</a></dt>
 <dd><p>Portable Model Class</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="KIMkit.models.PortableModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.PortableModel.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.PortableModel.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Class representing KIMkit portable-models</p>
 <p>Inherits from OpenKIM PortableModel class</p>
 <dl class="field-list simple">
@@ -96,11 +105,11 @@ code is available for simulations.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="KIMkit.models.SimulatorModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">SimulatorModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.SimulatorModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">SimulatorModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.SimulatorModel" title="Link to this definition">¶</a></dt>
 <dd><p>Simulator Model Class</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="KIMkit.models.SimulatorModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.SimulatorModel.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.SimulatorModel.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Class representing KIMkit simulator-models</p>
 <p>Inherits from OpenKIM SimulatorModel class</p>
 <dl class="field-list simple">
@@ -118,11 +127,11 @@ code is available for simulations.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="KIMkit.models.ModelDriver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">ModelDriver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.ModelDriver" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">ModelDriver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.ModelDriver" title="Link to this definition">¶</a></dt>
 <dd><p>Model Driver Class</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="KIMkit.models.ModelDriver.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.ModelDriver.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abspath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.ModelDriver.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Class representing KIMkit model-drivers</p>
 <p>Inherits from OpenKIM ModelDriver class</p>
 <dl class="field-list simple">
@@ -140,7 +149,7 @@ code is available for simulations.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.import_item">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">import_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previous_item_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.import_item" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">import_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previous_item_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.import_item" title="Link to this definition">¶</a></dt>
 <dd><p>Create a directory in the selected repository for the item based on its kimcode,
 copy the item’s files into it, generate needed metadata and provenance files,
 and store them with the item.</p>
@@ -149,7 +158,6 @@ and store them with the item.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tarfile_obj</strong> (<em>tarfile.TarFile</em>) – tarfile object containing item files</p></li>
-<li><p><strong>kimcode</strong> (<em>str</em>) – id code of the item</p></li>
 <li><p><strong>metadata_dict</strong> (<em>dict</em>) – dict of all required and any optional metadata key-value pairs</p></li>
 <li><p><strong>previous_item_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name the item was assigned before being imported into this KIMkit repository, if any.
 May be a kimcode or regular string.
@@ -164,6 +172,7 @@ by default set to cf.LOCAL_REPOSITORY_PATH</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>KIMkitUserNotFoundError</strong> – The user attempting to import the item isn’t in the list of KIMkit users.</p></li>
 <li><p><strong>InvalidItemTypeError</strong> – The leader of the kimcode is invalid.</p></li>
+<li><p><strong>InvalidKIMCode</strong> – Item type not consistient with kimcode leader item type</p></li>
 <li><p><strong>KimCodeAlreadyInUseError</strong> – Specified kimcode is already in use by another item in the same repository.</p></li>
 <li><p><strong>InvalidMetadataError</strong> – Metadata does not comply with KIMkit standard.</p></li>
 <li><p><strong>AttributeError</strong> – One or more inputs required for import is missing.</p></li>
@@ -174,7 +183,7 @@ by default set to cf.LOCAL_REPOSITORY_PATH</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.delete">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.delete" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.delete" title="Link to this definition">¶</a></dt>
 <dd><p>Delete an item from the repository and all of its content</p>
 <p>Users may delete items if they are the contributor or maintainer of that item.
 Otherwise, a KIMkit editor must delete the item, by specifying run_as_editor=True.</p>
@@ -202,7 +211,7 @@ by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.version_update">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">version_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_update_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance_comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.version_update" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">version_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_update_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance_comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_as_editor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.version_update" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new version of the item with new content and possibly new metadata</p>
 <p>Expects the content of the new version of the item to be passed in as a tarfile.Tarfile object.</p>
 <p>Users may update items if they are the contributor or maintainer of that item.
@@ -235,7 +244,7 @@ and update items they are neither the contributor nor maintainer of, by default 
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.fork">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">fork</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_update_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance_comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.fork" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">fork</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tarfile_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_update_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance_comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.fork" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new item, based off a fork of an existing one,
 with new content and possibly new metadata</p>
 <p>Expects the content of the new version of the item to be passed in as a tarfile.Tarfile object.</p>
@@ -244,7 +253,7 @@ with new content and possibly new metadata</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>kimcode</strong> (<em>str</em>) – ID code of the item to be forked</p></li>
 <li><p><strong>new_kimcode</strong> (<em>str</em>) – id code the new item will be assigned</p></li>
-<li><p><strong>tarfile_obj</strong> (<em>tarfile.Tarfile</em>) – tarfile object containing the new version’s content</p></li>
+<li><p><strong>tarfile_obj</strong> (<em>tarfile.Tarfile</em><em>, </em><em>optional</em>) – tarfile object containing the new version’s content</p></li>
 <li><p><strong>repository</strong> (<em>path-like</em><em>, </em><em>optional</em>) – root directory of the KIMkit repo containing the item,
 by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 <li><p><strong>metadata_update_dict</strong> (<em>dict</em><em>, </em><em>optional</em>) – dict of any metadata keys to be changed in the new version, by default None</p></li>
@@ -265,12 +274,14 @@ by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.export">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.export" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_dependencies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.export" title="Link to this definition">¶</a></dt>
 <dd><p>Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>kimcode</strong> (<em>str</em>) – id code of the item</p></li>
+<li><p><strong>include_dependencies</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to allow exports of KIMkit content without included dependencies,
+e.g. drivers, by default True</p></li>
 <li><p><strong>repository</strong> (<em>path-like</em><em>, </em><em>optional</em>) – root directory of the KIMkit repo containing the item,
 by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 </ul>
@@ -289,24 +300,8 @@ and any dependancies (e.g. model-drivers) needed for it to run</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="KIMkit.models.install">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">install</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.install" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export the item, and also install it into the environment variable collection of the kim-api-collections-manager</p>
-<p>Environment variable locations set in default-environment</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kimcode</strong> (<em>str</em>) – id code of the item</p></li>
-<li><p><strong>repository</strong> (<em>path-like</em><em>, </em><em>optional</em>) – root directory of the KIMkit repo containing the item,
-by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="KIMkit.models.update_makefile_kimcode">
-<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">update_makefile_kimcode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.update_makefile_kimcode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">update_makefile_kimcode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_kimcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cf.LOCAL_REPOSITORY_PATH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.update_makefile_kimcode" title="Link to this definition">¶</a></dt>
 <dd><p>Search through the item’s directory for makefiles containing kimcodes matching a previous version of the item,
 and attempt to replace them with the item’s new kimcode.</p>
 <dl class="field-list simple">
@@ -317,6 +312,25 @@ and attempt to replace them with the item’s new kimcode.</p>
 <li><p><strong>repository</strong> (<em>path-like</em><em>, </em><em>optional</em>) – root directory of the KIMkit repo containing the item,
 by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="KIMkit.models.listdir_nohidden">
+<span class="sig-prename descclassname"><span class="pre">KIMkit.models.</span></span><span class="sig-name descname"><span class="pre">listdir_nohidden</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.models.listdir_nohidden" title="Link to this definition">¶</a></dt>
+<dd><p>List the files and directories in a given path,
+ignoring hiden files/directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>path-like</em>) – directory who’s conents to list</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of all files and directories in path,
+excluding hidden files/directories</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -352,8 +366,8 @@ by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
 <li><a class="reference internal" href="#KIMkit.models.version_update"><code class="docutils literal notranslate"><span class="pre">version_update()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.models.fork"><code class="docutils literal notranslate"><span class="pre">fork()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.models.export"><code class="docutils literal notranslate"><span class="pre">export()</span></code></a></li>
-<li><a class="reference internal" href="#KIMkit.models.install"><code class="docutils literal notranslate"><span class="pre">install()</span></code></a></li>
 <li><a class="reference internal" href="#KIMkit.models.update_makefile_kimcode"><code class="docutils literal notranslate"><span class="pre">update_makefile_kimcode()</span></code></a></li>
+<li><a class="reference internal" href="#KIMkit.models.listdir_nohidden"><code class="docutils literal notranslate"><span class="pre">listdir_nohidden()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -410,8 +424,8 @@ by default cf.LOCAL_REPOSITORY_DIRECTORY</p></li>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2023, Brendon Waters.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2023, Brendon Waters.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

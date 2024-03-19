@@ -16,3 +16,4 @@ test.py
 *.egg-info/
 repository/*
 KIMkit_kim_api_environment_collection/*
+*.DS_Store*

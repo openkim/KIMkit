@@ -169,8 +169,6 @@ def import_item(
     ----------
     tarfile_obj : tarfile.TarFile
         tarfile object containing item files
-    kimcode : str
-        id code of the item
     metadata_dict : dict
         dict of all required and any optional metadata key-value pairs
     previous_item_name : str, optional

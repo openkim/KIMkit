@@ -166,7 +166,7 @@ def add_self_as_user(name):
     new_uuid = uuid.uuid4()
     new_uuid_key = new_uuid.hex
 
-    if is_user(personal_name=name):
+    if is_user(personal_name=name) or is_user(username=system_username):
         user_data = get_user_info(personal_name=name)
 
         existing_uuid = user_data["uuid"]
@@ -303,6 +303,18 @@ def delete_user(user_id, run_as_editor=False):
 
 
 def get_user_info(uuid=None, username=None, personal_name=None):
+    """Return the UUID, username, and personal name associated
+    with a given KIMkit user, which can be queried by any of the
+    above fields.
+
+    Args:
+        uuid (str (UUID4), optional): UUID assigned to a user. Defaults to None.
+        username (str, optional): operating system username of the user. Defaults to None.
+        personal_name (str, optional): persona name of the user. Defaults to None.
+
+    Returns:
+       dict: user identity information
+    """
     if uuid:
         if not kimcodes.is_valid_uuid4(uuid):
             raise (cf.InvalidKIMCode("Invalid UUID"))

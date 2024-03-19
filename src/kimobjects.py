@@ -5,7 +5,7 @@
 .. moduleauthor:: Alex Alemi <alexalemi@gmail.com>, Matt Bierbaum <mkb72@cornell.com>,
                   Daniel S. Karls <karl0100@umn.edu>, Brendon Waters <bwaters@umn.edu>
 
-A pure python object wrapper for the pipeline stuff
+A pure python object wrapper for KIMkit objects
 
 Has a base ``KIMObject`` class and
 
@@ -30,7 +30,7 @@ from . import kimapi
 # import template
 from .logger import logging
 
-logger = logging.getLogger("pipeline").getChild("kimobjects")
+logger = logging.getLogger("KIMkit")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -348,10 +348,9 @@ class Subject(KIMItem):
         associated files). If not, just use shutil to remove the directory.
         """
         logger.warning("Deleting item %r from local repository", self)
-        if cf.PIPELINE_DIRECTOR or cf.PIPELINE_WORKER:
-            subprocess.call(
-                ["kim-api-collections-management", "remove", "--force", self.kim_code]
-            )
+        subprocess.call(
+            ["kim-api-collections-management", "remove", "--force", self.kim_code]
+        )
         shutil.rmtree(self.path, ignore_errors=True)
 
 
@@ -502,10 +501,9 @@ class ModelDriver(KIMItem):
             child.delete()
 
         # Now, remove the Model Driver itself
-        if cf.PIPELINE_DIRECTOR or cf.PIPELINE_WORKER:
-            subprocess.check_call(
-                ["kim-api-collections-management", "remove", "--force", self.kim_code]
-            )
+        subprocess.check_call(
+            ["kim-api-collections-management", "remove", "--force", self.kim_code]
+        )
         shutil.rmtree(self.path, ignore_errors=True)
 
     @property

@@ -16,17 +16,6 @@ Additionally, this file contains some custom KIMkit exception types used for int
 def tostr(cls):
     return ".".join(map(str, cls))
 
-
-# First, record the current version of the pipeline and KIM API installed
-__kim_api_version__ = "2.2.1"
-
-# The following clauses specify what kim-api-versions that
-# the KIM API currently installed can actually compile and use.
-
-__kim_api_version_support_clauses__ = [(1, 6, 0), (1, 9, 0), (2, 0, 0)]
-
-__kim_api_version_support_spec__ = ">= " + tostr(__kim_api_version_support_clauses__[2])
-
 # =============================================================================
 # the environment parsing equipment
 # =============================================================================
@@ -109,6 +98,12 @@ def machine_id():
 
 
 def ensure_repository_structure(local_repository_path):
+    """Create the KIMkit model repository directories,
+    if they do not already exist
+
+    Args:
+        local_repository_path (path-like): root directory of the repository
+    """
     for fldr in ["portable-models", "simulator-models", "model-drivers"]:
         p = os.path.join(local_repository_path, fldr)
         subprocess.check_call(["mkdir", "-p", p])

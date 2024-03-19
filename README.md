@@ -43,14 +43,14 @@ edits to content contributed by or maintained by other users.
 **KIMkit** defines 3 levels of user access: Administrator, Editor, and User.
 
 There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory there should be
-a subdirectory "settings", which should contain a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
+a subdirectory "settings", where the owner of this **KIMkit** installation should create a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, **KIMkit** recognizes them as an Editor, and allows them certain
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.
 
 The Administrator should be listed as an Editor for most use cases.
 
-The default-environment file contains paths and settings to be used as default environment variables for a variety of **KIMkit** settings. The main path KIMKIT_DATA_DIRECTORY is unset by default, and should be configured to point to the path where **KIMkit** is installed. These settings can be overridden by a file called KIMkit-env stored inside the directory **KIMkit** is installed to to allow for finer control of settings per installation.
+The default-environment file contains paths and settings to be used as default environment variables for a variety of **KIMkit** settings. The main path KIMKIT_DATA_DIRECTORY is unset by default, and should be configured to point to the path where **KIMkit** is installed. These settings can be overridden by a file called KIMkit-env stored inside the top-level **KIMkit** directory to allow for finer control of settings per installation.
 
 ## First Time Using KIMkit
 

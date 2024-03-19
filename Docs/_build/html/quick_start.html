@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Getting Started &#8212; KIMkit 0.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -46,9 +45,9 @@
             
   <p id="quick-start">Previous Section: <a class="reference internal" href="installation.html"><span class="doc">KIMkit Installation</span></a></p>
 <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <section id="first-time-using-kimkit">
-<h2>First Time Using KIMkit<a class="headerlink" href="#first-time-using-kimkit" title="Permalink to this heading">¶</a></h2>
+<h2>First Time Using KIMkit<a class="headerlink" href="#first-time-using-kimkit" title="Link to this heading">¶</a></h2>
 <p>There is a file named <cite>user_uuids.edn</cite>, also in the KIMkit/settings/ directory, which will be created the first time a user is added if it does not exist.
 This file stores information about all <strong>KIMkit</strong> users in an .edn dict where the keys are
 UUID4s assigned to each user, and the values are an array that contain strings, with the user’s personal name,
@@ -58,7 +57,7 @@ by calling <code class="docutils literal notranslate"><span class="pre">users.ad
 operating system username, assigns them a UUID4, and adds this to user_uuids.edn.</p>
 </section>
 <section id="importing-new-content">
-<h2>Importing New Content<a class="headerlink" href="#importing-new-content" title="Permalink to this heading">¶</a></h2>
+<h2>Importing New Content<a class="headerlink" href="#importing-new-content" title="Link to this heading">¶</a></h2>
 <p>When creating a new item, either importing it into <strong>KIMkit</strong> for the first time, or forking an existing item,
 you should first generate a kimcode for the item by calling <code class="docutils literal notranslate"><span class="pre">kimcodes.generate_kimcode()</span></code> with a human-readable prefix
 for the item, its item-type, and the optionally the repository it is to be saved in (if different than the default location)
@@ -104,7 +103,7 @@ along with a dictionary of all required and any optional metadata fields.</p>
 </div>
 </section>
 <section id="creating-new-content-from-existing-kimkit-items">
-<h2>Creating New Content From Existing KIMkit Items<a class="headerlink" href="#creating-new-content-from-existing-kimkit-items" title="Permalink to this heading">¶</a></h2>
+<h2>Creating New Content From Existing KIMkit Items<a class="headerlink" href="#creating-new-content-from-existing-kimkit-items" title="Link to this heading">¶</a></h2>
 <p>Users listed as the contributor or maintainer of a <strong>KIMkit</strong> item may create new versions of that item by calling
 <code class="docutils literal notranslate"><span class="pre">models.version_update()</span></code> on the item with a tarfile.TarFile of new content. New versions of the same item will have the same
 kimcode, but with the final 3 digit version number incremented by 1.</p>
@@ -117,7 +116,7 @@ its history is updated in the kimprovenance.edn file stored in the item’s dire
 which keeps track of all changes to the item’s files, which user performed the changes, and why.</p>
 </section>
 <section id="kimkit-metadata">
-<h2>KIMkit Metadata<a class="headerlink" href="#kimkit-metadata" title="Permalink to this heading">¶</a></h2>
+<h2>KIMkit Metadata<a class="headerlink" href="#kimkit-metadata" title="Link to this heading">¶</a></h2>
 <p>All <strong>KIMkit</strong> items have associated metadata stored along with them in a file called kimspec.edn,
 which contains a dictionary of metadata keys and associated data values.
 Different <strong>KIMkit</strong> item types have different subsets of metadata fields required or optional to specify for them,
@@ -215,8 +214,8 @@ although this will create an update in the item’s kimprovenance.edn file that 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2023, Brendon Waters.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2023, Brendon Waters.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

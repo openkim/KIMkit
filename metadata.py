@@ -430,7 +430,7 @@ def _write_metadata_to_file(
 
     Raises
     ------
-    e
+    TypeError
         Data type not compatible with .edn format
     KIMkitItemNotFoundError
         No item with kimcode exists in repository
