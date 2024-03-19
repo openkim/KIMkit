@@ -241,7 +241,7 @@ def update_user(uuid, name, username=None):
     db.users.replace_one({"uuid": uuid}, user_entry)
 
 
-def drop_tables(ask=True,run_as_editor=False):
+def drop_tables(ask=True, run_as_editor=False):
     """DO NOT CALL IN PRODUCTION!
 
     backend method to clear the database,
@@ -253,15 +253,25 @@ def drop_tables(ask=True,run_as_editor=False):
         run_as_editor (bool,optional): flag for editors to run with elevated privleges
     """
 
-    if users.is_editor() and run_as_editor:
-        if ask:
-            check = eval(input("Are you sure? [y/n] "))
+    if users.is_editor():
+        if run_as_editor:
+            if ask:
+                check = eval(input("Are you sure? [y/n] "))
+            else:
+                check = "y"
+        
         else:
-            check = "y"
+            raise cf.NotRunAsEditorError("Did you mean to drop all tables? If you are an Editor run again with run_as_editor=True")
+    else:
+        this_user=users.whoami()
+        logger.warning(f"User {this_user} attempted to drop all tables from the database, but is not an editor")
+        raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
-        if check == "y":
-            db["items"].drop()
-            db["users"].drop()
+
+    if check == "y":
+        db["items"].drop()
+        db["users"].drop()
+        
 
 
 def delete_one_database_entry(id_code, run_as_editor=False):
@@ -271,9 +281,18 @@ def delete_one_database_entry(id_code, run_as_editor=False):
         id_code (str): kimcode or UUID4 to be deleted
     """
 
-    if users.is_editor() and run_as_editor:
-        db.items.delete_one({"kimcode": id_code})
-        db.users.delete_one({"uuid": id_code})
+    if users.is_editor() 
+        if run_as_editor:
+            db.items.delete_one({"kimcode": id_code})
+            db.users.delete_one({"uuid": id_code})
+
+        else:
+            raise cf.NotRunAsEditorError("Did you mean to delete this entry? If you are an Editor run again with run_as_editor=True")
+
+    else: 
+        this_user=users.whoami()
+        logger.warning(f"User {this_user} attempted to deleted item {id_code} from the database, but is neither the contributor of the item nor an editor")
+        raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
 
 def find_item_by_kimcode(kimcode):
