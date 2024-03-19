@@ -8,14 +8,14 @@ Getting Started
 First Time Using KIMkit
 ------------------------
 
-There is a file named `user_uuids.edn`, also in the KIMkit/settings/ directory, which will be created the first time a user is added if it does not exist.
-This file stores information about all **KIMkit** users in an .edn dict where the keys are
-UUID4s assigned to each user, and the values are an array that contain strings, with the user's personal name,
-and optionally their operating system username (if any).
 
-Users attempting to contribute or edit **KIMkit** data will be prompted to add themselves to the approved users list
+Inside the KIMkit/settings/ the system administrator should create
+a file called 'editors.txt' which all users have read access to, but only one user,
+the **KIMkit** Administrator has write access to. editors.txt should contain a sequence of operating-system usernames (one per line) as returned by getpass.getuser().
+
+Users attempting to contribute or edit **KIMkit** data for the first time will be prompted to add themselves to the approved users list
 by calling ``users.add_self_as_user(personal_name)`` , which simply takes their personal name as an input, associates it with their
-operating system username, assigns them a UUID4, and adds this to user_uuids.edn.
+operating system username, assigns them a UUID4, and adds this to the users collection in the mongodb database.
 
 Importing New Content
 ----------------------

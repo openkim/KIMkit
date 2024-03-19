@@ -48,13 +48,12 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <section id="first-time-using-kimkit">
 <h2>First Time Using KIMkit<a class="headerlink" href="#first-time-using-kimkit" title="Link to this heading">¶</a></h2>
-<p>There is a file named <cite>user_uuids.edn</cite>, also in the KIMkit/settings/ directory, which will be created the first time a user is added if it does not exist.
-This file stores information about all <strong>KIMkit</strong> users in an .edn dict where the keys are
-UUID4s assigned to each user, and the values are an array that contain strings, with the user’s personal name,
-and optionally their operating system username (if any).</p>
-<p>Users attempting to contribute or edit <strong>KIMkit</strong> data will be prompted to add themselves to the approved users list
+<p>Inside the KIMkit/settings/ the system administrator should create
+a file called ‘editors.txt’ which all users have read access to, but only one user,
+the <strong>KIMkit</strong> Administrator has write access to. editors.txt should contain a sequence of operating-system usernames (one per line) as returned by getpass.getuser().</p>
+<p>Users attempting to contribute or edit <strong>KIMkit</strong> data for the first time will be prompted to add themselves to the approved users list
 by calling <code class="docutils literal notranslate"><span class="pre">users.add_self_as_user(personal_name)</span></code> , which simply takes their personal name as an input, associates it with their
-operating system username, assigns them a UUID4, and adds this to user_uuids.edn.</p>
+operating system username, assigns them a UUID4, and adds this to the users collection in the mongodb database.</p>
 </section>
 <section id="importing-new-content">
 <h2>Importing New Content<a class="headerlink" href="#importing-new-content" title="Link to this heading">¶</a></h2>
