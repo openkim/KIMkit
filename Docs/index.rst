@@ -46,22 +46,17 @@ Configuration Files:
 
       Contains several arrays specifying which metadata fields are required or optional for each **KIMkit** item type, and their internal data structures. Users should not modify ``metadata_config.edn`` directly, but **KIMkit** Editors can adjust the default metadata settings via the utility functions in ``metadata.py``
 
-   ``settings/user_uuids.edn``
-
-      Used to track all **KIMkit** Users, and associate each with a unique UUID4. This file will be created if it does not exist when the first user adds themselves via ``KIMkit.users.add_self_as_user(personal_name)``.
-
 Important Directories:
 
    These paths can be configured inside ``default-environment``
 
+   ``KIMKIT_DATA_DIRECTORY``
+
+      Unset by default, should be set to point to the root path of the **KIMkit** installation.
+
    ``Repository``
 
       Default location for all **KIMkit** items' source code to be stored.
-
-   ``KIMkit_kim_api_environment_collection``
-
-      Default location for all **KIMkit** items' executable code to be stored once built and installed into the KIM API environment variable collection.
-
 
 Documentation Contents
 =======================

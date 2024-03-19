@@ -80,21 +80,17 @@ Additonally, contains utility functions allowing <strong>KIMkit</strong> Editors
 <blockquote>
 <div><p>Contains several arrays specifying which metadata fields are required or optional for each <strong>KIMkit</strong> item type, and their internal data structures. Users should not modify <code class="docutils literal notranslate"><span class="pre">metadata_config.edn</span></code> directly, but <strong>KIMkit</strong> Editors can adjust the default metadata settings via the utility functions in <code class="docutils literal notranslate"><span class="pre">metadata.py</span></code></p>
 </div></blockquote>
-<p><code class="docutils literal notranslate"><span class="pre">settings/user_uuids.edn</span></code></p>
-<blockquote>
-<div><p>Used to track all <strong>KIMkit</strong> Users, and associate each with a unique UUID4. This file will be created if it does not exist when the first user adds themselves via <code class="docutils literal notranslate"><span class="pre">KIMkit.users.add_self_as_user(personal_name)</span></code>.</p>
-</div></blockquote>
 </div></blockquote>
 <p>Important Directories:</p>
 <blockquote>
 <div><p>These paths can be configured inside <code class="docutils literal notranslate"><span class="pre">default-environment</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">KIMKIT_DATA_DIRECTORY</span></code></p>
+<blockquote>
+<div><p>Unset by default, should be set to point to the root path of the <strong>KIMkit</strong> installation.</p>
+</div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">Repository</span></code></p>
 <blockquote>
 <div><p>Default location for all <strong>KIMkit</strong> items’ source code to be stored.</p>
-</div></blockquote>
-<p><code class="docutils literal notranslate"><span class="pre">KIMkit_kim_api_environment_collection</span></code></p>
-<blockquote>
-<div><p>Default location for all <strong>KIMkit</strong> items’ executable code to be stored once built and installed into the KIM API environment variable collection.</p>
 </div></blockquote>
 </div></blockquote>
 </section>
