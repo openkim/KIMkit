@@ -83,7 +83,6 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     foo["version"] = int(version)
     foo["shortcode"] = "_".join((leader.upper(), num))
     foo["kimcode"] = kimcode
-    foo["path"] = os.path.join(leader.lower(), kimcode)
     foo["_id"] = kimcode
     foo["inserted_on"] = str(datetime.datetime.utcnow())
     foo["latest"] = True
@@ -96,13 +95,6 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
         foo["driver"] = True
     else:
         foo["driver"] = False
-
-    if leader == "MO":
-        item_type = "portable-models"
-    elif leader == "SM":
-        item_type = "simulator-models"
-    elif leader == "MD":
-        item_type = "model-drivers"
 
     src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     specpath = os.path.join(src_dir, cf.CONFIG_FILE)
