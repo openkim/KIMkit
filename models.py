@@ -36,10 +36,7 @@ otherwise a **KIMkit** Editor must run those
 functions with ``run_as_editor=True`` to modify content they don't own.
 
 This module also exposes an ``export()`` function that returns an item's content as a 
-tarfile.TarFile object, and an ``install()`` function, that unpacks the tar object into
-the KIM API environment variable collection on a path specified in default-environment,
-builds the item, and installs it into the KIM API so that its executable
-code is available for simulations."""
+tarfile.TarFile object for external use."""
 
 import os
 import shutil
