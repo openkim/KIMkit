@@ -219,7 +219,7 @@ def kimcode_to_file_path(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
 
     Items in /repository/ with kimcode 'name_prefix_XXXXYYYYZZZZ_VVV' are stored at path:
 
-    /repository/XXXX/YYYY/ZZZZ/VVV/
+    /repository/prefix-directory/XXXX/YYYY/ZZZZ/VVV/name_prefix_XXXXYYYYZZZZ_VVV/
 
     Parameters
     ----------
