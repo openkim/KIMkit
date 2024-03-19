@@ -281,17 +281,30 @@ def delete_one_database_entry(id_code, run_as_editor=False):
         id_code (str): kimcode or UUID4 to be deleted
     """
 
-    if users.is_editor() 
-        if run_as_editor:
-            db.items.delete_one({"kimcode": id_code})
-            db.users.delete_one({"uuid": id_code})
+    can_delete=False
 
+    this_username=users.whoami()
+
+    this_user_uuid=find_user(username=this_username)["uuid"]
+    query_results=query_item_database({"extended-id":id_code},projection={"contributor-id":1,"maintainer-id":1,"_id":0})
+    contributor=query_results[0]["contributor-id"]
+    maintainer=query_results[0]["maintainer-id"]
+
+    if this_user_uuid==contributor or this_user_uuid==maintainer:
+        can_delete=True
+
+    elif users.is_editor():
+        if run_as_editor:
+            can_delete=True
         else:
             raise cf.NotRunAsEditorError("Did you mean to delete this entry? If you are an Editor run again with run_as_editor=True")
 
+    if can_delete:
+        db.items.delete_one({"kimcode": id_code})
+        db.users.delete_one({"uuid": id_code})
+
     else: 
-        this_user=users.whoami()
-        logger.warning(f"User {this_user} attempted to deleted item {id_code} from the database, but is neither the contributor of the item nor an editor")
+        logger.warning(f"User {this_username} attempted to deleted item {id_code} from the database, but is neither the contributor of the item nor an editor")
         raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
 
