@@ -179,7 +179,7 @@ class KIMBuildError(RuntimeError):
 
 
 class KIMkitUserNotFoundError(PermissionError):
-    """Raised when a user does not have a vaild KIMkit UUID4 assigned in user_uuids.edn"""
+    """Raised when a user does not have a vaild KIMkit UUID4 assigned in the database's user collection"""
 
 
 class KimCodeAlreadyInUseError(FileExistsError):
