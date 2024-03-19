@@ -18,6 +18,7 @@ from . import config as cf
 from .logger import logging
 
 from .. import kimcodes
+from .. import users
 
 logger = logging.getLogger("KIMkit")
 
@@ -240,33 +241,39 @@ def update_user(uuid, name, username=None):
     db.users.replace_one({"uuid": uuid}, user_entry)
 
 
-def drop_tables(ask=True):
+def drop_tables(ask=True,run_as_editor=False):
     """DO NOT CALL IN PRODUCTION!
 
-    backend method to clear the database
+    backend method to clear the database,
+    requires editor privleges.
 
     Args:
         ask (bool, optional): whether to prompt for confirmation.
                               Defaults to True.
+        run_as_editor (bool,optional): flag for editors to run with elevated privleges
     """
-    if ask:
-        check = eval(input("Are you sure? [y/n] "))
-    else:
-        check = "y"
 
-    if check == "y":
-        db["items"].drop()
-        db["users"].drop()
+    if users.is_editor() and run_as_editor:
+        if ask:
+            check = eval(input("Are you sure? [y/n] "))
+        else:
+            check = "y"
+
+        if check == "y":
+            db["items"].drop()
+            db["users"].drop()
 
 
-def delete_one_database_entry(id_code):
+def delete_one_database_entry(id_code, run_as_editor=False):
     """Backend method to delete an item's/user's database entry
 
     Args:
         id_code (str): kimcode or UUID4 to be deleted
     """
-    db.items.delete_one({"kimcode": id_code})
-    db.users.delete_one({"uuid": id_code})
+
+    if users.is_editor() and run_as_editor:
+        db.items.delete_one({"kimcode": id_code})
+        db.users.delete_one({"uuid": id_code})
 
 
 def find_item_by_kimcode(kimcode):
