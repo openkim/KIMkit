@@ -288,8 +288,9 @@ def find_item_by_kimcode(kimcode):
 
     return data
 
-def find_item_by_kimnum(kimcode):
-    """Do a query to find items with the given ID number in their kimcode
+def find_legacy(kimcode):
+    """Do a query to find if any items with a given 
+    12 digit id in their kimcode exist.
 
     Args:
         kimcode (str): ID code of the item
@@ -302,7 +303,7 @@ def find_item_by_kimnum(kimcode):
     """
     if kimcodes.iskimid(kimcode):
         __,__,num,__=kimcodes.parse_kim_code(kimcode)
-        data = db.items.find({"kimnum":num})
+        data = db.items.find_one({"kimnum":num})
     else:
         raise cf.InvalidKIMCode("Invalid KIMkit ID code.")
     
