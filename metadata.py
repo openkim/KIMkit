@@ -387,8 +387,6 @@ def create_metadata(
     metadata_dict["domain"] = "KIMkit"
     metadata_dict["repository"] = repository
 
-    # TODO: assign DOI?
-
     try:
         metadata_dict = validate_metadata(metadata_dict)
 
@@ -1058,7 +1056,7 @@ def add_optional_metadata_key(
         )
 
 
-def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
+def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOSITORY_PATH, run_as_editor=False, inline_delete=False):
     """Delete an optional metadata key from the spec
 
     Requires Editor privleges.
@@ -1098,9 +1096,9 @@ def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
     for item in item_types:
         if item not in all_item_types:
             raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
-
-    # TODO: When the database is implemented, run a query to retrieve all items with this key set,
-    # and implement an optional method to delete them.
+    
+    id = users.whoami()
+    UUID = users.get_user_info(username=id)["uuid"]
 
     if users.is_editor():
         if not run_as_editor:
@@ -1157,13 +1155,33 @@ def delete_optional_metadata_key(key_name, item_types, run_as_editor=False):
         )
 
         with open(tmp_dest_file, "w") as outfile:
+            comment=_return_metadata_config_preamble()
+            outfile.writelines(comment)
             kim_edn.dump(final_dict, outfile, indent=4)
 
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
 
+        # run a query to retrieve any current items without the specified key set.
+        query_results=[]
+        for item_type in item_types:
+            res=mongodb.query_item_database({ key_name : { "$exists" : True }, "kim-item-type": item_type},projection={"extended-id":1,"_id":0})
+            query_results.extend(res)
+
+        items_needing_delete=[]
+        for i in query_results:
+            items_needing_delete.append(i.get("extended-id",None))
+
+        if inline_delete:
+
+            for kimcode in items_needing_delete:
+                create_new_metadata_from_existing(kimcode,kimcode,UUID)
+            
+                logger.info(f"user {id} deleted metadata field {key_name} from item {kimcode}")
+
+        return items_needing_delete
+
     else:
-        id = users.whoami()
         logger.warning(
             f"User {id} attempted to delete metadata field {key_name} without editor privleges."
         )
@@ -1178,9 +1196,10 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
 
     Requires Editor privleges.
 
-    NOTE: Only promote a metadata field to Required if all relevant
+    NOTE: Can only promote a metadata field to Required if all relevant
     items already have that field specified, or items may be left
-    with invalid metadata.
+    with invalid metadata. If items without a field are present, this function will 
+    do nothing and return a list of their kimcodes.
 
     Parameters
     ----------
@@ -1192,6 +1211,11 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
         and edit the metadata spec, by default False
+
+    Returns
+    -------
+    list
+        list of kimcodes of items without the key to be made required
     """
     (
         kimspec_order,
@@ -1213,49 +1237,66 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
         if item not in all_item_types:
             raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
 
-    # TODO: When the database is implemented, run a query to retrieve any items without the specified key set.
+    # run a query to retrieve any current items without the specified key set.
+    query_results=[]
+    for item_type in item_types:
+        res=mongodb.query_item_database({ key_name : { "$exists" : False }, "kim-item-type": item_type},projection={"extended-id":1,"_id":0})
+        query_results.extend(res)
 
-    if users.is_editor():
-        if not run_as_editor:
-            raise cf.NotRunAsEditorError(
-                "Did you mean to edit the metadata config? If you are an Editor run again with run_as_editor=True"
+    if len(query_results) == 0:
+        if users.is_editor():
+            if not run_as_editor:
+                raise cf.NotRunAsEditorError(
+                    "Did you mean to edit the metadata config? If you are an Editor run again with run_as_editor=True"
+                )
+
+            for item in item_types:
+                KIMkit_item_type_key_requirements[item]["optional"].remove(key_name)
+                KIMkit_item_type_key_requirements[item]["required"].append(key_name)
+
+            final_dict = {
+                "kimspec-order": kimspec_order,
+                "kimspec-strings": kimspec_strings,
+                "kimspec-uuid-fields": kimspec_uuid_fields,
+                "kimspec-arrays": kimspec_arrays,
+                "kimspec-arrays-dicts": kimspec_arrays_dicts,
+                "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
+            }
+
+            tmp_dest_file = os.path.join(
+                cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
             )
 
-        for item in item_types:
-            KIMkit_item_type_key_requirements[item]["optional"].remove(key_name)
-            KIMkit_item_type_key_requirements[item]["required"].append(key_name)
+            with open(tmp_dest_file, "w") as outfile:
+                comment=_return_metadata_config_preamble()
+                outfile.writelines(comment)
+                kim_edn.dump(final_dict, outfile, indent=4)
 
-        final_dict = {
-            "kimspec-order": kimspec_order,
-            "kimspec-strings": kimspec_strings,
-            "kimspec-uuid-fields": kimspec_uuid_fields,
-            "kimspec-arrays": kimspec_arrays,
-            "kimspec-arrays-dicts": kimspec_arrays_dicts,
-            "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
-        }
+            dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
+            os.rename(tmp_dest_file, dest_file)
+            id = users.whoami()
+            logger.info(
+                f"User {id} modified metadata field {key_name} to be Required instead of Optional for types {item_types}"
+            )
 
-        tmp_dest_file = os.path.join(
-            cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
-        )
+            return []
 
-        with open(tmp_dest_file, "w") as outfile:
-            kim_edn.dump(final_dict, outfile, indent=4)
-
-        dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
-        os.rename(tmp_dest_file, dest_file)
-        id = users.whoami()
-        logger.info(
-            f"User {id} modified metadata field {key_name} to be Required instead of Optional for types {item_types}"
-        )
-
+        else:
+            id = users.whoami()
+            logger.warning(
+                f"User {id} attempted to make {key_name} Required without editor privleges."
+            )
+            raise cf.NotAnEditorError(
+                "Only KIMkit Editors may change metadata configuration settings"
+            )
+        
     else:
-        id = users.whoami()
-        logger.warning(
-            f"User {id} attempted to make {key_name} Required without editor privleges."
-        )
-        raise cf.NotAnEditorError(
-            "Only KIMkit Editors may change metadata configuration settings"
-        )
+        warnings.warn(f"Items missing key {key_name}, cannot make required:")
+        items_needing_key=[]
+        for i in query_results:
+            items_needing_key.append(i.get("extended-id",None))
+        return items_needing_key
+        
 
 
 def make_required_metadata_key_optional(key_name, item_types, run_as_editor=False):
@@ -1336,3 +1377,36 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         raise cf.NotAnEditorError(
             "Only KIMkit Editors may change metadata configuration settings"
         )
+    
+def _return_metadata_config_preamble():
+    """Helper function to write the preamble comment to settings/metadata_config.edn
+    """
+
+    preamble_comment="""; 
+; This file contains arrays specifying the metadata standard for this installation of KIMkit. 
+;
+; The metadata standard may be changed by editing this file, or through the functions 
+; add_optional_metadata_key(), delete_optional_metadata_key(), make_optional_metadata_key_required(),
+; and make_required_metadata_key_optional() defined in metadata.py. Using the helper functions is preferred,
+; as it will check existing items for compliance.
+;
+; kimspec-order defines the order of metadata fields, alphabetical by default.
+; 
+; kimspec-strings lists the metadata fields that should be string-valued.
+;
+; kimspec-uuid-fields lists the subset of string-valued metadata fields that should be UUID4.hex strings.
+;
+; kimspec-arrays is a dict who's keys are metadata fields that should be array-valued,
+;     and its values define which type of array object that field should be.
+;
+; kimspec-arrays-dicts is a dict of dicts who's top-level keys are metadata fields that should be dict-valued,
+;    and who's inner keys are keys those fields may have, and their values are booleans specifying whether
+;    they're required or not.
+;
+; KIMkit-item-type-key-requirements is a dict of dicts who's top level keys are KIMkit item types,
+;    the values of each is another dict, who's inner keys of each are "required" and "optional",
+;    and the values of those inner dicts list which metadata fields are required or optional
+;    for the KIMkit item type.
+"""
+    
+    return preamble_comment
