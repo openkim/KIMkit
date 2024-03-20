@@ -147,7 +147,7 @@ def add_self_as_user(name):
     """Function to be used when a new user uses KIMkit for the first time,
     to assign themselves a UUID4 and adds them to the list of approved KIMkit users.
 
-    Checks if this user has already been added to the user file.
+    Checks if this user has already been added to the users collection in the database.
 
     Parameters
     ----------
@@ -326,7 +326,7 @@ def get_user_info(uuid=None, username=None, personal_name=None):
 
 def is_user(uuid=None, username=None, personal_name=None):
     """Return True if the user currently logged in is in the list of approved users
-    stored in the user data file.
+    stored in the users collection in the database.
 
     It is possible to search for users matching any of a specified uuid4,
     personal name, or operating system username.
