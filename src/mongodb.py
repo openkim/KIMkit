@@ -86,6 +86,7 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     foo["_id"] = kimcode
     foo["inserted_on"] = str(datetime.datetime.utcnow())
     foo["latest"] = True
+    foo["repository"] = repository
 
     if foo["type"] in ("mo", "sm", "md"):
         foo["makeable"] = True
