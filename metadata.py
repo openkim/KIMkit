@@ -1076,6 +1076,15 @@ def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOS
     run_as_editor : bool, optional
         flag to be used by KIMkit Editors to run with elevated permissions,
         and edit the metadata spec, by default False
+    inline_delete : bool, optional
+        flag to immediately delete depricated keys from items with them set,
+        by default False
+
+    Returns
+    --------
+    list
+        list of kimcodes with depricated keys, which either had them deleted
+        if inline_delete=True, or need to have them deleted otherwise.
     """
     (
         kimspec_order,
