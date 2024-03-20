@@ -144,7 +144,7 @@ and is_editor() returns True.</p>
 <span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">add_self_as_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.add_self_as_user" title="Link to this definition">¶</a></dt>
 <dd><p>Function to be used when a new user uses KIMkit for the first time,
 to assign themselves a UUID4 and adds them to the list of approved KIMkit users.</p>
-<p>Checks if this user has already been added to the user file.</p>
+<p>Checks if this user has already been added to the users collection in the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – personal name of the user adding themselves</p>
@@ -240,7 +240,7 @@ above fields.</p>
 <dt class="sig sig-object py" id="KIMkit.users.is_user">
 <span class="sig-prename descclassname"><span class="pre">KIMkit.users.</span></span><span class="sig-name descname"><span class="pre">is_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">personal_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#KIMkit.users.is_user" title="Link to this definition">¶</a></dt>
 <dd><p>Return True if the user currently logged in is in the list of approved users
-stored in the user data file.</p>
+stored in the users collection in the database.</p>
 <p>It is possible to search for users matching any of a specified uuid4,
 personal name, or operating system username.</p>
 <dl class="field-list simple">
