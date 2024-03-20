@@ -1,3 +1,27 @@
+; This file contains arrays specifying the metadata standard for this installation of KIMkit. 
+;
+; The metadata standard may be changed by editing this file, or through the functions 
+; add_optional_metadata_key(), delete_optional_metadata_key(), make_optional_metadata_key_required(),
+; and make_required_metadata_key_optional() defined in metadata.py. Using the helper functions is preferred,
+; as it will check existing items for compliance.
+;
+; kimspec-order defines the order of metadata fields, alphabetical by default.
+; 
+; kimspec-strings lists the metadata fields that should be string-valued.
+;
+; kimspec-uuid-fields lists the subset of string-valued metadata fields that should be UUID4.hex strings.
+;
+; kimspec-arrays is a dict who's keys are metadata fields that should be array-valued,
+;     and its values define which type of array object that field should be.
+;
+; kimspec-arrays-dicts is a dict of dicts who's top-level keys are metadata fields that should be dict-valued,
+;    and who's inner keys are keys those fields may have, and their values are booleans specifying whether
+;    they're required or not.
+;
+; KIMkit-item-type-key-requirements is a dict of dicts who's top level keys are KIMkit item types,
+;    the values of each is another dict, who's inner keys of each are "required" and "optional",
+;    and the values of those inner dicts list which metadata fields are required or optional
+;    for the KIMkit item type.
 {
     "kimspec-order" [
         "content-origin" 
