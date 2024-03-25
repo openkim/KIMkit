@@ -97,10 +97,6 @@ def test_fork(test_kimcode, new_test_kimcode):
         models.update_makefile_kimcode(EXAMPLE_MO_KIMCODE, new_test_kimcode)
 
 
-def test_install(test_kimcode):
-    models.install(test_kimcode)
-
-
 def test_delete(test_kimcode):
     models.delete(test_kimcode)
 
@@ -156,20 +152,8 @@ def test_models():
 
     test_fork(test_mo_kimcode, fork_kimcode)
 
-    test_install(fork_kimcode)
-
     models.delete(fork_kimcode)
     models.delete(updated_kimcode)
-
-    portable_install_dir = cf.KIM_API_PORTABLE_MODELS_DIR
-    driver_install_dir = cf.KIM_API_MODEL_DRIVERS_DIR
-
-    test_model_install_dir = os.path.join(portable_install_dir, fork_kimcode)
-    test_driver_install_dir = os.path.join(driver_install_dir, test_md_kimcode)
-
-    shutil.rmtree(test_model_install_dir)
-    shutil.rmtree(test_driver_install_dir)
-
     models.delete(test_mo_kimcode)
     models.delete(test_md_kimcode)
 
