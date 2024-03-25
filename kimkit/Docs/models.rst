@@ -5,7 +5,7 @@ Previous Section: :doc:`quick_start`
 The Models Module
 ==================
 
-.. automodule:: KIMkit.models
+.. automodule:: kimkit.models
     :members:
 
 

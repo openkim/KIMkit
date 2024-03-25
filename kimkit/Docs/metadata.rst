@@ -5,7 +5,7 @@ Previous Section: :doc:`models`
 The Metadata Module
 ====================
 
-.. automodule:: KIMkit.metadata
+.. automodule:: kimkit.metadata
     :members:
 
 Next Section :doc:`users`

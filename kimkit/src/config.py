@@ -19,16 +19,16 @@ def tostr(cls):
 # =============================================================================
 # the environment parsing equipment
 # =============================================================================
-ENVIRONMENT_FILE_NAME = "KIMkit-env"
-here = os.path.dirname(os.path.realpath(__file__))
-ENVIRONMENT_LOCATIONS = [
-    os.environ.get("KIMKIT_ENVIRONMENT_FILE", ""),
-    os.path.join(os.path.split(here)[0], ENVIRONMENT_FILE_NAME),
-    os.path.join("../", ENVIRONMENT_FILE_NAME),
-    os.path.join(os.path.expanduser("~"), ENVIRONMENT_FILE_NAME),
-    os.path.join("/KIMkit", ENVIRONMENT_FILE_NAME),
-    os.path.join(os.path.split(os.path.realpath(__file__))[0], ENVIRONMENT_FILE_NAME),
-]
+# ENVIRONMENT_FILE_NAME = "KIMkit-env"
+# here = os.path.dirname(os.path.realpath(__file__))
+# ENVIRONMENT_LOCATIONS = [
+#     os.environ.get("KIMKIT_ENVIRONMENT_FILE", ""),
+#     os.path.join(os.path.split(here)[0],ENVIRONMENT_FILE_NAME),
+#     os.path.join("../", ENVIRONMENT_FILE_NAME),
+#     os.path.join(os.path.expanduser("~"), ENVIRONMENT_FILE_NAME),
+#     os.path.join("/kimkit", ENVIRONMENT_FILE_NAME),
+#     os.path.join(os.path.split(os.path.realpath(__file__))[0], ENVIRONMENT_FILE_NAME),
+# ]
 
 
 def transform(val):
@@ -121,11 +121,19 @@ class Configuration(object):
         envf = os.path.join(os.path.split(here)[0], "default-environment")
         conf = read_environment_file(envf)
 
-        # supplement it with the default location's extra file
-        for loc in ENVIRONMENT_LOCATIONS:
-            if os.path.isfile(loc):
-                conf.update(read_environment_file(loc))
-                break
+        # # read the location of the KIMkit root directory if not set
+        # if conf["KIMKIT_DATA_DIRECTORY"]=="None":
+        #     conf.update({"KIMKIT_DATA_DIRECTORY":os.path.split(here)[0]})
+
+        # ENVIRONMENT_LOCATIONS.append(os.path.join(conf["KIMKIT_DATA_DIRECTORY"],ENVIRONMENT_FILE_NAME))
+
+        # # supplement it with the default location's extra file
+        # with open("debug.txt","a") as f:
+        #     for loc in ENVIRONMENT_LOCATIONS:
+        #         f.write(f"attempted to read: {loc} \n")
+        #         if os.path.isfile(loc):
+        #             conf.update(read_environment_file(loc))
+        #             break
 
         # then take variables from the shell environment
         for k, v in list(conf.items()):
@@ -163,9 +171,6 @@ globals().update(conf.conf)
 # ==================================================
 
 # Set up environment variable collection paths for KIM API
-os.environ["KIM_API_PORTABLE_MODELS_DIR"] = conf.get("KIM_API_PORTABLE_MODELS_DIR")
-os.environ["KIM_API_SIMULATOR_MODELS_DIR"] = conf.get("KIM_API_SIMULATOR_MODELS_DIR")
-os.environ["KIM_API_MODEL_DRIVERS_DIR"] = conf.get("KIM_API_MODEL_DRIVERS_DIR")
 
 # KIMkit custom exception types:
 

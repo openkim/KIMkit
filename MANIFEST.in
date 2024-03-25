@@ -1,0 +1,5 @@
+include kimkit/default-environment
+include kimkit/settings/metadata_config.edn
+recursive include kimkit *
+recursive include kimkit/settings *
+recursive include kimkit/src *

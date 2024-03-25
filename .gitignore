@@ -1,12 +1,15 @@
 *.pyc
-logs/*
+kimkit/logs/*
 *.tmp
 *.swp
 docs/_build
+kimkit/Docs/_build/*
 stupid.*
 .ropeproject
+build/
 venv
 KIMkit-env
+kimkit/default-environment
 __pycache__
 *.bak
 *vscode*

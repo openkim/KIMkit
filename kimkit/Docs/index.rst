@@ -36,7 +36,7 @@ Configuration Files:
 
    ``default-environment``
 
-      Contains default file paths and environment variables used to configure various global behaviors of **KIMkit**. Settings can be overridden by a file called ``KIMkit-env`` stored in the **KIMkit** install directory for for finer control of settings per installation.
+      Contains default file paths and environment variables used to configure various global behaviors of **KIMkit**. 
 
    ``settings/editors.txt``
 
@@ -53,10 +53,6 @@ Important Directories:
    ``KIMKIT_DATA_DIRECTORY``
 
       Unset by default, should be set to point to the root path of the **KIMkit** installation.
-
-   ``Repository``
-
-      Default location for all **KIMkit** items' source code to be stored.
 
 Documentation Contents
 =======================

@@ -57,8 +57,7 @@ Configuring Paths
 
 The default-environment file contains paths and settings to be used as default environment variables for a variety
 of **KIMkit** settings. The main path KIMKIT_DATA_DIRECTORY is unset by default, and should be configured to point
-to the path where **KIMkit** is installed. These settings can be overridden by a file called KIMkit-env stored
-inside KIMKIT_DATA_DIRECTORY to to allow for finer control of settings per installation.
+to the path where **KIMkit** is installed.
 
 
 Next Section :doc:`quick_start`

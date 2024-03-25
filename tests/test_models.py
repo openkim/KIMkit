@@ -7,11 +7,11 @@ import os
 import shutil
 import time
 
-import KIMkit.models as models
-import KIMkit.metadata as metadata
-import KIMkit.users as users
-import KIMkit.kimcodes as kimcodes
-import KIMkit.src.config as cf
+import kimkit.models as models
+import kimkit.metadata as metadata
+import kimkit.users as users
+import kimkit.kimcodes as kimcodes
+import kimkit.src.config as cf
 
 EXAMPLE_MO_KIMCODE = "EAM_Dynamo_AcklandTichyVitek_1987_Ag__MO_212700056563_005"
 EXAMPLE_MD_KIMCODE = "EAM_Dynamo__MD_120291908751_005"
