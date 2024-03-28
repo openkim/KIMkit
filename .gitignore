@@ -19,6 +19,5 @@ editors.txt
 test.py
 *.egg-info/
 kimkit/repository/*
-pyproject.toml
 KIMkit_kim_api_environment_collection/*
 *.DS_Store*
