@@ -1,5 +1,6 @@
 *.pyc
 kimkit/logs/*
+/logs/*
 *.tmp
 *.swp
 docs/_build
