@@ -1,12 +1,16 @@
 *.pyc
-logs/*
+kimkit/logs/*
+/logs/*
 *.tmp
 *.swp
 docs/_build
+kimkit/Docs/_build/*
 stupid.*
 .ropeproject
+build/
 venv
 KIMkit-env
+kimkit/default-environment
 __pycache__
 *.bak
 *vscode*
@@ -14,5 +18,7 @@ __pycache__
 editors.txt
 test.py
 *.egg-info/
-repository/*
+kimkit/repository/*
+pyproject.toml
 KIMkit_kim_api_environment_collection/*
+*.DS_Store*

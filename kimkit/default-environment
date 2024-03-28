@@ -1,0 +1,20 @@
+#=============================================================================
+# directories and other locations
+#=============================================================================
+# Set this when installing
+# can be overridden by KIMkit-env local environment file
+KIMKIT_DATA_DIRECTORY=None
+LOG_DIR=$KIMKIT_DATA_DIRECTORY/logs/
+
+LOCAL_REPOSITORY_PATH=$KIMKIT_DATA_DIRECTORY/repository
+
+KIMKIT_SETTINGS_DIRECTORY=$KIMKIT_DATA_DIRECTORY/settings
+KIMKIT_EDITORS_FILE=$KIMKIT_SETTINGS_DIRECTORY/editors.txt
+KIMKIT_METADATA_CONFIG_FILE=$KIMKIT_SETTINGS_DIRECTORY/metadata_config.edn
+
+CONFIG_FILE=kimspec.edn
+
+KIMKIT_DEBUG=False
+
+MONGODB_DATABASE=KIMkit_metadata
+MONGODB_HOSTNAME=127.0.0.1

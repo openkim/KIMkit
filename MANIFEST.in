@@ -1,0 +1,8 @@
+include kimkit/default-environment
+include kimkit/settings/metadata_config.edn
+include kimkit/tests/EAM_Dynamo_AcklandTichyVitek_1987_Ag__MO_212700056563_005.txz
+include kimkit/tests/EAM_Dynamo__MD_120291908751_005.txz
+recursive include kimkit *
+recursive include kimkit/settings *
+recursive include kimkit/src *
+recursive include kimkit/tests *
