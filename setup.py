@@ -12,5 +12,6 @@ setup(
     author_email="bwaters@umn.edu",
     include_package_data=True,
     packages=find_packages(),
-    install_requires=["pytz", "kim_edn", "packaging", "pygments","pymongo"],
+    install_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo"],
+    setup_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo"],
 )
