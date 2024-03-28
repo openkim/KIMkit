@@ -131,12 +131,10 @@ class Configuration(object):
         )
 
         # supplement it with the default location's extra file
-        with open("debug.txt", "a") as f:
-            for loc in ENVIRONMENT_LOCATIONS:
-                f.write(f"attempted to read: {loc} \n")
-                if os.path.isfile(loc):
-                    conf.update(read_environment_file(loc))
-                    break
+        for loc in ENVIRONMENT_LOCATIONS:
+            if os.path.isfile(loc):
+                conf.update(read_environment_file(loc))
+                break
 
         # then take variables from the shell environment
         for k, v in list(conf.items()):
