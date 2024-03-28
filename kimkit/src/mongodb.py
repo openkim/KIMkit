@@ -262,19 +262,21 @@ def drop_tables(ask=True, run_as_editor=False):
                 check = eval(input("Are you sure? [y/n] "))
             else:
                 check = "y"
-        
-        else:
-            raise cf.NotRunAsEditorError("Did you mean to drop all tables? If you are an Editor run again with run_as_editor=True")
-    else:
-        this_user=users.whoami()
-        logger.warning(f"User {this_user} attempted to drop all tables from the database, but is not an editor")
-        raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
+        else:
+            raise cf.NotRunAsEditorError(
+                "Did you mean to drop all tables? If you are an Editor run again with run_as_editor=True"
+            )
+    else:
+        this_user = users.whoami()
+        logger.warning(
+            f"User {this_user} attempted to drop all tables from the database, but is not an editor"
+        )
+        raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
     if check == "y":
         db["items"].drop()
         db["users"].drop()
-        
 
 
 def delete_one_database_entry(id_code, run_as_editor=False):
@@ -284,30 +286,39 @@ def delete_one_database_entry(id_code, run_as_editor=False):
         id_code (str): kimcode or UUID4 to be deleted
     """
 
-    can_delete=False
+    can_delete = False
 
-    this_username=users.whoami()
+    this_username = users.whoami()
 
-    this_user_uuid=find_user(username=this_username)["uuid"]
-    query_results=query_item_database({"extended-id":id_code},projection={"contributor-id":1,"maintainer-id":1,"_id":0})
-    contributor=query_results[0]["contributor-id"]
-    maintainer=query_results[0]["maintainer-id"]
+    this_user_uuid = find_user(username=this_username)["uuid"]
+    query_results = query_item_database(
+        {"kimcode": id_code},
+        projection={"contributor-id": 1, "maintainer-id": 1, "_id": 0},
+        include_old_versions=True,
+    )
+    this_entry = query_results[0]
+    contributor = this_entry["contributor-id"]
+    maintainer = this_entry["maintainer-id"]
 
-    if this_user_uuid==contributor or this_user_uuid==maintainer:
-        can_delete=True
+    if this_user_uuid == contributor or this_user_uuid == maintainer:
+        can_delete = True
 
     elif users.is_editor():
         if run_as_editor:
-            can_delete=True
+            can_delete = True
         else:
-            raise cf.NotRunAsEditorError("Did you mean to delete this entry? If you are an Editor run again with run_as_editor=True")
+            raise cf.NotRunAsEditorError(
+                "Did you mean to delete this entry? If you are an Editor run again with run_as_editor=True"
+            )
 
     if can_delete:
         db.items.delete_one({"kimcode": id_code})
         db.users.delete_one({"uuid": id_code})
 
-    else: 
-        logger.warning(f"User {this_username} attempted to deleted item {id_code} from the database, but is neither the contributor of the item nor an editor")
+    else:
+        logger.warning(
+            f"User {this_username} attempted to deleted item {id_code} from the database, but is neither the contributor of the item nor an editor"
+        )
         raise cf.NotAnEditorError("Only KIMkit editors can delete database entries")
 
 
@@ -330,8 +341,9 @@ def find_item_by_kimcode(kimcode):
 
     return data
 
+
 def find_legacy(kimcode):
-    """Do a query to find if any items with a given 
+    """Do a query to find if any items with a given
     12 digit id in their kimcode exist.
 
     Args:
@@ -344,11 +356,11 @@ def find_legacy(kimcode):
         dict: metadata of the item matching the kimcode
     """
     if kimcodes.iskimid(kimcode):
-        __,__,num,__=kimcodes.parse_kim_code(kimcode)
-        data = db.items.find_one({"kimnum":num})
+        __, __, num, __ = kimcodes.parse_kim_code(kimcode)
+        data = db.items.find_one({"kimnum": num})
     else:
         raise cf.InvalidKIMCode("Invalid KIMkit ID code.")
-    
+
     return data
 
 

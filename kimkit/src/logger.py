@@ -8,6 +8,7 @@ made a child of each::
 
     logger = logger.getChild("<child name>")
 """
+
 import re
 from pygments.lexer import RegexLexer, include
 from pygments.token import (

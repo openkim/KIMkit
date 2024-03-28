@@ -206,7 +206,7 @@ def import_item(
         )
 
     kimcode = metadata_dict["extended-id"]
-    kim_item_type=metadata_dict["kim-item-type"]
+    kim_item_type = metadata_dict["kim-item-type"]
 
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
@@ -223,9 +223,11 @@ def import_item(
         raise cf.InvalidItemTypeError(
             f"Leader of kimcode {kimcode} does not represent a valid item type"
         )
-    
+
     if kim_item_type != kimcode_item_type:
-        raise cf.InvalidKIMCode("Invalid Kimcode: Item type does not match kimcode leader.")
+        raise cf.InvalidKIMCode(
+            "Invalid Kimcode: Item type does not match kimcode leader."
+        )
 
     if not kimcodes.is_kimcode_available(kimcode):
         raise cf.KimCodeAlreadyInUseError(
@@ -883,6 +885,7 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             os.remove(os.path.join(src_dir, item))
     return tarfile_objs
 
+
 def update_makefile_kimcode(
     old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
 ):
@@ -944,6 +947,7 @@ def update_makefile_kimcode(
             Please write the kimcode of items explicitly into their makefiles
             so that KIMkit can edit them by regex when managing items."""
         )
+
 
 def listdir_nohidden(path):
     """List the files and directories in a given path,

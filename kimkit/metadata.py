@@ -658,12 +658,14 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     )
         elif field in kimspec_arrays:
             if kimspec_arrays[field] == "list":
-                if isinstance(metadata_dict[field],list):
+                if isinstance(metadata_dict[field], list):
                     for item in metadata_dict[field]:
                         if isinstance(item, str):
                             pass
                         else:
-                            raise TypeError(f"Metadata field {field} must be list of str.")
+                            raise TypeError(
+                                f"Metadata field {field} must be list of str."
+                            )
 
                         if field in kimspec_uuid_fields:
                             if not kimcodes.is_valid_uuid4(item):
@@ -676,8 +678,8 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                 )
                 else:
                     raise TypeError(
-                            f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
-                        )
+                        f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
+                    )
             elif kimspec_arrays[field] == "dict":
 
                 if isinstance(metadata_dict[field], dict):
@@ -707,7 +709,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
                     )
-                
+
                 keys_to_remove = []
                 for key in metadata_dict[field]:
                     if key not in kimspec_arrays_dicts[field]:
@@ -717,8 +719,6 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                         )
                 for key in keys_to_remove:
                     metadata_dict[field].pop(key, None)
-
-                
 
     return metadata_dict
 
@@ -893,7 +893,7 @@ def get_metadata_template_for_item_type(item_type):
         "maintainer-id",
         "date",
         "domain",
-        "repository"
+        "repository",
     ]
 
     for key in metadata_template:
@@ -1056,7 +1056,13 @@ def add_optional_metadata_key(
         )
 
 
-def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOSITORY_PATH, run_as_editor=False, inline_delete=False):
+def delete_optional_metadata_key(
+    key_name,
+    item_types,
+    repository=cf.LOCAL_REPOSITORY_PATH,
+    run_as_editor=False,
+    inline_delete=False,
+):
     """Delete an optional metadata key from the spec
 
     Requires Editor privleges.
@@ -1105,7 +1111,7 @@ def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOS
     for item in item_types:
         if item not in all_item_types:
             raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
-    
+
     id = users.whoami()
     UUID = users.get_user_info(username=id)["uuid"]
 
@@ -1164,7 +1170,7 @@ def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOS
         )
 
         with open(tmp_dest_file, "w") as outfile:
-            comment=_return_metadata_config_preamble()
+            comment = _return_metadata_config_preamble()
             outfile.writelines(comment)
             kim_edn.dump(final_dict, outfile, indent=4)
 
@@ -1172,21 +1178,26 @@ def delete_optional_metadata_key(key_name, item_types, repository=cf.LOCAL_REPOS
         os.rename(tmp_dest_file, dest_file)
 
         # run a query to retrieve any current items without the specified key set.
-        query_results=[]
+        query_results = []
         for item_type in item_types:
-            res=mongodb.query_item_database({ key_name : { "$exists" : True }, "kim-item-type": item_type},projection={"extended-id":1,"_id":0})
+            res = mongodb.query_item_database(
+                {key_name: {"$exists": True}, "kim-item-type": item_type},
+                projection={"extended-id": 1, "_id": 0},
+            )
             query_results.extend(res)
 
-        items_needing_delete=[]
+        items_needing_delete = []
         for i in query_results:
-            items_needing_delete.append(i.get("extended-id",None))
+            items_needing_delete.append(i.get("extended-id", None))
 
         if inline_delete:
 
             for kimcode in items_needing_delete:
-                create_new_metadata_from_existing(kimcode,kimcode,UUID)
-            
-                logger.info(f"user {id} deleted metadata field {key_name} from item {kimcode}")
+                create_new_metadata_from_existing(kimcode, kimcode, UUID)
+
+                logger.info(
+                    f"user {id} deleted metadata field {key_name} from item {kimcode}"
+                )
 
         return items_needing_delete
 
@@ -1207,7 +1218,7 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
 
     NOTE: Can only promote a metadata field to Required if all relevant
     items already have that field specified, or items may be left
-    with invalid metadata. If items without a field are present, this function will 
+    with invalid metadata. If items without a field are present, this function will
     do nothing and return a list of their kimcodes.
 
     Parameters
@@ -1247,9 +1258,12 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
             raise cf.InvalidItemTypeError(f"Item type {item} not recognized, aborting.")
 
     # run a query to retrieve any current items without the specified key set.
-    query_results=[]
+    query_results = []
     for item_type in item_types:
-        res=mongodb.query_item_database({ key_name : { "$exists" : False }, "kim-item-type": item_type},projection={"extended-id":1,"_id":0})
+        res = mongodb.query_item_database(
+            {key_name: {"$exists": False}, "kim-item-type": item_type},
+            projection={"extended-id": 1, "_id": 0},
+        )
         query_results.extend(res)
 
     if len(query_results) == 0:
@@ -1277,7 +1291,7 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
             )
 
             with open(tmp_dest_file, "w") as outfile:
-                comment=_return_metadata_config_preamble()
+                comment = _return_metadata_config_preamble()
                 outfile.writelines(comment)
                 kim_edn.dump(final_dict, outfile, indent=4)
 
@@ -1298,14 +1312,13 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
             raise cf.NotAnEditorError(
                 "Only KIMkit Editors may change metadata configuration settings"
             )
-        
+
     else:
         warnings.warn(f"Items missing key {key_name}, cannot make required:")
-        items_needing_key=[]
+        items_needing_key = []
         for i in query_results:
-            items_needing_key.append(i.get("extended-id",None))
+            items_needing_key.append(i.get("extended-id", None))
         return items_needing_key
-        
 
 
 def make_required_metadata_key_optional(key_name, item_types, run_as_editor=False):
@@ -1386,12 +1399,12 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         raise cf.NotAnEditorError(
             "Only KIMkit Editors may change metadata configuration settings"
         )
-    
-def _return_metadata_config_preamble():
-    """Helper function to write the preamble comment to settings/metadata_config.edn
-    """
 
-    preamble_comment="""; 
+
+def _return_metadata_config_preamble():
+    """Helper function to write the preamble comment to settings/metadata_config.edn"""
+
+    preamble_comment = """; 
 ; This file contains arrays specifying the metadata standard for this installation of KIMkit. 
 ;
 ; The metadata standard may be changed by editing this file, or through the functions 
@@ -1417,5 +1430,5 @@ def _return_metadata_config_preamble():
 ;    and the values of those inner dicts list which metadata fields are required or optional
 ;    for the KIMkit item type.
 """
-    
+
     return preamble_comment
