@@ -115,8 +115,7 @@
                 "extended-id" 
                 "kim-api-version" 
                 "kim-item-type" 
-                "maintainer-id" 
-                "model-driver" 
+                "maintainer-id"  
                 "potential-type" 
                 "repository" 
                 "species" 
@@ -131,6 +130,7 @@
                 "funding" 
                 "implementer" 
                 "license" 
+                "model-driver"
                 "source-citations" 
                 "training"
             ]
