@@ -332,6 +332,46 @@ def find_item_by_kimcode(kimcode):
     return data
 
 
+def list_potentials():
+    """List the kimcodes of all potentials currently in this kimkit repository
+
+    Returns:
+        list of kimcodes
+    """
+
+    data = db.items.find(
+        filter={"kim-item-type": {"$in": ["portable-model", "simulator-model"]}},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    potentials = []
+    for doc in data:
+        print(doc)
+        potentials.append(doc["kimcode"])
+
+    return potentials
+
+
+def list_drivers():
+    """List the kimcodes of all model drivers currently in this kimkit repository
+
+    Returns:
+        list of kimcodes
+    """
+
+    data = db.items.find(
+        filter={"kim-item-type": "model-driver"},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    potentials = []
+    for doc in data:
+        print(doc)
+        potentials.append(doc["kimcode"])
+
+    return potentials
+
+
 def find_legacy(kimcode):
     """Do a query to find if any items with a given
     12 digit id in their kimcode exist.
