@@ -224,7 +224,7 @@ class MetaData:
                 event_type=event_type,
                 comment=provenance_comments,
             )
-            models.set_repository_permissions(kimcode)
+            models.set_kimkit_permissions()
             logger.info(
                 f"User {UUID} updated metadata field '{key}' of item {kimcode} in repository {self.repository} from '{metadata_dict[key]}' to '{new_value}'"
             )
@@ -332,7 +332,7 @@ class MetaData:
                 event_type=event_type,
                 comment=provenance_comments,
             )
-            models.set_repository_permissions(kimcode)
+            models.set_kimkit_permissions()
             logger.info(
                 f"User {UUID} deleted metadata field '{field}' of item {kimcode} in repository {self.repository}"
             )
@@ -470,7 +470,7 @@ def _write_metadata_to_file(
         )
 
         mongodb.upsert_item(kimcode)
-        models.set_repository_permissions(kimcode)
+        models.set_kimkit_permissions()
 
     else:
         raise cf.KIMkitItemNotFoundError(
