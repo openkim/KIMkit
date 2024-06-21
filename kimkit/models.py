@@ -826,6 +826,7 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
                 if ".txz" in item:
                     tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
                     tarfile_objs.append(tarfile_obj)
+                    tarfile_obj.close()
                     os.remove(os.path.join(driver_src_dir, item))
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
@@ -834,6 +835,7 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_objs.append(tarfile_obj)
+            tarfile_obj.close()
             os.remove(os.path.join(src_dir, item))
     return tarfile_objs
 
