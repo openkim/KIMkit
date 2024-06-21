@@ -82,6 +82,7 @@ import kim_edn
 from collections import OrderedDict
 
 from . import users
+from . import models
 from .src import provenance
 from .src import config as cf
 from .src import logger
@@ -223,7 +224,7 @@ class MetaData:
                 event_type=event_type,
                 comment=provenance_comments,
             )
-
+            models.set_repository_permissions(kimcode)
             logger.info(
                 f"User {UUID} updated metadata field '{key}' of item {kimcode} in repository {self.repository} from '{metadata_dict[key]}' to '{new_value}'"
             )
@@ -331,6 +332,7 @@ class MetaData:
                 event_type=event_type,
                 comment=provenance_comments,
             )
+            models.set_repository_permissions(kimcode)
             logger.info(
                 f"User {UUID} deleted metadata field '{field}' of item {kimcode} in repository {self.repository}"
             )
@@ -468,6 +470,7 @@ def _write_metadata_to_file(
         )
 
         mongodb.upsert_item(kimcode)
+        models.set_repository_permissions(kimcode)
 
     else:
         raise cf.KIMkitItemNotFoundError(
