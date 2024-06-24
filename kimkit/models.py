@@ -307,7 +307,6 @@ def import_item(
             comment=None,
         )
         shutil.rmtree(tmp_dir)
-        set_kimkit_permissions()
         logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
     else:
         raise AttributeError(
@@ -423,7 +422,6 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         )
 
     mongodb.set_latest_version_object(num)
-    set_kimkit_permissions()
 
 
 def version_update(
@@ -627,7 +625,6 @@ def version_update(
         )
 
         shutil.rmtree(tmp_dir)
-        set_kimkit_permissions()
         logger.info(
             f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
         )
@@ -826,7 +823,6 @@ def fork(
     )
 
     shutil.rmtree(tmp_dir)
-    set_kimkit_permissions()
     logger.info(
         f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
     )
@@ -892,7 +888,6 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             tarfile_obj.close()
             os.remove(os.path.join(src_dir, item))
 
-    set_kimkit_permissions()
     return tarfile_objs
 
 
@@ -939,7 +934,6 @@ def update_makefile_kimcode(
                 with open(tmp_makefile, "w") as flobj2:
                     flobj2.write(updated_makefile_contents)
                 os.rename(tmp_makefile, makefile)
-                set_kimkit_permissions()
                 logger.info(
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
@@ -1032,7 +1026,6 @@ def _create_workflow_dir(
 
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)
-    set_kimkit_permissions()
 
 
 def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
@@ -1086,7 +1079,6 @@ def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(workflow_dir, item))
             os.remove(os.path.join(workflow_dir, item))
-    set_kimkit_permissions()
     return tarfile_obj
 
 
@@ -1096,10 +1088,3 @@ def listdir_nohidden(path):
         if not f.startswith("."):
             good_files_and_dirs.append(f)
     return good_files_and_dirs
-
-
-def set_kimkit_permissions():
-    """Set the kimkit installation directory to have group read/write permissions."""
-    # get the path to the enclosing kimkit folder
-    item_path = os.path.join(cf.KIMKIT_DATA_DIRECTORY, "../")
-    os.system("chmod -R g+rw " + str(item_path))
