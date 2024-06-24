@@ -1012,6 +1012,7 @@ def _create_workflow_dir(
 
     tmp_dir = os.path.join(item_path, "tmp")
     workflow_tarfile.extractall(path=tmp_dir)
+    workflow_tarfile.close()
     contents = os.listdir(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
