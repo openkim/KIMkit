@@ -235,6 +235,7 @@ def import_item(
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
         contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
@@ -525,6 +526,7 @@ def version_update(
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
         contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
@@ -697,6 +699,7 @@ def fork(
     tmp_dir = os.path.join(repository, new_kimcode)
     if tarfile_obj:
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
     else:
         # copy the existing item without editing it
         # if no new content supplied
@@ -704,6 +707,7 @@ def fork(
         for item in old_tarfile_obj:
             if kimcode in item.getnames():
                 item.extractall(path=tmp_dir)
+                item.close()
     contents = listdir_nohidden(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
