@@ -206,7 +206,7 @@ def import_item(
         )
 
     kimcode = metadata_dict["extended-id"]
-    kim_item_type=metadata_dict["kim-item-type"]
+    kim_item_type = metadata_dict["kim-item-type"]
 
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
 
@@ -223,9 +223,11 @@ def import_item(
         raise cf.InvalidItemTypeError(
             f"Leader of kimcode {kimcode} does not represent a valid item type"
         )
-    
+
     if kim_item_type != kimcode_item_type:
-        raise cf.InvalidKIMCode("Invalid Kimcode: Item type does not match kimcode leader.")
+        raise cf.InvalidKIMCode(
+            "Invalid Kimcode: Item type does not match kimcode leader."
+        )
 
     if not kimcodes.is_kimcode_available(kimcode):
         raise cf.KimCodeAlreadyInUseError(
@@ -236,6 +238,7 @@ def import_item(
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
         contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
@@ -535,6 +538,7 @@ def version_update(
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
         contents = listdir_nohidden(tmp_dir)
         # if the contents of the item are enclosed in a directory, copy them out
         # then delete the directory
@@ -624,7 +628,6 @@ def version_update(
         )
 
         shutil.rmtree(tmp_dir)
-
         logger.info(
             f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
         )
@@ -726,6 +729,7 @@ def fork(
     tmp_dir = os.path.join(repository, new_kimcode)
     if tarfile_obj:
         tarfile_obj.extractall(path=tmp_dir)
+        tarfile_obj.close()
     else:
         # copy the existing item without editing it
         # if no new content supplied
@@ -733,6 +737,7 @@ def fork(
         for item in old_tarfile_obj:
             if kimcode in item.getnames():
                 item.extractall(path=tmp_dir)
+                item.close()
     contents = listdir_nohidden(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory
@@ -821,7 +826,6 @@ def fork(
     )
 
     shutil.rmtree(tmp_dir)
-
     logger.info(
         f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
     )
@@ -875,6 +879,7 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
                 if ".txz" in item:
                     tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
                     tarfile_objs.append(tarfile_obj)
+                    tarfile_obj.close()
                     os.remove(os.path.join(driver_src_dir, item))
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
@@ -883,8 +888,11 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_objs.append(tarfile_obj)
+            tarfile_obj.close()
             os.remove(os.path.join(src_dir, item))
+
     return tarfile_objs
+
 
 def update_makefile_kimcode(
     old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
@@ -948,6 +956,7 @@ def update_makefile_kimcode(
             so that KIMkit can edit them by regex when managing items."""
         )
 
+
 def listdir_nohidden(path):
     """List the files and directories in a given path,
     ignoring hiden files/directories.
@@ -1000,6 +1009,7 @@ def _create_workflow_dir(
 
     tmp_dir = os.path.join(item_path, "tmp")
     workflow_tarfile.extractall(path=tmp_dir)
+    workflow_tarfile.close()
     contents = os.listdir(tmp_dir)
     # if the contents of the item are enclosed in a directory, copy them out
     # then delete the directory

@@ -3,6 +3,7 @@ Methods that deal with the KIM API directly.  Currently these are methods
 that build the libraries and use the Python interface kimpy
 to test if tests and models match.
 """
+
 import os
 from subprocess import check_call, CalledProcessError
 from contextlib import contextmanager
