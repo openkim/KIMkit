@@ -352,11 +352,10 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         )
 
     del_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+    needs_deleted_from_repository = True
 
     if not os.path.exists(del_path):
-        raise cf.KIMkitItemNotFoundError(
-            f"No item {kimcode} found in repository {repository}"
-        )
+        needs_deleted_from_repository = False
 
     __, leader, num, __ = kimcodes.parse_kim_code(kimcode)
 
@@ -386,6 +385,8 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
+        
+    current_item = mongodb.find_item_by_kimcode(kimcode)
 
     previous_items = mongodb.db.items.find_one(
         {"content-origin": kimcode}, projection={"kimcode": 1, "_id": 0}
@@ -398,8 +399,10 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
         return
 
     if can_edit:
-        shutil.rmtree(del_path)
-        mongodb.delete_one_database_entry(kimcode)
+        if needs_deleted_from_repository:
+            shutil.rmtree(del_path)
+        if current_item != None:
+            mongodb.delete_one_database_entry(kimcode, run_as_editor=run_as_editor)
 
         logger.info(
             f"User {this_user} deleted item {kimcode} from repository {repository}"
