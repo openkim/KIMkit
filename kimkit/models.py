@@ -262,7 +262,8 @@ def import_item(
         executables = []
         for file in listdir_nohidden(tmp_dir):
             #add group read/write/execute permissions
-            os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            filepath=os.path.join(tmp_dir,file)
+            os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -568,7 +569,8 @@ def version_update(
         executables = []
         for file in listdir_nohidden(tmp_dir):
             #add group read/write/execute permissions
-            os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            filepath=os.path.join(tmp_dir,file)
+            os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -772,7 +774,8 @@ def fork(
     executables = []
     for file in listdir_nohidden(tmp_dir):
         #add group read/write/execute permissions
-        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        filepath=os.path.join(tmp_dir,file)
+        os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -1055,7 +1058,8 @@ def _create_workflow_dir(
 
     for file in listdir_nohidden(tmp_dir):
         #add group read/write/execute permissions
-        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        filepath=os.path.join(tmp_dir,file)
+        os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
 
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)

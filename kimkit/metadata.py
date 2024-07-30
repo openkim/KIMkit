@@ -1413,7 +1413,7 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         #add group read/write/execute permissions
-        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         # return user's original usmask
         os.umask(oldumask)
         id = users.whoami()
