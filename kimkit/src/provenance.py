@@ -182,10 +182,10 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
         kimprovenance_new = [this_kimprovenance_entry] + kimprovenance_current_ordered
 
     with open(os.path.join(path, "kimprovenance.edn"), "w", encoding="utf-8") as ff:
-        write_provenance(kimprovenance_new, ff)
+        write_provenance(kimprovenance_new, ff, path)
 
 
-def write_provenance(o, f, allow_nils=True):
+def write_provenance(o, f, path, allow_nils=True):
     """Write a kimprovenance.edn file
 
     Parameters
@@ -248,7 +248,9 @@ def write_provenance(o, f, allow_nils=True):
 
     flobj.close()
     #add group read/write/execute permissions
-    os.chmod(f, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+    #TODO: get actual file path, instead of TextIOWrapper
+    provfile=os.path.join(path, "kimprovenance.edn")
+    os.chmod(provfile, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
     # return user's original usmask
     os.umask(oldumask)
 
