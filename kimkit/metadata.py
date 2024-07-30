@@ -619,6 +619,9 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
         Metadata field that should be dict is not
     """
     supported_item_types = ("portable-model", "simulator-model", "model-driver")
+    # prefix to indicate that the uuid came from openkim.org
+    # and so should not be checked against the list of kimkit users
+    uuid_override="openkim:"
 
     (
         kimspec_order,
@@ -673,13 +676,51 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                             )
 
                         if field in kimspec_uuid_fields:
-                            if not kimcodes.is_valid_uuid4(item):
+                            if item[:len(uuid_override)] != uuid_override:
+                                if not kimcodes.is_valid_uuid4(item):
+                                    raise TypeError(
+                                        f"Metadata Field {field} should be a list of UUID4 strings"
+                                    )
+                            if item[:len(uuid_override)] != uuid_override:
+                                if not users.is_user(uuid=item):
+                                    raise cf.KIMkitUserNotFoundError(
+                                        f"UUID {item} not recognized as a KIMkit user"
+                                    )
+                else:
+                    raise TypeError(
+                        f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
+                    )
+                
+            elif kimspec_arrays[field] == "list-dict":
+                if isinstance(metadata_dict[field], list):
+                    for item in metadata_dict[field]:
+                        if isinstance(item, dict):
+                            pass
+                        else:
+                            raise TypeError(
+                                f"Metadata field {field} must be list of dicts."
+                            )
+                    if field in kimspec_arrays_dicts:
+                        for key in kimspec_arrays_dicts[field]:
+                            try:
+                                value = metadata_dict[field][key]
+                            except KeyError as e:
+                                raise KeyError(
+                                    f"Required key {key} in metadata field {field} not found"
+                                ) from e
+                            if value and not isinstance(value, str):
                                 raise TypeError(
-                                    f"Metadata Field {field} should be a list of UUID4 strings"
+                                    f"Required key {key} in metadata field {field} must have str value"
                                 )
-                            if not users.is_user(uuid=item):
-                                raise cf.KIMkitUserNotFoundError(
-                                    f"UUID {item} not recognized as a KIMkit user"
+                        # optional keys are allowed not to exist
+                        else:
+                            try:
+                                value = metadata_dict[field][key]
+                            except KeyError:
+                                pass
+                            if value and not isinstance(value, str):
+                                raise TypeError(
+                                    f"Key {key} in metadata field {field} must have str value"
                                 )
                 else:
                     raise TypeError(
@@ -800,6 +841,41 @@ def create_new_metadata_from_existing(
     )
     return new_metadata
 
+def create_kimkit_metadata_from_openkim_kimspec(kimspec_file, UUID):
+
+    openkim_metadata=kim_edn.load(kimspec_file)
+
+    kimcode=openkim_metadata["extended-id"]
+
+    leader=kimcodes.get_leader(kimcode)
+
+    if leader == "MO":
+        item_type="portable-model"
+    elif leader == "MD":
+        item_type="model-driver"
+    elif leader == "SM":
+        item_type="simulator-model"
+    #TODO: uncomment once tests/drivers supported
+    # elif leader == "TE":
+    #     item_type="test"
+    # elif leader == "TD":
+    #     item_type="test-driver"
+
+    openkim_metadata["kim-item-type"] = item_type
+    
+    openkim_metadata["contributor-id"] = UUID
+    openkim_metadata["maintainer-id"] = UUID
+    
+    for i,uuid in enumerate(openkim_metadata["developer"]):
+        new_uuid="openkim:"+uuid
+        openkim_metadata["developer"][i]=new_uuid
+
+    if "implementer" in openkim_metadata:
+        for i,uuid in enumerate(openkim_metadata["implementer"]):
+            new_uuid="openkim:"+uuid
+            openkim_metadata["implementer"][i]=new_uuid
+
+    return openkim_metadata
 
 def _read_metadata_config():
     """Read in the metadata configuration spec from

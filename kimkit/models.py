@@ -153,7 +153,7 @@ class ModelDriver(kimobjects.ModelDriver):
 
 def import_item(
     tarfile_obj,
-    metadata_dict,
+    metadata_dict=None,
     previous_item_name=None,
     workflow_tarfile=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
@@ -205,7 +205,38 @@ def import_item(
         raise cf.KIMkitUserNotFoundError(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
-
+    event_type = "initial-creation"
+    if not metadata_dict:
+        oldumask = os.umask(0)
+        tmp_dir = os.path.join(repository, "tmp")
+        tarfile_obj.extractall(path=tmp_dir)
+        contents = listdir_nohidden(tmp_dir)
+        # if the contents of the item are enclosed in a directory, copy them out
+        # then delete the directory
+        if len(contents) == 1 and os.path.isdir(os.path.join(tmp_dir, contents[0])):
+            inner_dir = os.path.join(tmp_dir, contents[0])
+            if os.path.isdir(inner_dir):
+                inner_contents = listdir_nohidden(inner_dir)
+                for item in inner_contents:
+                    item_path = os.path.join(inner_dir, item)
+                    if os.path.isdir(item_path):
+                        shutil.copytree(
+                            item_path, os.path.join(tmp_dir, item), dirs_exist_ok=True
+                        )
+                    else:
+                        shutil.copy(os.path.join(inner_dir, item), tmp_dir)
+                shutil.rmtree(inner_dir)
+        contents = listdir_nohidden(tmp_dir)
+        if "kimspec.edn" in contents:
+            kimspec_loc=os.path.join(tmp_dir,"kimspec.edn")
+            new_metadata_dict=metadata.create_kimkit_metadata_from_openkim_kimspec(kimspec_loc,UUID)
+            shutil.rmtree(tmp_dir)
+        else: 
+            shutil.rmtree(tmp_dir)
+            raise cf.InvalidMetadataError("No dict of metadata or kimspec.edn file present, aborting import.")
+        if "kimprovenance.edn" in contents:
+            event_type="fork"
+    metadata_dict=new_metadata_dict
     kimcode = metadata_dict["extended-id"]
     kim_item_type = metadata_dict["kim-item-type"]
 
@@ -235,7 +266,6 @@ def import_item(
             f"kimcode {kimcode} is already in use, please select another."
         )
 
-    event_type = "initial-creation"
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
         # ignore any umask the user may have set
         oldumask = os.umask(0)
