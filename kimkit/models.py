@@ -206,6 +206,7 @@ def import_item(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
     event_type = "initial-creation"
+    can_create_metadata=False
     if not metadata_dict:
         oldumask = os.umask(0)
         tmp_dir = os.path.join(repository, "tmp")
@@ -230,13 +231,15 @@ def import_item(
         if "kimspec.edn" in contents:
             kimspec_loc=os.path.join(tmp_dir,"kimspec.edn")
             new_metadata_dict=metadata.create_kimkit_metadata_from_openkim_kimspec(kimspec_loc,UUID)
+            can_create_metadata=True
             shutil.rmtree(tmp_dir)
         else: 
             shutil.rmtree(tmp_dir)
             raise cf.InvalidMetadataError("No dict of metadata or kimspec.edn file present, aborting import.")
         if "kimprovenance.edn" in contents:
             event_type="fork"
-    metadata_dict=new_metadata_dict
+    if can_create_metadata:
+        metadata_dict=new_metadata_dict
     kimcode = metadata_dict["extended-id"]
     kim_item_type = metadata_dict["kim-item-type"]
 
