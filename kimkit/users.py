@@ -137,7 +137,7 @@ def add_editor(editor_name, run_as_administrator=False):
         with open(cf.KIMKIT_EDITORS_FILE, "a") as editor_file:
             editor_file.write(editor_name + "\n")
         #add group read/write/execute permissions
-        os.chmod(cf.KIMKIT_EDITORS_FILE,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(cf.KIMKIT_EDITORS_FILE, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         # return user's original usmask
         os.umask(oldumask)
         logger.info(f"The Administrator added {editor_name} as a KIMkit editor.")

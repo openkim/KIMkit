@@ -263,7 +263,7 @@ def import_item(
         for file in listdir_nohidden(tmp_dir):
             #add group read/write/execute permissions
             filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            os.chmod(file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -570,7 +570,7 @@ def version_update(
         for file in listdir_nohidden(tmp_dir):
             #add group read/write/execute permissions
             filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            os.chmod(file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -775,7 +775,7 @@ def fork(
     for file in listdir_nohidden(tmp_dir):
         #add group read/write/execute permissions
         filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -960,7 +960,7 @@ def update_makefile_kimcode(
                 with open(tmp_makefile, "w") as flobj2:
                     flobj2.write(updated_makefile_contents)
                 os.rename(tmp_makefile, makefile)
-                os.chmod(makefile,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+                os.chmod(makefile, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
                 logger.info(
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
@@ -1059,7 +1059,7 @@ def _create_workflow_dir(
     for file in listdir_nohidden(tmp_dir):
         #add group read/write/execute permissions
         filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
 
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)

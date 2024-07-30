@@ -471,7 +471,7 @@ def _write_metadata_to_file(
             os.path.join(dest_path, "kimspec.edn"),
         )
         #add group read/write/execute permissions
-        os.chmod(os.path.join(dest_path, "kimspec.edn"), stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(os.path.join(dest_path, "kimspec.edn"), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         mongodb.upsert_item(kimcode)
 
     else:
@@ -1050,7 +1050,7 @@ def add_optional_metadata_key(
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         #add group read/write/execute permissions
-        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         id = users.whoami()
         logger.info(
             f"User {id} added field {key_name} as an Optional key of type {value_type} to {item_types}"
@@ -1191,7 +1191,7 @@ def delete_optional_metadata_key(
         os.rename(tmp_dest_file, dest_file)
 
         #add group read/write/execute permissions
-        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         # return user's original usmask
         os.umask(oldumask)
         # run a query to retrieve any current items without the specified key set.
@@ -1317,7 +1317,7 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
             os.rename(tmp_dest_file, dest_file)
 
             #add group read/write/execute permissions
-            os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             # return user's original usmask
             os.umask(oldumask)
             id = users.whoami()
@@ -1413,7 +1413,7 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
         #add group read/write/execute permissions
-        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         # return user's original usmask
         os.umask(oldumask)
         id = users.whoami()
