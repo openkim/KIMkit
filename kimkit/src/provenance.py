@@ -11,6 +11,7 @@ import subprocess
 import hashlib
 import codecs
 import re
+import stat
 from collections import OrderedDict
 from pytz import timezone
 import kim_edn
@@ -201,6 +202,8 @@ def write_provenance(o, f, allow_nils=True):
     Exception
         not all kimprovenance objects are lists
     """
+    # ignore any umask the user may have set
+    oldumask = os.umask(0)
     if not allow_nils:
         o = replace_nones(o)
 
@@ -244,7 +247,10 @@ def write_provenance(o, f, allow_nils=True):
     flobj.write("\n")
 
     flobj.close()
-
+    #add group read/write/execute permissions
+    os.chmod(f,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+    # return user's original usmask
+    os.umask(oldumask)
 
 def format_kimprovenance(kimprov_as_str):
     """Organize provenance information into the correct format

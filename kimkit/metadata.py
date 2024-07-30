@@ -79,6 +79,7 @@ from pytz import timezone
 import os
 import warnings
 import kim_edn
+import stat
 from collections import OrderedDict
 
 from . import users
@@ -453,6 +454,9 @@ def _write_metadata_to_file(
 
     dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
+    # ignore any umask the user may have set
+    oldumask = os.umask(0)
+
     if os.path.exists(dest_path):
         dest_file = os.path.join(dest_path, "kimspec_tmp.edn")
         with open(dest_file, "w") as outfile:
@@ -466,7 +470,8 @@ def _write_metadata_to_file(
             os.path.join(dest_path, "kimspec_tmp.edn"),
             os.path.join(dest_path, "kimspec.edn"),
         )
-
+        #add group read/write/execute permissions
+        os.chmod(os.path.join(dest_path, "kimspec.edn"), stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         mongodb.upsert_item(kimcode)
 
     else:
@@ -1035,16 +1040,23 @@ def add_optional_metadata_key(
         tmp_dest_file = os.path.join(
             cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
-
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         with open(tmp_dest_file, "w") as outfile:
+            comment = _return_metadata_config_preamble()
+            outfile.writelines(comment)
             kim_edn.dump(final_dict, outfile, indent=4)
 
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
+        #add group read/write/execute permissions
+        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         id = users.whoami()
         logger.info(
             f"User {id} added field {key_name} as an Optional key of type {value_type} to {item_types}"
         )
+        # return user's original usmask
+        os.umask(oldumask)
 
     else:
         id = users.whoami()
@@ -1168,7 +1180,8 @@ def delete_optional_metadata_key(
         tmp_dest_file = os.path.join(
             cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
-
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         with open(tmp_dest_file, "w") as outfile:
             comment = _return_metadata_config_preamble()
             outfile.writelines(comment)
@@ -1177,6 +1190,10 @@ def delete_optional_metadata_key(
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
 
+        #add group read/write/execute permissions
+        os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # return user's original usmask
+        os.umask(oldumask)
         # run a query to retrieve any current items without the specified key set.
         query_results = []
         for item_type in item_types:
@@ -1285,7 +1302,8 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
                 "kimspec-arrays-dicts": kimspec_arrays_dicts,
                 "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
             }
-
+            # ignore any umask the user may have set
+            oldumask = os.umask(0)
             tmp_dest_file = os.path.join(
                 cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
             )
@@ -1297,6 +1315,11 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
 
             dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
             os.rename(tmp_dest_file, dest_file)
+
+            #add group read/write/execute permissions
+            os.chmod(dest_file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # return user's original usmask
+            os.umask(oldumask)
             id = users.whoami()
             logger.info(
                 f"User {id} modified metadata field {key_name} to be Required instead of Optional for types {item_types}"
@@ -1376,16 +1399,23 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
             "kimspec-arrays-dicts": kimspec_arrays_dicts,
             "KIMkit-item-type-key-requirements": KIMkit_item_type_key_requirements,
         }
-
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         tmp_dest_file = os.path.join(
             cf.KIMKIT_SETTINGS_DIRECTORY, "tmp_metadata_config.edn"
         )
 
         with open(tmp_dest_file, "w") as outfile:
+            comment = _return_metadata_config_preamble()
+            outfile.writelines(comment)
             kim_edn.dump(final_dict, outfile, indent=4)
 
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
+        #add group read/write/execute permissions
+        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # return user's original usmask
+        os.umask(oldumask)
         id = users.whoami()
         logger.info(
             f"User {id} modified metadata field {key_name} to be Optional instead of Required for types {item_types}"

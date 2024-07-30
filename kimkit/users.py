@@ -36,6 +36,8 @@ that their contributions can be tracked and credited.
 
 import uuid
 import getpass
+import os
+import stat
 
 from .src import config as cf
 from .src import logger
@@ -130,8 +132,14 @@ def add_editor(editor_name, run_as_administrator=False):
             )
 
     if can_edit:
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         with open(cf.KIMKIT_EDITORS_FILE, "a") as editor_file:
             editor_file.write(editor_name + "\n")
+        #add group read/write/execute permissions
+        os.chmod(cf.KIMKIT_EDITORS_FILE,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # return user's original usmask
+        os.umask(oldumask)
         logger.info(f"The Administrator added {editor_name} as a KIMkit editor.")
     else:
         username = whoami()

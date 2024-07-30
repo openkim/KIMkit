@@ -43,6 +43,7 @@ import shutil
 import tarfile
 import re
 import warnings
+import stat
 
 from . import metadata
 from . import users
@@ -236,6 +237,8 @@ def import_item(
 
     event_type = "initial-creation"
     if all((tarfile_obj, repository, kimcode, metadata_dict)):
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         tmp_dir = os.path.join(repository, kimcode)
         tarfile_obj.extractall(path=tmp_dir)
         tarfile_obj.close()
@@ -258,6 +261,8 @@ def import_item(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
+            #add group read/write/execute permissions
+            os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -308,6 +313,8 @@ def import_item(
         )
         shutil.rmtree(tmp_dir)
         logger.info(f"User {UUID} imported item {kimcode} into repository {repository}")
+        # return user's original usmask
+        os.umask(oldumask)
     else:
         raise AttributeError(
             f"""A name, source directory, KIMkit repository,
@@ -534,6 +541,8 @@ def version_update(
             )
 
     if can_edit:
+        # ignore any umask the user may have set
+        oldumask = os.umask(0)
         new_version = str(int(old_version) + 1)
         new_kimcode = kimcodes.format_kim_code(name, leader, num, new_version)
         tmp_dir = os.path.join(repository, new_kimcode)
@@ -558,6 +567,8 @@ def version_update(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
+            #add group read/write/execute permissions
+            os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -631,6 +642,8 @@ def version_update(
         logger.info(
             f"User {UUID} has requested a version update of item {kimcode} in repository {repository}"
         )
+        # return user's original usmask
+        os.umask(oldumask)
 
     else:
         logger.warning(
@@ -716,7 +729,8 @@ def fork(
         raise cf.KimCodeAlreadyInUseError(
             f"kimcode {new_kimcode} is already in use, please select another."
         )
-
+    # ignore any umask the user may have set
+    oldumask = os.umask(0)
     event_type = "fork"
     name, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
@@ -757,6 +771,8 @@ def fork(
 
     executables = []
     for file in listdir_nohidden(tmp_dir):
+        #add group read/write/execute permissions
+        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -829,6 +845,8 @@ def fork(
     logger.info(
         f"User {UUID} has forked item {new_kimcode} based on {kimcode} in repository {repository}"
     )
+    # return user's original usmask
+    os.umask(oldumask)
 
 
 def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PATH):
@@ -933,13 +951,18 @@ def update_makefile_kimcode(
             if updated_makefile_contents != makefile_contents:
                 set_new_kimcode = True
                 tmp_makefile_name = "tmp_" + makefile_name
+                # ignore any umask the user may have set
+                oldumask = os.umask(0)
                 tmp_makefile = os.path.join(item_path, tmp_makefile_name)
                 with open(tmp_makefile, "w") as flobj2:
                     flobj2.write(updated_makefile_contents)
                 os.rename(tmp_makefile, makefile)
+                os.chmod(makefile,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
                 logger.info(
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
+                # return user's original usmask
+                os.umask(oldumask)
 
     if set_new_kimcode == False and already_changed == None:
         logger.warning(
@@ -1005,6 +1028,9 @@ def _create_workflow_dir(
     """
     item_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
+    # ignore any umask the user may have set
+    oldumask = os.umask(0)
+
     workflow_dir = os.path.join(item_path, "workflow")
 
     tmp_dir = os.path.join(item_path, "tmp")
@@ -1027,8 +1053,14 @@ def _create_workflow_dir(
                     shutil.copy(os.path.join(inner_dir, item), tmp_dir)
             shutil.rmtree(inner_dir)
 
+    for file in listdir_nohidden(tmp_dir):
+        #add group read/write/execute permissions
+        os.chmod(file,stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)
+    # return user's original usmask
+    os.umask(oldumask)
 
 
 def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
