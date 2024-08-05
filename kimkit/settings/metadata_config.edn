@@ -42,8 +42,10 @@
         "kim-item-type" 
         "license" 
         "maintainer-id" 
+        "matching-models"
         "model-driver" 
-        "potential-type" 
+        "potential-type"
+        "properties" 
         "repository" 
         "run-compatibility"
         "simulator-name" 
@@ -51,6 +53,7 @@
         "simulator-potential-compatibility" 
         "source-citations" 
         "species" 
+        "test-driver"
         "title" 
         "training"
     ] 
@@ -73,7 +76,8 @@
         "repository"
         "run-compatibility" 
         "simulator-name" 
-        "simulator-potential" 
+        "simulator-potential"
+        "test-driver" 
         "title"
     ] 
     "kimspec-uuid-fields" [
@@ -87,6 +91,8 @@
         "executables" "list" 
         "funding" "list-dict" 
         "implementer" "list" 
+        "matching-models" "list"
+        "properties" "list"
         "simulator_potential_compatibility" "list" 
         "source-citations" "list-dict" 
         "species" "list" 
@@ -193,6 +199,91 @@
                 "implementer" 
                 "license" 
                 "simulator-potential-compatibility" 
+                "source-citations"
+            ]
+        }
+        "test" {
+            "required" [
+                "contributor-id" 
+                "date" 
+                "description" 
+                "developer" 
+                "domain" 
+                "extended-id" 
+                "maintainer-id" 
+                "matching-models"
+                "kim-api-version" 
+                "kim-item-type" 
+                "repository"
+                "species"
+                "test-driver"
+                "title"
+            ] 
+            "optional" [
+                "content-origin" 
+                "content-other-locations" 
+                "disclaimer" 
+                "doi" 
+                "executables" 
+                "funding" 
+                "implementer" 
+                "license" 
+                "source-citations"
+            ]
+        }
+         "test-driver" {
+            "required" [
+                "contributor-id" 
+                "date" 
+                "description" 
+                "developer" 
+                "domain" 
+                "extended-id" 
+                "maintainer-id" 
+                "kim-api-version" 
+                "kim-item-type" 
+                "properties"
+                "repository"
+                "simulator-name"
+                "title"
+            ] 
+            "optional" [
+                "content-origin" 
+                "content-other-locations" 
+                "disclaimer" 
+                "doi" 
+                "executables" 
+                "funding" 
+                "implementer" 
+                "license" 
+                "source-citations"
+            ]
+        }
+         "verification-check" {
+            "required" [
+                "contributor-id" 
+                "date" 
+                "description" 
+                "developer" 
+                "domain" 
+                "extended-id" 
+                "maintainer-id" 
+                "matching-models"
+                "kim-api-version" 
+                "kim-item-type" 
+                "repository"
+                "simulator-name"
+                "title"
+            ] 
+            "optional" [
+                "content-origin" 
+                "content-other-locations" 
+                "disclaimer" 
+                "doi" 
+                "executables" 
+                "funding" 
+                "implementer" 
+                "license" 
                 "source-citations"
             ]
         }

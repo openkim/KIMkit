@@ -12,9 +12,27 @@ KIMKIT_SETTINGS_DIRECTORY=$KIMKIT_DATA_DIRECTORY/settings
 KIMKIT_EDITORS_FILE=$KIMKIT_SETTINGS_DIRECTORY/editors.txt
 KIMKIT_METADATA_CONFIG_FILE=$KIMKIT_SETTINGS_DIRECTORY/metadata_config.edn
 
-CONFIG_FILE=kimspec.edn
-
 KIMKIT_DEBUG=False
 
 MONGODB_DATABASE=KIMkit_metadata
 MONGODB_HOSTNAME=127.0.0.1
+
+#=============================================================================
+# global defines that are necessary to define interface to tests
+#=============================================================================
+OUTPUT_DIR=output
+TEST_EXECUTABLE=runner
+INPUT_FILE=pipeline.stdin.tpl
+TEMPLATE_FILE=results.edn.tpl
+CONFIG_FILE=kimspec.edn
+DEPENDENCY_FILE=dependencies.edn
+
+# files related to computations
+TEMP_INPUT_FILE=pipeline.stdin
+TEMP_INPUT_INFO_FILE=pipeline.stdin.info
+STDOUT_FILE=pipeline.stdout
+STDERR_FILE=pipeline.stderr
+KIMLOG_FILE=kim.log
+RESULT_FILE=results.edn
+EXCEPTION_FILE=pipeline.exception
+PIPELINESPEC_FILE=pipelinespec.edn

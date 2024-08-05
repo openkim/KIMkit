@@ -1,6 +1,7 @@
 """
 This module contains the classes corresponding to the various **KIMkit** items 
-(portable-model, simulator-model, and model-driver), along with functions to manage them.
+(portable-model, simulator-model, model-driver, test, test-driver, and verification-check),
+along with functions to manage them.
 
 In general, content is passed in and out of **KIMkit** as tarfile.TarFile objects, so that
 automated systems can submit and retrieve KIMkit content without needing to write to disk.
@@ -150,6 +151,96 @@ class ModelDriver(kimobjects.ModelDriver):
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
+class Test(kimobjects.Test):
+    """KIM Test Class"""
+
+    def __init__(
+        self,
+        repository,
+        kimcode,
+        abspath=None,
+        *args,
+        **kwargs,
+    ):
+        """Class representing KIMkit tests
+
+        Inherits from OpenKIM Test class
+
+        Parameters
+        ----------
+        repository : path-like
+            path to root directory of KIMkit repository
+        kimcode : str, optional
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
+        """
+
+        setattr(self, "repository", repository)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(Test, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+
+class TestDriver(kimobjects.TestDriver):
+    """KIM Test Driver Class"""
+
+    def __init__(
+        self,
+        repository,
+        kimcode,
+        abspath=None,
+        *args,
+        **kwargs,
+    ):
+        """Class representing KIMkit test-drivers
+
+        Inherits from OpenKIM TestDriver class
+
+        Parameters
+        ----------
+        repository : path-like
+            path to root directory of KIMkit repository
+        kimcode : str, optional
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
+        """
+
+        setattr(self, "repository", repository)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(TestDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+
+class VerificationCheck(kimobjects.VerificationCheck):
+    """KIM Test Class"""
+
+    def __init__(
+        self,
+        repository,
+        kimcode,
+        abspath=None,
+        *args,
+        **kwargs,
+    ):
+        """Class representing KIMkit verification checks
+
+        Inherits from OpenKIM Test class
+
+        Parameters
+        ----------
+        repository : path-like
+            path to root directory of KIMkit repository
+        kimcode : str, optional
+            ID code of the item
+        abspath : path-like, optional
+            location of the item on disk, if not specified it is constructed out of the repoistory and kimcode, by default None
+        """
+
+        setattr(self, "repository", repository)
+        if not abspath:
+            abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
+        super(VerificationCheck, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+
 
 def import_item(
     tarfile_obj,
@@ -253,6 +344,15 @@ def import_item(
 
     elif leader == "MD":
         kimcode_item_type = "model-driver"
+
+    elif leader == "TE":
+        kimcode_item_type = "test"
+
+    elif leader == "TD":
+        kimcode_item_type = "test-driver"
+
+    elif leader == "VC":
+        kimcode_item_type = "verification-check"
 
     else:
         raise cf.InvalidItemTypeError(
@@ -412,6 +512,15 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     elif leader == "MD":
         item = ModelDriver(kimcode=kimcode, repository=repository)
 
+    elif leader == "TE":
+        item = Test(kimcode=kimcode, repository=repository)
+
+    elif leader == "TD":
+        item = TestDriver(kimcode=kimcode, repository=repository)
+
+    elif leader == "VC":
+        item = VerificationCheck(kimcode=kimcode, repository=repository)
+
     spec = item.kimspec
 
     contributor = spec["contributor-id"]
@@ -548,13 +657,21 @@ def version_update(
     name, leader, num, old_version = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":
         this_item = PortableModel(kimcode=kimcode, repository=repository)
-        kim_item_type = "portable-model"
+
     elif leader == "SM":
         this_item = SimulatorModel(kimcode=kimcode, repository=repository)
-        kim_item_type = "simulator-model"
+
     elif leader == "MD":
         this_item = ModelDriver(kimcode=kimcode, repository=repository)
-        kim_item_type = "model-driver"
+
+    elif leader == "TE":
+        this_item = Test(kimcode=kimcode, repository=repository)
+
+    elif leader == "TD":
+        this_item = TestDriver(kimcode=kimcode, repository=repository)
+
+    elif leader == "VC":
+        this_item = VerificationCheck(kimcode=kimcode, repository=repository)
 
     spec = this_item.kimspec
 
@@ -743,13 +860,7 @@ def fork(
 
     __, new_leader, __, __ = kimcodes.parse_kim_code(new_kimcode)
 
-    if new_leader == "MO":
-        new_kim_item_type = "portable-model"
-    elif leader == "SM":
-        new_kim_item_type = "simulator-model"
-    elif leader == "MD":
-        new_kim_item_type = "model-driver"
-    else:
+    if new_leader not in ["MO","SM","MD","TE","TD","VC"]:
         raise cf.InvalidItemTypeError(
             f"Leader of new kimcode {new_kimcode} does not refer to a valid kim item type"
         )
@@ -767,13 +878,6 @@ def fork(
     # ignore any umask the user may have set
     oldumask = os.umask(0)
     event_type = "fork"
-    name, leader, __, __ = kimcodes.parse_kim_code(kimcode)
-    if leader == "MO":
-        kim_item_type = "portable-model"
-    elif leader == "SM":
-        kim_item_type = "simulator-model"
-    elif leader == "MD":
-        kim_item_type = "model-driver"
 
     tmp_dir = os.path.join(repository, new_kimcode)
     if tarfile_obj:
@@ -921,6 +1025,22 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
+        if include_dependencies:
+            req_driver = this_item.driver
+            driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
+            with tarfile.open(
+                os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
+            ) as tar:
+                tar.add(driver_src_dir, arcname=req_driver)
+            contents = listdir_nohidden(driver_src_dir)
+            for item in contents:
+                if ".txz" in item:
+                    tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
+                    tarfile_objs.append(tarfile_obj)
+                    tarfile_obj.close()
+                    os.remove(os.path.join(driver_src_dir, item))
+    elif leader == "TE":  # test
+        this_item = Test(repository, kimcode=kimcode)
         if include_dependencies:
             req_driver = this_item.driver
             driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)

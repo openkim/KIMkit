@@ -12,6 +12,9 @@ Has a base ``KIMObject`` class and
  * Portable Model
  * Simulator Model
  * Model Driver
+ * Test
+ * Test Driver
+ * Verification Check
  
 
 classes, all of which inherit from ``KIMObject`` and aim to know how to handle themselves.
@@ -315,12 +318,90 @@ class KIMItem(KIMObject):
                 prev_short_code = short_code
 
         return (cls(x) for x in fresh_items)
+    
+class KIMJobResult(KIMObject):
+    """Represents a Test Result, Verification Result, or Error"""
+
+    kim_type = None
+    makeable = False
+
+    def __init__(self, kim_code, *args, **kwargs):
+        super().__init__(kim_code, *args, **kwargs)
+
 
 
 # ============================================================
-# Subject
+# Runner & Subject
 # ============================================================
 
+
+class Runner(KIMItem):
+    """
+    An executable KIM Item.  This may be a Test or Verification Check.  The
+    corresponding subject will be a Model.
+
+    NOTE: Technically we could do away with the terminology of "runner" and "subject"
+          now that we've eliminated the idea of Test Verifications, but since "runner"
+          can still be a TE or VC, I'm keeping it in place.
+    """
+
+    makeable = True
+    result_leader = "tr"
+
+    def __init__(self, kim_code, *args, **kwargs):
+        super(Runner, self).__init__(kim_code, *args, **kwargs)
+        self.executable = os.path.join(self.path, cf.TEST_EXECUTABLE)
+        self.infile_path = os.path.join(self.path, cf.INPUT_FILE)
+        self.depfile_path = os.path.join(self.path, cf.DEPENDENCY_FILE)
+
+    def __call__(self, *args, **kwargs):
+        """Calling a runner object executes its executable in
+        its own directory.  args and kwargs are passed to ``subprocess.check_call``."""
+        with self.in_dir():
+            subprocess.check_call(self.executable, *args, **kwargs)
+
+    @property
+    def _reversed_out_dict(self):
+        """Reverses the out_dict"""
+        return {value: key for key, value in self.out_dict.items()}
+
+    @property
+    def infile(self):
+        """return a file object for the INPUT_FILE"""
+        return open(self.infile_path)
+
+    @property
+    def depfile(self):
+        """return a file object for DEPENDENCY_FILE"""
+        if os.path.isfile(self.depfile_path):
+            return open(self.depfile_path)
+        return None
+
+    # def processed_infile(self, subject, add_history=False):
+    #     """Process the input file, with template, and return a file object to the result"""
+    #     template.process(self.infile_path, subject, self, add_history=add_history)
+    #     return open(os.path.join(self.path, cf.OUTPUT_DIR, cf.TEMP_INPUT_FILE))
+
+    # @property
+    # def template(self):
+    #     return template.template_environment.get_template(
+    #         os.path.join(self.path, cf.OUTPUT_DIR, cf.TEMPLATE_FILE)
+    #     )
+
+    @property
+    def children_on_disk(self):
+        return None
+
+    @property
+    def fresh_children_on_disk(self):
+        return None
+
+    @property
+    def simulator_potential(self):
+        if not self.kimspec:
+            return None
+        else:
+            return self.kimspec.get("simulator-potential")
 
 class Subject(KIMItem):
     """
@@ -453,11 +534,220 @@ class SimulatorModel(Subject):
                 return self.kimspec["pm-run-compatible"]
             except KeyError:
                 return True
+            
+# ============================================================
+# Runner Objs
+# ============================================================
+
+# ---------------------------------------------
+# Test
+# ---------------------------------------------
+class Test(Runner):
+    """A kim test, it is a KIMItem, plus
+
+    Settings:
+        kim_type = "te"
+        makeable = True
+
+    Attributes:
+        executable
+            a path to its executable
+        outfile_path
+            path to its INPUT_FILE
+        infile_path
+            path to its OUTPUT_FILE
+        out_dict
+            a dictionary of its output file, mapping strings to
+            Property objects
+    """
+
+    kim_type = "te"
+    makeable = True
+    subject_type = Model
+    result_leader = "tr"
+    runner_name = "test"
+    subject_name = "test"
+
+    def __init__(self, kim_code, *args, **kwargs):
+        """Initialize the Test, with a kim_code"""
+        super(Test, self).__init__(kim_code, *args, **kwargs)
+
+    @property
+    def _reversed_out_dict(self):
+        """Reverses the out_dict"""
+        return {value: key for key, value in self.out_dict.items()}
+
+    @property
+    def test_driver(self):
+        """Return the Test Driver listed in this Test's kimspec file"""
+        if not self.kimspec or not self.kimspec.get("test-driver"):
+            return None
+        else:
+            return self.kimspec["test-driver"]
+
+    @property
+    def driver(self):
+        return self.test_driver
+
+    @property
+    def species(self):
+        if not self.kimspec:
+            return None
+        else:
+            return self.kimspec["species"]
+
+    @property
+    def simulator(self):
+        drv = self.driver
+        if drv:
+            return kim_obj(drv).simulator
+        else:
+            return self.kimspec["simulator-name"]
+
+    def runtime_dependencies(self):
+        """
+        Read the DEPENDENCY_FILE (currently dependencies.edn) for the runner item.
+        Note that these will usually be specified without a version number, and also
+        that the list returned by this function only contains the Tests listed in the
+        dependency file, not tuples containing those Tests with any Models.
+        """
+        # FIXME: Verify that each item listed in dependencies.edn is at least a partial kimcode for
+        #        a Test, i.e. only Tests should be listed in dependencies.edn.
+        if self.depfile:
+            deps = kim_edn.load(self.depfile)
+            if not isinstance(deps, list):
+                logger.exception(
+                    "Dependencies file of item %r has invalid format (must be a list)"
+                    % self.kim_code
+                )
+                raise TypeError(
+                    "Dependencies file of item %r has invalid format (must be a list)"
+                    % self.kim_code
+                )
+            for dep in deps:
+                if not isinstance(dep, str):
+                    logger.exception(
+                        "Dependencies file entry %r of item %r has invalid format (must be a "
+                        "string)" % (dep, self.kim_code)
+                    )
+                    raise TypeError(
+                        "Dependencies file entry %r of item %r has invalid "
+                        "format (must be a string)" % (dep, self.kim_code)
+                    )
+            # Cast each entry of deps to str to get rid of any unicode.
+            deps = [str(dep) for dep in deps]
+            return deps
+        return []
+
+
+# ------------------------------------------
+# Verification Check
+# ------------------------------------------
+class VerificationCheck(Test):
+    """A kim test, it is a KIMItem, plus
+
+    Settings:
+        kim_type = "vc"
+        makeable = True
+
+    Attributes:
+        executable
+            a path to its executable
+        outfile_path
+            path to its INPUT_FILE
+        infile_path
+            path to its OUTPUT_FILE
+        out_dict
+            a dictionary of its output file, mapping strings to
+            Property objects
+    """
+
+    kim_type = "vc"
+    makeable = True
+    subject_type = Model
+    result_leader = "vr"
+    runner_name = "verification-check"
+
+    def __init__(self, kim_code, *args, **kwargs):
+        """Initialize the Test, with a kim_code"""
+        super(VerificationCheck, self).__init__(kim_code, *args, **kwargs)
+
+    @property
+    def simulator(self):
+        return self.kimspec["simulator-name"]
 
 
 # ============================================================
 # Drivers
 # ============================================================
+
+# ------------------------------------------
+# Test Driver
+# ------------------------------------------
+class TestDriver(KIMItem):
+    """A test driver, a KIMItem with,
+
+    Settings:
+        kim_type = "td"
+        makeable = True
+
+    Attributes:
+        executable
+            the executable for the TestDriver
+    """
+
+    kim_type = "td"
+    makeable = True
+
+    def __init__(self, kim_code, *args, **kwargs):
+        """Initialize the TestDriver, with a kim_code"""
+        super(TestDriver, self).__init__(kim_code, *args, **kwargs)
+        self.executable = os.path.join(self.path, cf.TEST_EXECUTABLE)
+
+    def __call__(self, *args, **kwargs):
+        """Make the TestDriver callable, executing its executable in its own directory,
+        passing args and kwargs to ``subprocess.check_call``
+        """
+        with self.in_dir():
+            subprocess.check_call(self.executable, *args, **kwargs)
+
+    @property
+    def children_on_disk(self):
+        """
+        Return a generator of all of the Tests in the local repository which
+        use this Test Driver.  In production, this function is only used as a
+        secondary precaution when deleting a Test Driver from the system in
+        order to ensure all of their children are indeed deleted. The
+        Director's delete() function should already ensure that this secondary
+        deletion step is unnecessary.
+
+        This function is also used by the user VM command line utilities.
+        """
+        return (test for test in Test.all_on_disk() if self.kim_code == test.driver)
+
+    def delete(self):
+        """
+        Override KIMItem.delete to also delete children from local repository
+        """
+        logger.warning("Deleting item %r from local repository", self)
+        # Delete any children of this driver in the local repository
+        for child in self.children_on_disk:
+            child.delete()
+        shutil.rmtree(self.path)
+
+    @property
+    def fresh_children_on_disk(self):
+        """
+        Same as children_on_disk, but only returns non-stale Tests which use
+        this Test Driver.  Also used by the user VM command line utilities.
+        """
+        return (
+            test for test in Test.all_fresh_on_disk() if self.kim_code == test.driver
+        )
+
+    @property
+    def simulator(self):
+        return self.kimspec["simulator-name"]
 
 
 # ------------------------------------------
@@ -569,7 +859,7 @@ def kim_obj(kim_code, *args, **kwargs):
             f"Invalid kim type code {kim_type} in item ID {kim_code}"
         )
     except IOError:
-        raise cf.KIMItemMissing(f"Could not initialize KIMObject for {kim_code}")
+        raise cf.KIMkitItemNotFoundError(f"Could not initialize KIMObject for {kim_code}")
     else:
         kobj = cls(kim_code, *args, **kwargs)
         return kobj

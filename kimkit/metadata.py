@@ -509,7 +509,7 @@ def validate_metadata(metadata_dict):
     InvalidMetadataTypesError
         Validating metadata types failed
     """
-    supported_item_types = ("portable-model", "simulator-model", "model-driver")
+    supported_item_types = ("portable-model", "simulator-model", "model-driver", "test", "test-driver", "verification-check")
 
     (
         kimspec_order,
@@ -618,7 +618,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     TypeError
         Metadata field that should be dict is not
     """
-    supported_item_types = ("portable-model", "simulator-model", "model-driver")
+    supported_item_types = ("portable-model", "simulator-model", "model-driver", "test", "test-driver", "verification-check")
     # prefix to indicate that the uuid came from openkim.org
     # and so should not be checked against the list of kimkit users
     uuid_override="openkim:"
@@ -855,11 +855,12 @@ def create_kimkit_metadata_from_openkim_kimspec(kimspec_file, UUID):
         item_type="model-driver"
     elif leader == "SM":
         item_type="simulator-model"
-    #TODO: uncomment once tests/drivers supported
-    # elif leader == "TE":
-    #     item_type="test"
-    # elif leader == "TD":
-    #     item_type="test-driver"
+    elif leader == "TE":
+        item_type="test"
+    elif leader == "TD":
+        item_type="test-driver"
+    elif leader == "VC":
+        item_type="verification-check"
 
     openkim_metadata["kim-item-type"] = item_type
     
@@ -950,7 +951,7 @@ def get_metadata_template_for_item_type(item_type):
 
     if item_type not in all_item_types:
         # include item type short codes
-        item_type_short_codes = ["mo", "sm", "md"]
+        item_type_short_codes = ["mo", "sm", "md", "te", "td", "vc"]
 
         if item_type in item_type_short_codes:
             if item_type == "mo":
@@ -959,6 +960,12 @@ def get_metadata_template_for_item_type(item_type):
                 item_type = "simulator-model"
             elif item_type == "md":
                 item_type = "model-driver"
+            elif item_type == "te":
+                item_type = "test"
+            elif item_type == "td":
+                item_type = "test"
+            elif item_type == "vc":
+                item_type = "verification-check"
         else:
             raise cf.InvalidItemTypeError(
                 f"Item type {item_type} not recognized, aborting."

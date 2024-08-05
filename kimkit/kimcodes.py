@@ -8,7 +8,8 @@ but must begin with a letter, and is meant to be a human-readable label for the 
 
 The leader is a 2 letter code which specifies what type of kim item the kimcode
 refers to, where "MO" stands for "Portable Model", "SM" stands for 
-"Simulator Model" and "MD" stands for "Model Driver".
+"Simulator Model", "MD" stands for "Model Driver", "TE" stands for "test",
+"TD" stands for "Test Driver", and "VC" stands for "Verification Check".
 
 The 12 digit ID number is generated pseudorandomly,
 and used to destinguish KIMkit items, and assign them a directory location in the chosen repository. 
@@ -29,15 +30,27 @@ RE_KIMID = r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3
 RE_EXTENDEDKIMID = (
     r"^(?:([_a-zA-Z][_a-zA-Z0-9]*?)__)?([A-Z]{2})_([0-9]{12})(?:_([0-9]{3}))$"
 )
-
+RE_JOBID = (
+    r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})$"
+)
+RE_UUID = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-([tve]r)$"
+RE_TESTRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(tr)$"
+RE_VERIFICATIONRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(vr)$"
+RE_ERROR = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(er)$"
 
 def parse_kim_code(kim_code):
-    """Parse a kim code into it's pieces,
-    returns a tuple (name,leader,num,version)"""
+    """ Parse a kim code into it's pieces,
+        returns a tuple (name,leader,num,version) """
     rekimid = re.match(RE_KIMID, kim_code)
+    rejobid = re.match(RE_JOBID, kim_code)
+    reuuid = re.match(RE_UUID, kim_code)
 
     if rekimid:
         return rekimid.groups()
+    elif rejobid:
+        return rejobid.groups()
+    elif reuuid:
+        return reuuid.groups()
     else:
         raise cf.InvalidKIMCode(
             "{} is not a valid KIM ID, job id, or uuid".format(kim_code)
@@ -164,6 +177,12 @@ def generate_kimcode(name, item_type, repository=cf.LOCAL_REPOSITORY_PATH):
         leader = "SM"
     elif item_type == "model-driver":
         leader = "MD"
+    elif item_type == "test":
+        leader = "TE"
+    elif item_type == "test-driver":
+        leader = "TD"
+    elif item_type == "verification-check":
+        leader = "VC"
     else:
         raise ValueError(
             "Valid item types include 'portable-model', 'simulator-model', and 'model-driver'"
@@ -254,6 +273,12 @@ def kimcode_to_file_path(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
         prefix = "simulator-models"
     elif leader == "MD":
         prefix = "model-drivers"
+    elif leader == "TE":
+        prefix = "tests"
+    elif leader == "TD":
+        prefix = "test-drivers"
+    elif leader == "VC":
+        prefix = "verification-checks"
     else:
         raise ValueError("Unrecognized KIMkit item type")
 
@@ -287,3 +312,23 @@ def iskimid(kimcode):
 
 def isextendedkimid(kimcode):
     return re.match(RE_EXTENDEDKIMID, kimcode) is not None
+
+
+def isuuid(kimcode):
+    return re.match(RE_UUID, kimcode) is not None
+
+
+def isjobid(kimcode):
+    return re.match(RE_JOBID, kimcode) is not None
+
+
+def istestresult(uuid):
+    return re.match(RE_TESTRESULT, uuid) is not None
+
+
+def isverificationresult(uuid):
+    return re.match(RE_VERIFICATIONRESULT, uuid) is not None
+
+
+def iserror(uuid):
+    return re.match(RE_ERROR, uuid) is not None

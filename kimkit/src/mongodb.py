@@ -14,6 +14,7 @@ import datetime
 import re
 import kim_edn
 
+from . import kimobjects
 from . import config as cf
 from .logger import logging
 
@@ -22,17 +23,18 @@ from .. import users
 
 logger = logging.getLogger("KIMkit")
 
-user = cf.MONGODB_USERNAME
-password = cf.MONGODB_PASSWORD
-host = cf.MONGODB_HOSTNAME
-port = cf.MONGODB_PORT
-db_name = cf.MONGODB_DATABASE
-args = "ssl=true&tlsAllowInvalidCertificates=true"
+# user = cf.MONGODB_USERNAME
+# password = cf.MONGODB_PASSWORD
+# host = cf.MONGODB_HOSTNAME
+# port = cf.MONGODB_PORT
+# db_name = cf.MONGODB_DATABASE
+# args = "ssl=true&tlsAllowInvalidCertificates=true"
 
-db_uri = "mongodb://%s:%s@%s:%s/%s?%s" % (user, password, host, port, db_name, args)
+# db_uri = "mongodb://%s:%s@%s:%s/%s?%s" % (user, password, host, port, db_name, args)
 
 
-client = pymongo.MongoClient(host=db_uri)
+# client = pymongo.MongoClient(host=db_uri)
+client=pymongo.MongoClient(cf.MONGODB_HOSTNAME)
 db = client[cf.MONGODB_DATABASE]
 
 BADKEYS = {"kimspec", "profiling", "inserted_on", "latest"}
@@ -98,24 +100,36 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     foo["latest"] = True
     foo["repository"] = repository
 
-    if foo["type"] in ("mo", "sm", "md"):
-        foo["makeable"] = True
-    if foo["type"] in ("sm", "mo"):
-        foo["subject"] = True
-    if foo["type"] in ("md"):
-        foo["driver"] = True
+    if foo['type'] in ('te','mo','sm','td', 'md','vc'):
+        foo['makeable'] = True
+    if foo['type'] in ('te','vc'):
+        foo['runner'] = True
+    if foo['type'] in ('sm','mo'):
+        foo['subject'] = True
+    if foo['type'] in ('md','td'):
+        foo['driver'] = True
     else:
-        foo["driver"] = False
+        foo['driver'] = False
 
     src_dir = kimcodes.kimcode_to_file_path(kimcode, repository)
     specpath = os.path.join(src_dir, cf.CONFIG_FILE)
     with open(specpath, "r") as specfile:
         spec = kim_edn.load(specfile)
 
-    if foo["type"] == "mo":
-        modeldriver = spec.get("model-driver", None)
+    if foo['type'] == 'te':
+        # Fetch Test Driver, if any, from kimspec dict we loaded
+        testresult = spec.get('test-driver', None)
+        if testresult:
+            foo['driver'] = rmbadkeys(kimcode_to_dict(testresult))
+
+        # Fetch list of Tests in dependencies.edn, if it exists
+        kobj = kimobjects.kim_obj(kimcode)
+        foo['dependencies'] = kobj.runtime_dependencies()
+
+    if foo['type'] == 'mo':
+        modeldriver = spec.get('model-driver', None)
         if modeldriver:
-            foo["driver"] = rmbadkeys(kimcode_to_dict(modeldriver))
+            foo['driver'] = rmbadkeys(kimcode_to_dict(modeldriver))
 
     foo.update(spec)
     return foo
