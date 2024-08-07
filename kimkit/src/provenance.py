@@ -247,12 +247,21 @@ def write_provenance(o, f, path, allow_nils=True):
     flobj.write("\n")
 
     flobj.close()
-    #add group read/write/execute permissions
-    #TODO: get actual file path, instead of TextIOWrapper
-    provfile=os.path.join(path, "kimprovenance.edn")
-    os.chmod(provfile, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+    # add group read/write/execute permissions
+    # TODO: get actual file path, instead of TextIOWrapper
+    provfile = os.path.join(path, "kimprovenance.edn")
+    os.chmod(
+        provfile,
+        stat.S_IRUSR
+        | stat.S_IWUSR
+        | stat.S_IXUSR
+        | stat.S_IRGRP
+        | stat.S_IWGRP
+        | stat.S_IXGRP,
+    )
     # return user's original usmask
     os.umask(oldumask)
+
 
 def format_kimprovenance(kimprov_as_str):
     """Organize provenance information into the correct format

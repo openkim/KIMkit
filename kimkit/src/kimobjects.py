@@ -318,7 +318,8 @@ class KIMItem(KIMObject):
                 prev_short_code = short_code
 
         return (cls(x) for x in fresh_items)
-    
+
+
 class KIMJobResult(KIMObject):
     """Represents a Test Result, Verification Result, or Error"""
 
@@ -327,7 +328,6 @@ class KIMJobResult(KIMObject):
 
     def __init__(self, kim_code, *args, **kwargs):
         super().__init__(kim_code, *args, **kwargs)
-
 
 
 # ============================================================
@@ -402,6 +402,7 @@ class Runner(KIMItem):
             return None
         else:
             return self.kimspec.get("simulator-potential")
+
 
 class Subject(KIMItem):
     """
@@ -534,10 +535,12 @@ class SimulatorModel(Subject):
                 return self.kimspec["pm-run-compatible"]
             except KeyError:
                 return True
-            
+
+
 # ============================================================
 # Runner Objs
 # ============================================================
+
 
 # ---------------------------------------------
 # Test
@@ -680,6 +683,7 @@ class VerificationCheck(Test):
 # ============================================================
 # Drivers
 # ============================================================
+
 
 # ------------------------------------------
 # Test Driver
@@ -859,7 +863,9 @@ def kim_obj(kim_code, *args, **kwargs):
             f"Invalid kim type code {kim_type} in item ID {kim_code}"
         )
     except IOError:
-        raise cf.KIMkitItemNotFoundError(f"Could not initialize KIMObject for {kim_code}")
+        raise cf.KIMkitItemNotFoundError(
+            f"Could not initialize KIMObject for {kim_code}"
+        )
     else:
         kobj = cls(kim_code, *args, **kwargs)
         return kobj

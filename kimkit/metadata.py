@@ -120,7 +120,7 @@ class MetaData:
         setattr(self, "repository", repository)
         dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
-        dest_file = os.path.join(dest_path, "kimspec.edn")
+        dest_file = os.path.join(dest_path, cf.CONFIG_FILE)
 
         # read current metadata from kimspec.edn if it exists
         if os.path.isfile(dest_file):
@@ -468,10 +468,18 @@ def _write_metadata_to_file(
 
         os.rename(
             os.path.join(dest_path, "kimspec_tmp.edn"),
-            os.path.join(dest_path, "kimspec.edn"),
+            os.path.join(dest_path, cf.CONFIG_FILE),
         )
-        #add group read/write/execute permissions
-        os.chmod(os.path.join(dest_path, "kimspec.edn"), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        os.chmod(
+            os.path.join(dest_path, cf.CONFIG_FILE),
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         mongodb.upsert_item(kimcode)
 
     else:
@@ -509,7 +517,14 @@ def validate_metadata(metadata_dict):
     InvalidMetadataTypesError
         Validating metadata types failed
     """
-    supported_item_types = ("portable-model", "simulator-model", "model-driver", "test", "test-driver", "verification-check")
+    supported_item_types = (
+        "portable-model",
+        "simulator-model",
+        "model-driver",
+        "test",
+        "test-driver",
+        "verification-check",
+    )
 
     (
         kimspec_order,
@@ -618,10 +633,17 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
     TypeError
         Metadata field that should be dict is not
     """
-    supported_item_types = ("portable-model", "simulator-model", "model-driver", "test", "test-driver", "verification-check")
+    supported_item_types = (
+        "portable-model",
+        "simulator-model",
+        "model-driver",
+        "test",
+        "test-driver",
+        "verification-check",
+    )
     # prefix to indicate that the uuid came from openkim.org
     # and so should not be checked against the list of kimkit users
-    uuid_override="openkim:"
+    uuid_override = "openkim:"
 
     (
         kimspec_order,
@@ -676,12 +698,12 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                             )
 
                         if field in kimspec_uuid_fields:
-                            if item[:len(uuid_override)] != uuid_override:
+                            if item[: len(uuid_override)] != uuid_override:
                                 if not kimcodes.is_valid_uuid4(item):
                                     raise TypeError(
                                         f"Metadata Field {field} should be a list of UUID4 strings"
                                     )
-                            if item[:len(uuid_override)] != uuid_override:
+                            if item[: len(uuid_override)] != uuid_override:
                                 if not users.is_user(uuid=item):
                                     raise cf.KIMkitUserNotFoundError(
                                         f"UUID {item} not recognized as a KIMkit user"
@@ -690,7 +712,7 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
                     )
-                
+
             elif kimspec_arrays[field] == "list-dict":
                 if isinstance(metadata_dict[field], list):
                     for item in metadata_dict[field]:
@@ -841,42 +863,44 @@ def create_new_metadata_from_existing(
     )
     return new_metadata
 
+
 def create_kimkit_metadata_from_openkim_kimspec(kimspec_file, UUID):
 
-    openkim_metadata=kim_edn.load(kimspec_file)
+    openkim_metadata = kim_edn.load(kimspec_file)
 
-    kimcode=openkim_metadata["extended-id"]
+    kimcode = openkim_metadata["extended-id"]
 
-    leader=kimcodes.get_leader(kimcode)
+    leader = kimcodes.get_leader(kimcode)
 
     if leader == "MO":
-        item_type="portable-model"
+        item_type = "portable-model"
     elif leader == "MD":
-        item_type="model-driver"
+        item_type = "model-driver"
     elif leader == "SM":
-        item_type="simulator-model"
+        item_type = "simulator-model"
     elif leader == "TE":
-        item_type="test"
+        item_type = "test"
     elif leader == "TD":
-        item_type="test-driver"
+        item_type = "test-driver"
     elif leader == "VC":
-        item_type="verification-check"
+        item_type = "verification-check"
 
     openkim_metadata["kim-item-type"] = item_type
-    
+
     openkim_metadata["contributor-id"] = UUID
     openkim_metadata["maintainer-id"] = UUID
-    
-    for i,uuid in enumerate(openkim_metadata["developer"]):
-        new_uuid="openkim:"+uuid
-        openkim_metadata["developer"][i]=new_uuid
+
+    for i, uuid in enumerate(openkim_metadata["developer"]):
+        new_uuid = "openkim:" + uuid
+        openkim_metadata["developer"][i] = new_uuid
 
     if "implementer" in openkim_metadata:
-        for i,uuid in enumerate(openkim_metadata["implementer"]):
-            new_uuid="openkim:"+uuid
-            openkim_metadata["implementer"][i]=new_uuid
+        for i, uuid in enumerate(openkim_metadata["implementer"]):
+            new_uuid = "openkim:" + uuid
+            openkim_metadata["implementer"][i] = new_uuid
 
     return openkim_metadata
+
 
 def _read_metadata_config():
     """Read in the metadata configuration spec from
@@ -1132,8 +1156,16 @@ def add_optional_metadata_key(
 
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
-        #add group read/write/execute permissions
-        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        os.chmod(
+            dest_file,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         id = users.whoami()
         logger.info(
             f"User {id} added field {key_name} as an Optional key of type {value_type} to {item_types}"
@@ -1273,8 +1305,16 @@ def delete_optional_metadata_key(
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
 
-        #add group read/write/execute permissions
-        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        os.chmod(
+            dest_file,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         # return user's original usmask
         os.umask(oldumask)
         # run a query to retrieve any current items without the specified key set.
@@ -1399,8 +1439,16 @@ def make_optional_metadata_key_required(key_name, item_types, run_as_editor=Fals
             dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
             os.rename(tmp_dest_file, dest_file)
 
-            #add group read/write/execute permissions
-            os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # add group read/write/execute permissions
+            os.chmod(
+                dest_file,
+                stat.S_IRUSR
+                | stat.S_IWUSR
+                | stat.S_IXUSR
+                | stat.S_IRGRP
+                | stat.S_IWGRP
+                | stat.S_IXGRP,
+            )
             # return user's original usmask
             os.umask(oldumask)
             id = users.whoami()
@@ -1495,8 +1543,16 @@ def make_required_metadata_key_optional(key_name, item_types, run_as_editor=Fals
 
         dest_file = cf.KIMKIT_METADATA_CONFIG_FILE
         os.rename(tmp_dest_file, dest_file)
-        #add group read/write/execute permissions
-        os.chmod(dest_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        os.chmod(
+            dest_file,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         # return user's original usmask
         os.umask(oldumask)
         id = users.whoami()

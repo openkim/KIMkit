@@ -151,6 +151,7 @@ class ModelDriver(kimobjects.ModelDriver):
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
+
 class Test(kimobjects.Test):
     """KIM Test Class"""
 
@@ -180,6 +181,7 @@ class Test(kimobjects.Test):
         if not abspath:
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(Test, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+
 
 class TestDriver(kimobjects.TestDriver):
     """KIM Test Driver Class"""
@@ -211,6 +213,7 @@ class TestDriver(kimobjects.TestDriver):
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(TestDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
+
 class VerificationCheck(kimobjects.VerificationCheck):
     """KIM Test Class"""
 
@@ -239,7 +242,9 @@ class VerificationCheck(kimobjects.VerificationCheck):
         setattr(self, "repository", repository)
         if not abspath:
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-        super(VerificationCheck, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+        super(VerificationCheck, self).__init__(
+            kimcode, abspath=abspath, *args, **kwargs
+        )
 
 
 def import_item(
@@ -297,7 +302,7 @@ def import_item(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
     event_type = "initial-creation"
-    can_create_metadata=False
+    can_create_metadata = False
     if not metadata_dict:
         oldumask = os.umask(0)
         tmp_dir = os.path.join(repository, "tmp")
@@ -320,17 +325,21 @@ def import_item(
                 shutil.rmtree(inner_dir)
         contents = listdir_nohidden(tmp_dir)
         if "kimspec.edn" in contents:
-            kimspec_loc=os.path.join(tmp_dir,"kimspec.edn")
-            new_metadata_dict=metadata.create_kimkit_metadata_from_openkim_kimspec(kimspec_loc,UUID)
-            can_create_metadata=True
+            kimspec_loc = os.path.join(tmp_dir, "kimspec.edn")
+            new_metadata_dict = metadata.create_kimkit_metadata_from_openkim_kimspec(
+                kimspec_loc, UUID
+            )
+            can_create_metadata = True
             shutil.rmtree(tmp_dir)
-        else: 
+        else:
             shutil.rmtree(tmp_dir)
-            raise cf.InvalidMetadataError("No dict of metadata or kimspec.edn file present, aborting import.")
+            raise cf.InvalidMetadataError(
+                "No dict of metadata or kimspec.edn file present, aborting import."
+            )
         if "kimprovenance.edn" in contents:
-            event_type="fork"
+            event_type = "fork"
     if can_create_metadata:
-        metadata_dict=new_metadata_dict
+        metadata_dict = new_metadata_dict
     kimcode = metadata_dict["extended-id"]
     kim_item_type = metadata_dict["kim-item-type"]
 
@@ -394,9 +403,17 @@ def import_item(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
-            #add group read/write/execute permissions
-            filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # add group read/write/execute permissions
+            filepath = os.path.join(tmp_dir, file)
+            os.chmod(
+                filepath,
+                stat.S_IRUSR
+                | stat.S_IWUSR
+                | stat.S_IXUSR
+                | stat.S_IRGRP
+                | stat.S_IWGRP
+                | stat.S_IXGRP,
+            )
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -538,7 +555,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
-        
+
     current_item = mongodb.find_item_by_kimcode(kimcode)
 
     previous_items = mongodb.db.items.find_one(
@@ -718,9 +735,17 @@ def version_update(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
-            #add group read/write/execute permissions
-            filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # add group read/write/execute permissions
+            filepath = os.path.join(tmp_dir, file)
+            os.chmod(
+                filepath,
+                stat.S_IRUSR
+                | stat.S_IWUSR
+                | stat.S_IXUSR
+                | stat.S_IRGRP
+                | stat.S_IWGRP
+                | stat.S_IXGRP,
+            )
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -860,7 +885,7 @@ def fork(
 
     __, new_leader, __, __ = kimcodes.parse_kim_code(new_kimcode)
 
-    if new_leader not in ["MO","SM","MD","TE","TD","VC"]:
+    if new_leader not in ["MO", "SM", "MD", "TE", "TD", "VC"]:
         raise cf.InvalidItemTypeError(
             f"Leader of new kimcode {new_kimcode} does not refer to a valid kim item type"
         )
@@ -910,9 +935,17 @@ def fork(
 
     executables = []
     for file in listdir_nohidden(tmp_dir):
-        #add group read/write/execute permissions
-        filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        filepath = os.path.join(tmp_dir, file)
+        os.chmod(
+            filepath,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -1113,7 +1146,15 @@ def update_makefile_kimcode(
                 with open(tmp_makefile, "w") as flobj2:
                     flobj2.write(updated_makefile_contents)
                 os.rename(tmp_makefile, makefile)
-                os.chmod(makefile, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+                os.chmod(
+                    makefile,
+                    stat.S_IRUSR
+                    | stat.S_IWUSR
+                    | stat.S_IXUSR
+                    | stat.S_IRGRP
+                    | stat.S_IWGRP
+                    | stat.S_IXGRP,
+                )
                 logger.info(
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
@@ -1210,9 +1251,17 @@ def _create_workflow_dir(
             shutil.rmtree(inner_dir)
 
     for file in listdir_nohidden(tmp_dir):
-        #add group read/write/execute permissions
-        filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        filepath = os.path.join(tmp_dir, file)
+        os.chmod(
+            filepath,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
 
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)
