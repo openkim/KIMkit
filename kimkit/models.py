@@ -1329,3 +1329,31 @@ def listdir_nohidden(path):
         if not f.startswith("."):
             good_files_and_dirs.append(f)
     return good_files_and_dirs
+
+
+def enumerate_repository(repository):
+    """Return a list of all items currently saved in the local repository
+
+    Args:
+        repository (path-like, optional): root directory of the local repository,
+                Defaults to cf.LOCAL_REPOSITORY_PATH.
+    """
+
+    repository_kimcodes = []
+
+    # get a list of all subdirectories in the repository
+    all_subdirs = [x[0] for x in os.walk(repository)]
+
+    for subdir in all_subdirs:
+
+        # parse the levels of each subdir path
+        parts = subdir.split("/")
+
+        for part in parts:
+
+            # check for directory names that are full extended kim ids
+            # those contain items
+            if kimcodes.isextendedkimid(part):
+                repository_kimcodes.append(part)
+
+    return repository_kimcodes

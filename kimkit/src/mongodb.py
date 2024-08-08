@@ -13,6 +13,7 @@ import os
 import datetime
 import re
 import kim_edn
+import numpy as np
 
 from . import kimobjects
 from . import config as cf
@@ -20,6 +21,7 @@ from .logger import logging
 
 from .. import kimcodes
 from .. import users
+from .. import models
 
 logger = logging.getLogger("KIMkit")
 
@@ -376,23 +378,161 @@ def list_potentials():
 
 
 def list_drivers():
-    """List the kimcodes of all model drivers currently in this kimkit repository
+    """List the kimcodes of all drivers currently in this kimkit repository
 
     Returns:
         list of kimcodes
     """
 
     data = db.items.find(
-        filter={"kim-item-type": "model-driver"},
+        filter={"kim-item-type": {"$in": ["model-driver", "test-driver"]}},
         projection={"kimcode": 1, "_id": 0},
     )
 
-    potentials = []
+    drivers = []
     for doc in data:
         print(doc)
-        potentials.append(doc["kimcode"])
+        drivers.append(doc["kimcode"])
 
-    return potentials
+    return drivers
+
+
+def list_runners():
+    """List the kimcodes of all runners currently in this kimkit repository
+
+    Returns:
+        list of kimcodes
+    """
+    data = db.items.find(
+        filter={"kim-item-type": {"$in": ["test", "verification-check"]}},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    drivers = []
+    for doc in data:
+        print(doc)
+        drivers.append(doc["kimcode"])
+
+
+def list_all_items():
+    """List the kimcodes of all items in this database
+
+    Returns:
+        list: list of kimcodes
+    """
+
+    data = db.items.find(
+        filter={},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    items = []
+    for doc in data:
+        print(doc)
+        items.append(doc["kimcode"])
+
+    return items
+
+
+def _find_db_entries_missing_repository_items(repository=cf.LOCAL_REPOSITORY_PATH):
+    """Return a list of items that have metadata in the database, but are missing
+    corresponding files in the local repository.
+
+    Args:
+        repository (path-like, optional): Root path of the local repository.
+                                             Defaults to cf.LOCAL_REPOSITORY_PATH.
+
+    Returns:
+        list: list of kimcodes of items that are missing files
+    """
+
+    all_items = list_all_items()
+    missing_items = []
+
+    for kimcode in all_items:
+
+        item_path = kimcodes.kimcode_to_file_path(kimcode, repository=repository)
+
+        target_metadata_file = os.path.join(repository, item_path, cf.CONFIG_FILE)
+        # item is missing/has missing metadata
+        if not os.path.isfile(target_metadata_file):
+            missing_items.append(kimcode)
+
+    return missing_items
+
+
+def _insert_missing_db_entries_from_repository_if_possible(
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
+    """Determine which items in the local repository do not have entries in the
+    database, and read their metadata and insert them if possible. Otherwise, return
+    a list of kimcodes of items that failed to insert.
+
+    Args:
+        repository (_type_, optional): _description_. Defaults to cf.LOCAL_REPOSITORY_PATH.
+    """
+
+    failed_to_insert = []
+
+    all_items_in_database = list_all_items()
+
+    all_items_in_repository = models.enumerate_repository(repository=repository)
+
+    all_items_in_database = np.asarray(all_items_in_database)
+    all_items_in_repository = np.asarray(all_items_in_repository)
+
+    # subtract the set of the items in the database from the items in the repository
+    # the remainder if any are items that are missing from the database
+    missing_db_entries = np.setdiff1d(all_items_in_repository, all_items_in_database)
+
+    for kimcode in missing_db_entries:
+
+        try:
+            # if the item is intact and has a valid kimspec.edn, simply insert it into the db
+            upsert_item(kimcode)
+        except:
+            # catch all errors and simply report them as failures to insert
+            # too hard to predict all failure modes, will require human intervention
+            failed_to_insert.append(kimcode)
+
+    return failed_to_insert
+
+
+def sychronize_database_with_local_repository_and_report_failures(
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
+    """Attempt to synchronize the information in the local repository
+    on disk with the metadata stored in the database. Items missing from the
+    repository are simply reported, as there is no way to generate metadata
+    for them. However, attempt to insert items missing from the database but
+    present in the repository by reading their kimspec.edn metadata files, also
+    reporting failures if they occur.
+
+    Args:
+        repository (path-like, optional): Root directory of the local repository.
+                                             Defaults to cf.LOCAL_REPOSITORY_PATH.
+
+    Returns:
+        dict: dict with 2 keys, 'missing-database-entries', and
+        'missing-repository-files', each associated with a list of
+        kimcodes of the missing items that were not able to be
+        automatically inserted.
+    """
+
+    missing_database_items = _insert_missing_db_entries_from_repository_if_possible(
+        repository=repository
+    )
+
+    missing_repository_items = _find_db_entries_missing_repository_items(
+        repository=repository
+    )
+
+    missing_items = {
+        "missing-database-entries": missing_database_items,
+        "missing-repository-files": missing_repository_items,
+    }
+
+    return missing_items
 
 
 def find_legacy(kimcode):
