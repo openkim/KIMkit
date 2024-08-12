@@ -46,7 +46,9 @@ Content is passed in and out of **KIMkit** as python tarfile.TarFile objects,
 so that automated systems can submit and retrieve **KIMkit** content without needing to write to disk.
 The content of the item should be packaged as a tar archive and read into memory
 (e.g. by ``tar = tarfile.open(/path/to/tar_file.txz)``), to be passed into **KIMkit**
-along with a dictionary of all required and any optional metadata fields.
+along with a dictionary of all required and any optional metadata fields. If the item is from openkim.org it should
+come with a metadata file called kimspec.edn, which will be read automatically at import, so openkim items do not 
+require a dictionary of metadata.
 
 .. code-block:: python
 

@@ -73,7 +73,7 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
 
     extended_id = None
     short_id = None
-    m = re.search("(.+)__([A-Z]{2}_\d{12}_\d{3})$", kimcode)
+    m = re.search("(.+)__([A-Z]{2}_\\{12}_\\{3})$", kimcode)
     if m:
         extended_id = kimcode
         short_id = m.group(2)
@@ -371,7 +371,6 @@ def list_potentials():
 
     potentials = []
     for doc in data:
-        print(doc)
         potentials.append(doc["kimcode"])
 
     return potentials
@@ -391,7 +390,6 @@ def list_drivers():
 
     drivers = []
     for doc in data:
-        print(doc)
         drivers.append(doc["kimcode"])
 
     return drivers
@@ -410,7 +408,6 @@ def list_runners():
 
     drivers = []
     for doc in data:
-        print(doc)
         drivers.append(doc["kimcode"])
 
 
@@ -428,7 +425,6 @@ def list_all_items():
 
     items = []
     for doc in data:
-        print(doc)
         items.append(doc["kimcode"])
 
     return items

@@ -260,6 +260,9 @@ def import_item(
 
     Expects the item to be passed in as a tarfile.Tarfile object.
 
+    If the item is from openkim.org the user does not need to supply a dict of
+    metadata, as it will be automatically generated from the item's kimspec.edn file.
+
     Parameters
     ----------
     tarfile_obj : tarfile.TarFile
@@ -1022,25 +1025,27 @@ def fork(
     os.umask(oldumask)
 
 
-def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PATH):
-    """Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run
+def export(
+    kimcode,
+    destination_path,
+    include_dependencies=True,
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
+    """Export an item as a .txz file, with any dependancies (e.g. model-drivers) needed for it to run,
+    and save it to the path specified in destination_path
 
     Parameters
     ----------
     kimcode: str
         id code of the item
+    destination_path: path-like
+        location on disk to save the tar archive
     include_dependencies : bool, optional
         Flag to allow exports of KIMkit content without included dependencies,
         e.g. drivers, by default True
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
-
-    Returns
-    -------
-    list of tarfile.TarFile objects
-        list of object(s) containing all of the item's content,
-        and any dependancies (e.g. model-drivers) needed for it to run
 
     Raises
     ------
@@ -1054,7 +1059,6 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
         )
 
     logger.debug(f"Exporting item {kimcode} from repository {repository}")
-    tarfile_objs = []
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
@@ -1069,9 +1073,8 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             for item in contents:
                 if ".txz" in item:
                     tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                    tarfile_objs.append(tarfile_obj)
                     tarfile_obj.close()
-                    os.remove(os.path.join(driver_src_dir, item))
+                    shutil.move(os.path.join(driver_src_dir, item), destination_path)
     elif leader == "TE":  # test
         this_item = Test(repository, kimcode=kimcode)
         if include_dependencies:
@@ -1085,20 +1088,16 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             for item in contents:
                 if ".txz" in item:
                     tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                    tarfile_objs.append(tarfile_obj)
                     tarfile_obj.close()
-                    os.remove(os.path.join(driver_src_dir, item))
+                    shutil.move(os.path.join(driver_src_dir, item), destination_path)
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
     contents = listdir_nohidden(src_dir)
     for item in contents:
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
-            tarfile_objs.append(tarfile_obj)
             tarfile_obj.close()
-            os.remove(os.path.join(src_dir, item))
-
-    return tarfile_objs
+            shutil.move(os.path.join(src_dir, item), destination_path)
 
 
 def update_makefile_kimcode(
@@ -1269,9 +1268,9 @@ def _create_workflow_dir(
     os.umask(oldumask)
 
 
-def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
+def export_workflow(kimcode, destination_path, repository=cf.LOCAL_REPOSITORY_PATH):
     """Export the contents of the "workflow" subdirectory for a given item,
-    if it exists as a tarfile.TarFile object.
+    if it exists and save it to the destination_path.
 
     Parameters
     ----------
@@ -1280,12 +1279,6 @@ def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     repository : path like, optional
         root directory of the repository containing the item,
         by default cf.LOCAL_REPOSITORY_PATH
-
-    Returns
-    -------
-    tarfile.TarFile
-        compressed file object of all workflow files
-        associated with the item
 
     Raises
     ------
@@ -1318,9 +1311,7 @@ def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     contents = os.listdir(workflow_dir)
     for item in contents:
         if ".txz" in item:
-            tarfile_obj = tarfile.open(os.path.join(workflow_dir, item))
-            os.remove(os.path.join(workflow_dir, item))
-    return tarfile_obj
+            shutil.move(os.path.join(workflow_dir, item), destination_path)
 
 
 def listdir_nohidden(path):
@@ -1331,7 +1322,7 @@ def listdir_nohidden(path):
     return good_files_and_dirs
 
 
-def enumerate_repository(repository):
+def enumerate_repository(repository=cf.LOCAL_REPOSITORY_PATH):
     """Return a list of all items currently saved in the local repository
 
     Args:

@@ -247,8 +247,6 @@ def write_provenance(o, f, path, allow_nils=True):
     flobj.write("\n")
 
     flobj.close()
-    # add group read/write/execute permissions
-    # TODO: get actual file path, instead of TextIOWrapper
     provfile = os.path.join(path, "kimprovenance.edn")
     os.chmod(
         provfile,
