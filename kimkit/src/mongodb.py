@@ -124,7 +124,7 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
             foo["driver"] = rmbadkeys(kimcode_to_dict(testresult))
 
         # Fetch list of Tests in dependencies.edn, if it exists
-        kobj = kimobjects.kim_obj(kimcode)
+        kobj = models.Test(repository=repository, kimcode=kimcode)
         foo["dependencies"] = kobj.runtime_dependencies()
 
     if foo["type"] == "mo":
