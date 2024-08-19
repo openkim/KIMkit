@@ -890,9 +890,10 @@ def create_kimkit_metadata_from_openkim_kimspec(kimspec_file, UUID):
     openkim_metadata["contributor-id"] = UUID
     openkim_metadata["maintainer-id"] = UUID
 
-    for i, uuid in enumerate(openkim_metadata["developer"]):
-        new_uuid = "openkim:" + uuid
-        openkim_metadata["developer"][i] = new_uuid
+    if "developer" in openkim_metadata:
+        for i, uuid in enumerate(openkim_metadata["developer"]):
+            new_uuid = "openkim:" + uuid
+            openkim_metadata["developer"][i] = new_uuid
 
     if "implementer" in openkim_metadata:
         for i, uuid in enumerate(openkim_metadata["implementer"]):

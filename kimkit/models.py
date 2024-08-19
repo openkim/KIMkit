@@ -1332,6 +1332,15 @@ def enumerate_repository(repository=cf.LOCAL_REPOSITORY_PATH):
 
     repository_kimcodes = []
 
+    subdir_prefixes = [
+        "portable-models",
+        "model-drivers",
+        "simulator-models",
+        "tests",
+        "test-drivers",
+        "verification-checks",
+    ]
+
     # get a list of all subdirectories in the repository
     all_subdirs = [x[0] for x in os.walk(repository)]
 
@@ -1340,11 +1349,15 @@ def enumerate_repository(repository=cf.LOCAL_REPOSITORY_PATH):
         # parse the levels of each subdir path
         parts = subdir.split("/")
 
-        for part in parts:
+        # exclude temporary directories, only search in kim item type directories
+        for prefix in subdir_prefixes:
+            if prefix in parts:
 
-            # check for directory names that are full extended kim ids
-            # those contain items
-            if kimcodes.isextendedkimid(part):
-                repository_kimcodes.append(part)
+                for part in parts:
+
+                    # check for directory names that are full extended kim ids
+                    # those contain items
+                    if kimcodes.isextendedkimid(part):
+                        repository_kimcodes.append(part)
 
     return repository_kimcodes
