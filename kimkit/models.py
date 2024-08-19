@@ -1360,4 +1360,8 @@ def enumerate_repository(repository=cf.LOCAL_REPOSITORY_PATH):
                     if kimcodes.isextendedkimid(part):
                         repository_kimcodes.append(part)
 
+    # reduce to unique entries
+    repository_kimcodes = set(repository_kimcodes)
+    repository_kimcodes = list(repository_kimcodes)
+
     return repository_kimcodes
