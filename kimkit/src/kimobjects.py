@@ -822,6 +822,9 @@ kim_code_to_class = {
     "mo": Model,
     "md": ModelDriver,
     "sm": SimulatorModel,
+    "te": Test,
+    "td": TestDriver,
+    "vc": VerificationCheck,
 }
 
 
