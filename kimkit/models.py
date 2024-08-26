@@ -1097,7 +1097,8 @@ def export(
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_obj.close()
-            shutil.move(os.path.join(src_dir, item), destination_path)
+            shutil.copy(os.path.join(src_dir, item), destination_path)
+            os.remove(os.path.join(src_dir, item))
 
 
 def update_makefile_kimcode(
