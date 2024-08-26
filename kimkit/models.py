@@ -1101,7 +1101,6 @@ def export(
             src = os.path.join(src_dir, item)
             dest = os.path.join(destination_path,item)
             check_call(["mv",f"{src}",f"{dest}"])
-            os.remove(os.path.join(src_dir, item))
 
 
 def update_makefile_kimcode(
