@@ -548,6 +548,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     maintainer = spec["maintainer-id"]
 
     can_edit = False
+    test_model_prefix="Test_Model"
 
     if UUID == contributor or UUID == maintainer:
         can_edit = True
@@ -559,6 +560,8 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
+    elif kimcode[:10] == test_model_prefix:
+        can_edit = True
 
     current_item = mongodb.find_item_by_kimcode(kimcode)
 
