@@ -45,6 +45,7 @@ import tarfile
 import re
 import warnings
 import stat
+from subprocess import check_call
 
 from . import metadata
 from . import users
@@ -1097,7 +1098,9 @@ def export(
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_obj.close()
-            shutil.copy(os.path.join(src_dir, item), os.path.join(destination_path,item))
+            src = os.path.join(src_dir, item)
+            dest = os.path.join(destination_path,item)
+            check_call(["mv",f"{src}",f"{dest}"])
             os.remove(os.path.join(src_dir, item))
 
 
