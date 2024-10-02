@@ -723,27 +723,31 @@ def check_metadata_types(metadata_dict, kim_item_type=None):
                                 f"Metadata field {field} must be list of dicts."
                             )
                     if field in kimspec_arrays_dicts:
-                        for key in kimspec_arrays_dicts[field]:
-                            try:
-                                value = metadata_dict[field][key]
-                            except KeyError as e:
-                                raise KeyError(
-                                    f"Required key {key} in metadata field {field} not found"
-                                ) from e
-                            if value and not isinstance(value, str):
-                                raise TypeError(
-                                    f"Required key {key} in metadata field {field} must have str value"
-                                )
+                        if kimspec_arrays_dicts[field] is True:
+                            for item in metadata_dict[field]:
+                                for key in kimspec_arrays_dicts[field]:
+                                    try:
+                                        value = item[key]
+                                    except KeyError as e:
+                                        raise KeyError(
+                                            f"Required key {key} in metadata field {field} not found"
+                                        ) from e
+                                    if value and not isinstance(value, str):
+                                        raise TypeError(
+                                            f"Required key {key} in metadata field {field} must have str value"
+                                        )
                         # optional keys are allowed not to exist
                         else:
-                            try:
-                                value = metadata_dict[field][key]
-                            except KeyError:
-                                pass
-                            if value and not isinstance(value, str):
-                                raise TypeError(
-                                    f"Key {key} in metadata field {field} must have str value"
-                                )
+                            for item in metadata_dict[field]:
+                                for key in kimspec_arrays_dicts[field]:
+                                    try:
+                                        value = item[key]
+                                    except KeyError:
+                                        pass
+                                    if value and not isinstance(value, str):
+                                        raise TypeError(
+                                            f"Key {key} in metadata field {field} must have str value"
+                                        )
                 else:
                     raise TypeError(
                         f"Metadata field '{field}' is of invalid type, must be '{kimspec_arrays[field]}'."
