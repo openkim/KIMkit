@@ -130,7 +130,11 @@ def kimcode_to_dict(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     if foo["type"] == "mo":
         modeldriver = spec.get("model-driver", None)
         if modeldriver:
-            foo["driver"] = rmbadkeys(kimcode_to_dict(modeldriver))
+            # handle portable models without drivers
+            if kimcodes.iskimid(modeldriver):
+                foo["driver"] = rmbadkeys(kimcode_to_dict(modeldriver))
+            else:
+                foo["driver"] = modeldriver
 
     foo.update(spec)
     return foo
