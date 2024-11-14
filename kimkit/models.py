@@ -548,7 +548,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     maintainer = spec["maintainer-id"]
 
     can_edit = False
-    test_model_prefix="Test_Model"
+    test_model_prefix = "Test_Model"
 
     if UUID == contributor or UUID == maintainer:
         can_edit = True
@@ -1068,17 +1068,23 @@ def export(
         this_item = PortableModel(repository, kimcode=kimcode)
         if include_dependencies:
             req_driver = this_item.driver
-            driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
-            with tarfile.open(
-                os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
-            ) as tar:
-                tar.add(driver_src_dir, arcname=req_driver)
-            contents = listdir_nohidden(driver_src_dir)
-            for item in contents:
-                if ".txz" in item:
-                    tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                    tarfile_obj.close()
-                    shutil.move(os.path.join(driver_src_dir, item), destination_path)
+            # some portable models may not have a driver associated/available
+            # these will have a string in the model-driver field
+            # but it will not be a kimcode
+            if kimcodes.iskimid(req_driver):
+                driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
+                with tarfile.open(
+                    os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
+                ) as tar:
+                    tar.add(driver_src_dir, arcname=req_driver)
+                contents = listdir_nohidden(driver_src_dir)
+                for item in contents:
+                    if ".txz" in item:
+                        tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
+                        tarfile_obj.close()
+                        shutil.move(
+                            os.path.join(driver_src_dir, item), destination_path
+                        )
     elif leader == "TE":  # test
         this_item = Test(repository, kimcode=kimcode)
         if include_dependencies:
@@ -1102,8 +1108,8 @@ def export(
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
             tarfile_obj.close()
             src = os.path.join(src_dir, item)
-            dest = os.path.join(destination_path,item)
-            check_call(["mv",f"{src}",f"{dest}"])
+            dest = os.path.join(destination_path, item)
+            check_call(["mv", f"{src}", f"{dest}"])
 
 
 def update_makefile_kimcode(
