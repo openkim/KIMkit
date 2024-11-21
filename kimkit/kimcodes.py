@@ -38,6 +38,8 @@ RE_TESTRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3
 RE_VERIFICATIONRESULT = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(vr)$"
 RE_ERROR = r"^([A-Z]{2}_[0-9]{12}_[0-9]{3})-and-([A-Z]{2}_[0-9]{12}_[0-9]{3})-([0-9]{5,})-(er)$"
 
+RE_KIMNUM = r"^([0-9]{12})"
+
 
 def parse_kim_code(kim_code):
     """Parse a kim code into it's pieces,
@@ -313,6 +315,10 @@ def iskimid(kimcode):
 
 def isextendedkimid(kimcode):
     return re.match(RE_EXTENDEDKIMID, kimcode) is not None
+
+
+def iskimnum(kimcode):
+    return re.match(RE_KIMNUM, kimcode) is not None
 
 
 def isuuid(kimcode):
