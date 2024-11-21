@@ -353,12 +353,15 @@ def find_item_by_kimcode(kimcode):
     Returns:
         dict: metadata of the item matching the kimcode
     """
+    name, leader, num, version = kimcodes.parse_kim_code(kimcode)
+    shortcode = leader + "_" + num
     if kimcodes.isextendedkimid(kimcode):
-        data = db.items.find_one({"kimcode": kimcode})
+        if name:
+            data = db.items.find_one({"kimcode": kimcode})
+        else:
+            data = db.items.find_one({"shortcode": shortcode, "kimid-version": version})
     elif kimcodes.iskimid(kimcode):
-        data = db.items.find_one({"shortcode": kimcode})
-    elif kimcodes.iskimnum(kimcode):
-        data = db.items.find_one({"kimnum": kimcode, "latest": True})
+        data = db.items.find_one({"shortcode": shortcode, "latest": True})
     else:
         raise cf.InvalidKIMCode("Invalid KIMkit ID code.")
 
