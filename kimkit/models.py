@@ -1113,7 +1113,7 @@ def export(
 
 
 def update_makefile_kimcode(
-    old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
+    old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH, replace_with=None
 ):
     """Search through the item's directory for makefiles containing kimcodes matching a previous version of the item,
     and attempt to replace them with the item's new kimcode.
@@ -1127,6 +1127,9 @@ def update_makefile_kimcode(
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
+    replace_with: str
+        optional string to replace the old kimcode with, if different
+        than the new kimcode.
     """
 
     item_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
@@ -1145,9 +1148,14 @@ def update_makefile_kimcode(
                     r"\b" + new_kimcode + r"\b", makefile_contents
                 )
                 # attempt to replace the old kimcode
-                updated_makefile_contents = re.sub(
-                    r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
-                )
+                if not replace_with:
+                    updated_makefile_contents = re.sub(
+                        r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
+                    )
+                else:
+                    updated_makefile_contents = re.sub(
+                        r"\b" + old_kimcode + r"\b", replace_with, makefile_contents
+                    )
             if updated_makefile_contents != makefile_contents:
                 set_new_kimcode = True
                 tmp_makefile_name = "tmp_" + makefile_name
