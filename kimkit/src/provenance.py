@@ -16,7 +16,9 @@ from collections import OrderedDict
 from pytz import timezone
 import kim_edn
 
+from .. import users
 from .logger import logging
+from . import config as cf
 
 logger = logging.getLogger("KIMkit")
 
@@ -49,7 +51,12 @@ kimprovenance_order = [
 ]
 
 
-def add_kimprovenance_entry(path, user_id, event_type, comment):
+def add_kimprovenance_entry(
+    path,
+    comment,
+    event_type=None,
+    user_id=None,
+):
     """Create a new kimprovenance.edn entry for a new instance of an item
 
     Attempt to read the previous kimprovenance.edn (if any),
@@ -83,6 +90,24 @@ def add_kimprovenance_entry(path, user_id, event_type, comment):
         Encountered object that appears to be neither a file nor a directory
         when attempting to hash the item's files/dirs
     """
+    if not user_id:
+        try:
+            username = users.whoami()
+            user_info = users.get_user_info(username=username)
+            user_id = user_info.get("uuid")
+        except AttributeError:
+            raise (
+                cf.KIMkitUserNotFoundError(
+                    "Only KIMkit users can create metadata. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+                )
+            )
+
+    if not event_type:
+        existing_provenance = os.path.join(path, "kimprovenance.edn")
+        if os.path.isfile(existing_provenance):
+            event_type = "revised-version-creation"
+        else:
+            event_type = "initial-creation"
 
     assert event_type in [
         "initial-creation",
