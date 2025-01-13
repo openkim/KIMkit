@@ -348,8 +348,9 @@ class MetaData:
 def create_metadata(
     kimcode,
     metadata_dict,
-    UUID,
+    UUID=None,
     repository=cf.LOCAL_REPOSITORY_PATH,
+    external_path=None,
 ):
     """Create a kimspec.edn metadata file for a new KIMkit item.
 
@@ -378,6 +379,18 @@ def create_metadata(
         If the supplied metadata_dict does not conform to the KIMkit standard
     """
 
+    if not UUID:
+        try:
+            username = users.whoami()
+            user_info = users.get_user_info(username=username)
+            UUID = user_info.get("uuid")
+        except AttributeError:
+            raise (
+                cf.KIMkitUserNotFoundError(
+                    "Only KIMkit users can create metadata. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
+                )
+            )
+
     metadata_dict["date"] = datetime.datetime.now(central).strftime("%Y-%m-%d %H:%M:%S")
     if not "contributor-id" in metadata_dict:
         metadata_dict["contributor-id"] = UUID
@@ -400,19 +413,25 @@ def create_metadata(
             "Supplied metadata dict does not conform to the KIMkit metadata standard."
         ) from e
 
-    _write_metadata_to_file(kimcode, metadata_dict, repository=repository)
+    _write_metadata_to_file(
+        kimcode, metadata_dict, repository=repository, external_path=external_path
+    )
 
-    new_metadata = MetaData(repository, kimcode)
+    if not external_path:
+        new_metadata = MetaData(repository, kimcode)
 
-    logger.debug(f"Metadata created for new item {kimcode} in repository {repository}")
+        logger.debug(
+            f"Metadata created for new item {kimcode} in repository {repository}"
+        )
 
-    return new_metadata
+        return new_metadata
 
 
 def _write_metadata_to_file(
     kimcode,
     metadata_dict,
     repository=cf.LOCAL_REPOSITORY_PATH,
+    external_path=None,
 ):
     """Internal function used to write a KIMkit item's metadata to disk
     once its metadata has been validated and created. Also calls methods
@@ -452,7 +471,11 @@ def _write_metadata_to_file(
         if field in metadata_dict:
             metadata_dict_sorted[field] = metadata_dict[field]
 
-    dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
+    if external_path:
+        dest_path = external_path
+        os.makedirs(dest_path, exist_ok=True)
+    else:
+        dest_path = kimcodes.kimcode_to_file_path(kimcode, repository)
 
     # ignore any umask the user may have set
     oldumask = os.umask(0)
@@ -480,7 +503,8 @@ def _write_metadata_to_file(
             | stat.S_IWGRP
             | stat.S_IXGRP,
         )
-        mongodb.upsert_item(kimcode)
+        if not external_path:
+            mongodb.upsert_item(kimcode)
 
     else:
         raise cf.KIMkitItemNotFoundError(
