@@ -301,7 +301,7 @@ def delete_user(user_id, run_as_editor=False):
 
     if can_edit:
         if is_user(uuid=user_id):
-            mongodb.delete_one_database_entry(user_id)
+            mongodb.delete_one_database_entry(user_id,run_as_editor=run_as_editor)
 
         else:
             raise cf.KIMkitUserNotFoundError(f"UUID {user_id} not found in user data.")

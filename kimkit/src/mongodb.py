@@ -310,17 +310,18 @@ def delete_one_database_entry(id_code, run_as_editor=False):
     this_username = users.whoami()
 
     this_user_uuid = find_user(username=this_username)["uuid"]
-    query_results = query_item_database(
-        {"kimcode": id_code},
-        projection={"contributor-id": 1, "maintainer-id": 1, "_id": 0},
-        include_old_versions=True,
-    )
-    this_entry = query_results[0]
-    contributor = this_entry["contributor-id"]
-    maintainer = this_entry["maintainer-id"]
+    if not kimcodes.is_valid_uuid4(id_code):
+        query_results = query_item_database(
+            {"kimcode": id_code},
+            projection={"contributor-id": 1, "maintainer-id": 1, "_id": 0},
+            include_old_versions=True,
+        )
+        this_entry = query_results[0]
+        contributor = this_entry["contributor-id"]
+        maintainer = this_entry["maintainer-id"]
 
-    if this_user_uuid == contributor or this_user_uuid == maintainer:
-        can_delete = True
+        if this_user_uuid == contributor or this_user_uuid == maintainer:
+            can_delete = True
 
     elif users.is_editor():
         if run_as_editor:
