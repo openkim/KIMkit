@@ -320,7 +320,7 @@ def delete_one_database_entry(id_code, run_as_editor=False):
         contributor = this_entry["contributor-id"]
         maintainer = this_entry["maintainer-id"]
         
-        if this_user_uuid == contributor or this_user_uuid == maintainer:
+    if this_user_uuid == contributor or this_user_uuid == maintainer:
             can_delete = True
 
     if users.is_editor():
