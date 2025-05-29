@@ -184,6 +184,8 @@ def add_self_as_user(name):
 
     if is_user(personal_name=name) or is_user(username=system_username):
         user_data = get_user_info(personal_name=name)
+        if user_data is None:
+            user_data = get_user_info(username=system_username)
 
         existing_uuid = user_data["uuid"]
         raise RuntimeError(

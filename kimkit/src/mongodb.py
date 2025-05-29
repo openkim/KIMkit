@@ -406,6 +406,41 @@ def list_drivers():
 
     return drivers
 
+def list_model_drivers():
+    """List the kimcodes of all model drivers currently in this kimkit repository
+
+    Returns:
+        list of kimcodes
+    """
+
+    data = db.items.find(
+        filter={"kim-item-type": "model-driver"},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    drivers = []
+    for doc in data:
+        drivers.append(doc["kimcode"])
+
+    return drivers
+
+def list_test_drivers():
+    """List the kimcodes of all test drivers currently in this kimkit repository
+
+    Returns:
+        list of kimcodes
+    """
+
+    data = db.items.find(
+        filter={"kim-item-type":"test-driver"},
+        projection={"kimcode": 1, "_id": 0},
+    )
+
+    drivers = []
+    for doc in data:
+        drivers.append(doc["kimcode"])
+
+    return drivers
 
 def list_runners():
     """List the kimcodes of all runners currently in this kimkit repository
