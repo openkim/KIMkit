@@ -3,7 +3,7 @@
     :synopsis: Holds the python object models for kim objects
 
 .. moduleauthor:: Alex Alemi <alexalemi@gmail.com>, Matt Bierbaum <mkb72@cornell.com>,
-                  Daniel S. Karls <karl0100@umn.edu>, Brendon Waters <bwaters@umn.edu>
+                  Daniel S. Karls <karl0100@umn.edu>, Claire Waters <bwaters@umn.edu>
 
 A pure python object wrapper for KIMkit objects
 
@@ -15,7 +15,7 @@ Has a base ``KIMObject`` class and
  * Test
  * Test Driver
  * Verification Check
- 
+
 
 classes, all of which inherit from ``KIMObject`` and aim to know how to handle themselves.
 """

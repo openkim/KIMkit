@@ -6,9 +6,9 @@ for scheme in INSTALL_SCHEMES.values():
 
 setup(
     name="kimkit",
-    version="0.1",
+    version="1.0",
     description="KIM Interatomic Model storage and management system",
-    author="Brendon Waters",
+    author="Claire Waters",
     author_email="bwaters@umn.edu",
     include_package_data=True,
     packages=find_packages(),
