@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath(os.path.join("..", "..")))
 # -- Project information -----------------------------------------------------
 
 project = "KIMkit"
-copyright = "2023, Brendon Waters"
-author = "Brendon Waters"
+copyright = "2023, Claire Waters"
+author = "Claire Waters"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1"
+release = "1.0"
 
 
 # -- General configuration ---------------------------------------------------
