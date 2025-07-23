@@ -45,6 +45,7 @@ import tarfile
 import re
 import warnings
 import stat
+from subprocess import check_call
 
 from . import metadata
 from . import users
@@ -151,6 +152,7 @@ class ModelDriver(kimobjects.ModelDriver):
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(ModelDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
+
 class Test(kimobjects.Test):
     """KIM Test Class"""
 
@@ -180,6 +182,7 @@ class Test(kimobjects.Test):
         if not abspath:
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(Test, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+
 
 class TestDriver(kimobjects.TestDriver):
     """KIM Test Driver Class"""
@@ -211,6 +214,7 @@ class TestDriver(kimobjects.TestDriver):
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
         super(TestDriver, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
 
+
 class VerificationCheck(kimobjects.VerificationCheck):
     """KIM Test Class"""
 
@@ -239,7 +243,9 @@ class VerificationCheck(kimobjects.VerificationCheck):
         setattr(self, "repository", repository)
         if not abspath:
             abspath = kimcodes.kimcode_to_file_path(kimcode, self.repository)
-        super(VerificationCheck, self).__init__(kimcode, abspath=abspath, *args, **kwargs)
+        super(VerificationCheck, self).__init__(
+            kimcode, abspath=abspath, *args, **kwargs
+        )
 
 
 def import_item(
@@ -254,6 +260,9 @@ def import_item(
     and store them with the item.
 
     Expects the item to be passed in as a tarfile.Tarfile object.
+
+    If the item is from openkim.org the user does not need to supply a dict of
+    metadata, as it will be automatically generated from the item's kimspec.edn file.
 
     Parameters
     ----------
@@ -297,7 +306,7 @@ def import_item(
             "Only KIMkit users can import items. Please add yourself as a KIMkit user (users.add_self_as_user('Your Name')) before trying again."
         )
     event_type = "initial-creation"
-    can_create_metadata=False
+    can_create_metadata = False
     if not metadata_dict:
         oldumask = os.umask(0)
         tmp_dir = os.path.join(repository, "tmp")
@@ -320,17 +329,21 @@ def import_item(
                 shutil.rmtree(inner_dir)
         contents = listdir_nohidden(tmp_dir)
         if "kimspec.edn" in contents:
-            kimspec_loc=os.path.join(tmp_dir,"kimspec.edn")
-            new_metadata_dict=metadata.create_kimkit_metadata_from_openkim_kimspec(kimspec_loc,UUID)
-            can_create_metadata=True
+            kimspec_loc = os.path.join(tmp_dir, "kimspec.edn")
+            new_metadata_dict = metadata.create_kimkit_metadata_from_openkim_kimspec(
+                kimspec_loc, UUID
+            )
+            can_create_metadata = True
             shutil.rmtree(tmp_dir)
-        else: 
+        else:
             shutil.rmtree(tmp_dir)
-            raise cf.InvalidMetadataError("No dict of metadata or kimspec.edn file present, aborting import.")
+            raise cf.InvalidMetadataError(
+                "No dict of metadata or kimspec.edn file present, aborting import."
+            )
         if "kimprovenance.edn" in contents:
-            event_type="fork"
+            event_type = "fork"
     if can_create_metadata:
-        metadata_dict=new_metadata_dict
+        metadata_dict = new_metadata_dict
     kimcode = metadata_dict["extended-id"]
     kim_item_type = metadata_dict["kim-item-type"]
 
@@ -394,9 +407,17 @@ def import_item(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
-            #add group read/write/execute permissions
-            filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # add group read/write/execute permissions
+            filepath = os.path.join(tmp_dir, file)
+            os.chmod(
+                filepath,
+                stat.S_IRUSR
+                | stat.S_IWUSR
+                | stat.S_IXUSR
+                | stat.S_IRGRP
+                | stat.S_IWGRP
+                | stat.S_IXGRP,
+            )
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -527,6 +548,7 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
     maintainer = spec["maintainer-id"]
 
     can_edit = False
+    test_model_prefix = "Test_Model"
 
     if UUID == contributor or UUID == maintainer:
         can_edit = True
@@ -538,7 +560,9 @@ def delete(kimcode, run_as_editor=False, repository=cf.LOCAL_REPOSITORY_PATH):
             raise cf.NotRunAsEditorError(
                 "Did you mean to edit this item? If you are an Editor run again with run_as_editor=True"
             )
-        
+    elif kimcode[:10] == test_model_prefix:
+        can_edit = True
+
     current_item = mongodb.find_item_by_kimcode(kimcode)
 
     previous_items = mongodb.db.items.find_one(
@@ -718,9 +742,17 @@ def version_update(
 
         executables = []
         for file in listdir_nohidden(tmp_dir):
-            #add group read/write/execute permissions
-            filepath=os.path.join(tmp_dir,file)
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+            # add group read/write/execute permissions
+            filepath = os.path.join(tmp_dir, file)
+            os.chmod(
+                filepath,
+                stat.S_IRUSR
+                | stat.S_IWUSR
+                | stat.S_IXUSR
+                | stat.S_IRGRP
+                | stat.S_IWGRP
+                | stat.S_IXGRP,
+            )
             if os.path.isfile(file):
                 executable = os.access(file, os.X_OK)
                 if executable:
@@ -860,7 +892,7 @@ def fork(
 
     __, new_leader, __, __ = kimcodes.parse_kim_code(new_kimcode)
 
-    if new_leader not in ["MO","SM","MD","TE","TD","VC"]:
+    if new_leader not in ["MO", "SM", "MD", "TE", "TD", "VC"]:
         raise cf.InvalidItemTypeError(
             f"Leader of new kimcode {new_kimcode} does not refer to a valid kim item type"
         )
@@ -910,9 +942,17 @@ def fork(
 
     executables = []
     for file in listdir_nohidden(tmp_dir):
-        #add group read/write/execute permissions
-        filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        filepath = os.path.join(tmp_dir, file)
+        os.chmod(
+            filepath,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         if os.path.isfile(file):
             executable = os.access(file, os.X_OK)
             if executable:
@@ -989,25 +1029,27 @@ def fork(
     os.umask(oldumask)
 
 
-def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PATH):
-    """Export an item as a tarfile.TarFile object, with any dependancies (e.g. model-drivers) needed for it to run
+def export(
+    kimcode,
+    destination_path,
+    include_dependencies=True,
+    repository=cf.LOCAL_REPOSITORY_PATH,
+):
+    """Export an item as a .txz file, with any dependancies (e.g. model-drivers) needed for it to run,
+    and save it to the path specified in destination_path
 
     Parameters
     ----------
     kimcode: str
         id code of the item
+    destination_path: path-like
+        location on disk to save the tar archive
     include_dependencies : bool, optional
         Flag to allow exports of KIMkit content without included dependencies,
         e.g. drivers, by default True
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
-
-    Returns
-    -------
-    list of tarfile.TarFile objects
-        list of object(s) containing all of the item's content,
-        and any dependancies (e.g. model-drivers) needed for it to run
 
     Raises
     ------
@@ -1021,24 +1063,28 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
         )
 
     logger.debug(f"Exporting item {kimcode} from repository {repository}")
-    tarfile_objs = []
     __, leader, __, __ = kimcodes.parse_kim_code(kimcode)
     if leader == "MO":  # portable model
         this_item = PortableModel(repository, kimcode=kimcode)
         if include_dependencies:
             req_driver = this_item.driver
-            driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
-            with tarfile.open(
-                os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
-            ) as tar:
-                tar.add(driver_src_dir, arcname=req_driver)
-            contents = listdir_nohidden(driver_src_dir)
-            for item in contents:
-                if ".txz" in item:
-                    tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                    tarfile_objs.append(tarfile_obj)
-                    tarfile_obj.close()
-                    os.remove(os.path.join(driver_src_dir, item))
+            # some portable models may not have a driver associated/available
+            # these will have a string in the model-driver field
+            # but it will not be a kimcode
+            if kimcodes.iskimid(req_driver):
+                driver_src_dir = kimcodes.kimcode_to_file_path(req_driver, repository)
+                with tarfile.open(
+                    os.path.join(driver_src_dir, req_driver + ".txz"), "w:xz"
+                ) as tar:
+                    tar.add(driver_src_dir, arcname=req_driver)
+                contents = listdir_nohidden(driver_src_dir)
+                for item in contents:
+                    if ".txz" in item:
+                        tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
+                        tarfile_obj.close()
+                        shutil.move(
+                            os.path.join(driver_src_dir, item), destination_path
+                        )
     elif leader == "TE":  # test
         this_item = Test(repository, kimcode=kimcode)
         if include_dependencies:
@@ -1052,24 +1098,22 @@ def export(kimcode, include_dependencies=True, repository=cf.LOCAL_REPOSITORY_PA
             for item in contents:
                 if ".txz" in item:
                     tarfile_obj = tarfile.open(os.path.join(driver_src_dir, item))
-                    tarfile_objs.append(tarfile_obj)
                     tarfile_obj.close()
-                    os.remove(os.path.join(driver_src_dir, item))
+                    shutil.move(os.path.join(driver_src_dir, item), destination_path)
     with tarfile.open(os.path.join(src_dir, kimcode + ".txz"), "w:xz") as tar:
         tar.add(src_dir, arcname=kimcode)
     contents = listdir_nohidden(src_dir)
     for item in contents:
         if ".txz" in item:
             tarfile_obj = tarfile.open(os.path.join(src_dir, item))
-            tarfile_objs.append(tarfile_obj)
             tarfile_obj.close()
-            os.remove(os.path.join(src_dir, item))
-
-    return tarfile_objs
+            src = os.path.join(src_dir, item)
+            dest = os.path.join(destination_path, item)
+            check_call(["mv", f"{src}", f"{dest}"])
 
 
 def update_makefile_kimcode(
-    old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH
+    old_kimcode, new_kimcode, repository=cf.LOCAL_REPOSITORY_PATH, replace_with=None
 ):
     """Search through the item's directory for makefiles containing kimcodes matching a previous version of the item,
     and attempt to replace them with the item's new kimcode.
@@ -1083,6 +1127,9 @@ def update_makefile_kimcode(
     repository : path-like, optional
         root directory of the KIMkit repo containing the item,
         by default cf.LOCAL_REPOSITORY_DIRECTORY
+    replace_with: str
+        optional string to replace the old kimcode with, if different
+        than the new kimcode.
     """
 
     item_path = kimcodes.kimcode_to_file_path(new_kimcode, repository)
@@ -1101,9 +1148,14 @@ def update_makefile_kimcode(
                     r"\b" + new_kimcode + r"\b", makefile_contents
                 )
                 # attempt to replace the old kimcode
-                updated_makefile_contents = re.sub(
-                    r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
-                )
+                if not replace_with:
+                    updated_makefile_contents = re.sub(
+                        r"\b" + old_kimcode + r"\b", new_kimcode, makefile_contents
+                    )
+                else:
+                    updated_makefile_contents = re.sub(
+                        r"\b" + old_kimcode + r"\b", replace_with, makefile_contents
+                    )
             if updated_makefile_contents != makefile_contents:
                 set_new_kimcode = True
                 tmp_makefile_name = "tmp_" + makefile_name
@@ -1113,7 +1165,15 @@ def update_makefile_kimcode(
                 with open(tmp_makefile, "w") as flobj2:
                     flobj2.write(updated_makefile_contents)
                 os.rename(tmp_makefile, makefile)
-                os.chmod(makefile, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+                os.chmod(
+                    makefile,
+                    stat.S_IRUSR
+                    | stat.S_IWUSR
+                    | stat.S_IXUSR
+                    | stat.S_IRGRP
+                    | stat.S_IWGRP
+                    | stat.S_IXGRP,
+                )
                 logger.info(
                     f"Updated name/kimcode of item {new_kimcode}  makeflile {makefile_name} to match its new kimcode."
                 )
@@ -1210,9 +1270,17 @@ def _create_workflow_dir(
             shutil.rmtree(inner_dir)
 
     for file in listdir_nohidden(tmp_dir):
-        #add group read/write/execute permissions
-        filepath=os.path.join(tmp_dir,file)
-        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        filepath = os.path.join(tmp_dir, file)
+        os.chmod(
+            filepath,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
 
     shutil.copytree(tmp_dir, workflow_dir, dirs_exist_ok=True)
     shutil.rmtree(tmp_dir)
@@ -1220,9 +1288,9 @@ def _create_workflow_dir(
     os.umask(oldumask)
 
 
-def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
+def export_workflow(kimcode, destination_path, repository=cf.LOCAL_REPOSITORY_PATH):
     """Export the contents of the "workflow" subdirectory for a given item,
-    if it exists as a tarfile.TarFile object.
+    if it exists and save it to the destination_path.
 
     Parameters
     ----------
@@ -1231,12 +1299,6 @@ def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     repository : path like, optional
         root directory of the repository containing the item,
         by default cf.LOCAL_REPOSITORY_PATH
-
-    Returns
-    -------
-    tarfile.TarFile
-        compressed file object of all workflow files
-        associated with the item
 
     Raises
     ------
@@ -1269,9 +1331,7 @@ def export_workflow(kimcode, repository=cf.LOCAL_REPOSITORY_PATH):
     contents = os.listdir(workflow_dir)
     for item in contents:
         if ".txz" in item:
-            tarfile_obj = tarfile.open(os.path.join(workflow_dir, item))
-            os.remove(os.path.join(workflow_dir, item))
-    return tarfile_obj
+            shutil.move(os.path.join(workflow_dir, item), destination_path)
 
 
 def listdir_nohidden(path):
@@ -1280,3 +1340,48 @@ def listdir_nohidden(path):
         if not f.startswith("."):
             good_files_and_dirs.append(f)
     return good_files_and_dirs
+
+
+def enumerate_repository(repository=cf.LOCAL_REPOSITORY_PATH):
+    """Return a list of all items currently saved in the local repository
+
+    Args:
+        repository (path-like, optional): root directory of the local repository,
+                Defaults to cf.LOCAL_REPOSITORY_PATH.
+    """
+
+    repository_kimcodes = []
+
+    subdir_prefixes = [
+        "portable-models",
+        "model-drivers",
+        "simulator-models",
+        "tests",
+        "test-drivers",
+        "verification-checks",
+    ]
+
+    # get a list of all subdirectories in the repository
+    all_subdirs = [x[0] for x in os.walk(repository)]
+
+    for subdir in all_subdirs:
+
+        # parse the levels of each subdir path
+        parts = subdir.split("/")
+
+        # exclude temporary directories, only search in kim item type directories
+        for prefix in subdir_prefixes:
+            if prefix in parts:
+
+                for part in parts:
+
+                    # check for directory names that are full extended kim ids
+                    # those contain items
+                    if kimcodes.isextendedkimid(part):
+                        repository_kimcodes.append(part)
+
+    # reduce to unique entries
+    repository_kimcodes = set(repository_kimcodes)
+    repository_kimcodes = list(repository_kimcodes)
+
+    return repository_kimcodes

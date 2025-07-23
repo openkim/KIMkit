@@ -136,8 +136,16 @@ def add_editor(editor_name, run_as_administrator=False):
         oldumask = os.umask(0)
         with open(cf.KIMKIT_EDITORS_FILE, "a") as editor_file:
             editor_file.write(editor_name + "\n")
-        #add group read/write/execute permissions
-        os.chmod(cf.KIMKIT_EDITORS_FILE, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # add group read/write/execute permissions
+        os.chmod(
+            cf.KIMKIT_EDITORS_FILE,
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IXUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IXGRP,
+        )
         # return user's original usmask
         os.umask(oldumask)
         logger.info(f"The Administrator added {editor_name} as a KIMkit editor.")
@@ -176,6 +184,8 @@ def add_self_as_user(name):
 
     if is_user(personal_name=name) or is_user(username=system_username):
         user_data = get_user_info(personal_name=name)
+        if user_data is None:
+            user_data = get_user_info(username=system_username)
 
         existing_uuid = user_data["uuid"]
         raise RuntimeError(
@@ -293,7 +303,7 @@ def delete_user(user_id, run_as_editor=False):
 
     if can_edit:
         if is_user(uuid=user_id):
-            mongodb.delete_one_database_entry(user_id)
+            mongodb.delete_one_database_entry(user_id, run_as_editor=run_as_editor)
 
         else:
             raise cf.KIMkitUserNotFoundError(f"UUID {user_id} not found in user data.")
@@ -330,6 +340,53 @@ def get_user_info(uuid=None, username=None, personal_name=None):
     data = mongodb.find_user(uuid=uuid, username=username, personal_name=personal_name)
 
     return data
+
+
+def edit_peraonal_name(UUID, new_personal_name, run_as_editor=False):
+    """Utility to update the personal name of a KIMKit user.
+
+    Pass a user's UUID to identitfy them, and enter what their new
+    personal name should be stored as. By default, will only accept edits
+    from users of their own names. KIMKit Editors may edit other user's
+    names by passing run_as_editor=True.
+
+    Args:
+        uuid (str): UUID4 hex string identifying the user to be edited
+        new_personal_name (str): Name the user wants to be called
+        run_as_editor (bool, optional): Use editor privleges to
+        update the name of another user. Defaults to False.
+    """
+
+    can_edit = False
+
+    my_username = whoami()
+
+    my_user_info = get_user_info(username=my_username)
+
+    my_uuid = my_user_info["uuid"]
+
+    if my_uuid == UUID:
+        can_edit = True
+    elif is_editor():
+        if run_as_editor:
+            can_edit = True
+        else:
+            raise cf.NotRunAsEditorError(
+                "Did you mean to edit this user? If you are an Editor run again with run_as_editor=True"
+            )
+
+    if can_edit:
+
+        mongodb.update_user(UUID, new_personal_name, my_username)
+
+    else:
+
+        logger.warning(
+            f"User {my_username} attempted to edit user {uuid} without editor priveleges"
+        )
+        raise cf.NotAnEditorError(
+            "Editor permissions are required to delete users from KIMkit."
+        )
 
 
 def is_user(uuid=None, username=None, personal_name=None):

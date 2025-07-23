@@ -206,8 +206,7 @@
             "required" [
                 "contributor-id" 
                 "date" 
-                "description" 
-                "developer" 
+                "description"  
                 "domain" 
                 "extended-id" 
                 "maintainer-id" 
@@ -222,6 +221,7 @@
             "optional" [
                 "content-origin" 
                 "content-other-locations" 
+                "developer"
                 "disclaimer" 
                 "doi" 
                 "executables" 
