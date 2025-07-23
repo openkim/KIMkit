@@ -6,12 +6,11 @@ for scheme in INSTALL_SCHEMES.values():
 
 setup(
     name="kimkit",
-    version="1.0",
-    description="KIM Interatomic Model storage and management system",
+    version="1.0.1",
     author="Claire Waters",
     author_email="bwaters@umn.edu",
     include_package_data=True,
     packages=find_packages(),
-    install_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo"],
-    setup_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo"],
+    install_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo", "numpy"],
+    setup_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo", "numpy"],
 )
