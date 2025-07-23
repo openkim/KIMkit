@@ -25,7 +25,17 @@ from .. import models
 
 logger = logging.getLogger("KIMkit")
 
-client = pymongo.MongoClient(host=cf.MONGODB_HOSTNAME)
+user = cf.MONGODB_USERNAME
+password = cf.MONGODB_PASSWORD
+host = cf.MONGODB_HOSTNAME
+port = cf.MONGODB_PORT
+db_name = cf.MONGODB_DATABASE
+args = "ssl=true&tlsAllowInvalidCertificates=true"
+
+db_uri = "mongodb://%s:%s@%s:%s/%s?%s" % (user, password, host, port, db_name, args)
+
+
+client = pymongo.MongoClient(host=db_uri)
 db = client[cf.MONGODB_DATABASE]
 
 BADKEYS = {"kimspec", "profiling", "inserted_on", "latest"}
