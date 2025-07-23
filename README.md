@@ -43,7 +43,7 @@ edits to content contributed by or maintained by other users.
 **KIMkit** defines 3 levels of user access: Administrator, Editor, and User.
 
 There is only one Administrator per installation of **KIMkit**. Inside the **KIMkit** package root directory there should be
-a subdirectory "settings", where the owner of this **KIMkit** installation should create a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
+a subdirectory "settings", containing a file called 'editors.txt' which all users have read access to, but only the Administrator has write access to. editors.txt should contain a sequence of operating-system usernames as returned by getpass.getuser().
 If the current user is in editors.txt, **KIMkit** recognizes them as an Editor, and allows them certain
 elevated permissions (e.g. editing content submitted by other users, adding keys to the metadata standard).
 Any user that is neither the Administrator nor listed as an Editor is a regular User by default.

@@ -4,5 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kimkit"
+authors = [{"name"="Claire Waters", "email"="bwaters@umn.edu"}]
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
 dynamic = ["version"]
 dependencies=["pytz", "kim_edn", "packaging", "pygments", "pymongo"]
