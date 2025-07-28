@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import getpass
 from setuptools import setup, find_packages
 from distutils.command.install import INSTALL_SCHEMES
 
@@ -17,6 +18,8 @@ setup(
     install_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo", "numpy"],
     setup_requires=["pytz", "kim_edn", "packaging", "pygments", "pymongo", "numpy"],
 )
+
+from kimkit import users
 
 # create a kimkit subdirectory in the user's home directory
 home_dir = os.path.expanduser("~")
@@ -42,6 +45,10 @@ final_editors_file = os.path.join(kimkit_dir, "editors.txt")
 # set user who installed as kimkit administrator
 # only they should have read/write permissions to editors.txt
 subprocess.check_output(["chmod", "600", final_editors_file])
+
+# add the administrator as an editor
+username = users.whoami()
+users.add_editor(username)
 
 # copy environment settings file to kimkit dir
 NOT_SET_LINE = "KIMKIT_DATA_DIRECTORY=None"
