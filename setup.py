@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 from setuptools import setup, find_packages
 from distutils.command.install import INSTALL_SCHEMES
@@ -21,7 +20,7 @@ setup(
 # create a kimkit subdirectory in the user's home directory
 home_dir = os.path.expanduser("~")
 kimkit_dir = os.path.join(home_dir, "kimkit")
-os.makedirs(kimkit_dir, exist_ok=True)
+subprocess.check_output(["mkdir", f"{kimkit_dir}"])
 
 # get the paths to the settings files
 # relative to this setup script
@@ -34,7 +33,7 @@ metadata_config_file = os.path.join(settings_dir, "metadata_config.edn")
 editors_file = os.path.join(settings_dir, "editors.txt")
 
 # copy settings files into kimkit directory
-shutil.copy(metadata_config_file, kimkit_dir)
+subprocess.check_output(["cp", f"{metadata_config_file}", f"{kimkit_dir}"])
 
 final_editors_file = os.path.join(kimkit_dir, "editors.txt")
 
