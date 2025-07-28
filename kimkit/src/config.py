@@ -133,6 +133,51 @@ class Configuration(object):
             os.path.join(conf["KIMKIT_DATA_DIRECTORY"], ENVIRONMENT_FILE_NAME)
         )
 
+        # create a kimkit subdirectory in the user's home directory if required
+        if not os.path.isdir(kimkit_dir):
+            subprocess.check_output(["mkdir", f"{kimkit_dir}"])
+
+        # get the paths to the settings files
+        # relative to this setup script
+        here = os.path.dirname(os.path.realpath(__file__))
+        kimkit_root = os.path.join(here, "../")
+        settings_dir = os.path.join(kimkit_root, "../settings")
+
+        default_env_file = os.path.join(kimkit_root, "default-environment")
+        metadata_config_file = os.path.join(settings_dir, "metadata_config.edn")
+
+        # copy settings files into kimkit directory if not present
+        if not os.path.isfile(os.path.join(kimkit_dir, metadata_config_file)):
+            subprocess.check_output(["cp", f"{metadata_config_file}", f"{kimkit_dir}"])
+
+        final_editors_file = os.path.join(kimkit_dir, "editors.txt")
+
+        # create blank editors.txt if needed
+        subprocess.check_output(args=["touch", f"{final_editors_file}"])
+
+        # set user who installed as kimkit administrator
+        # only they should have read/write permissions to editors.txt
+        subprocess.check_output(["chmod", "600", final_editors_file])
+
+        # copy environment settings file to kimkit dir
+        NOT_SET_LINE = "KIMKIT_DATA_DIRECTORY=None"
+
+        # change name of copy of default-environment to KIMkit-env
+        kimkit_env_dest = os.path.join(kimkit_dir, "KIMkit-env")
+
+        if not os.path.exists(default_env_file):
+            with open(default_env_file, "r") as envfile:
+                data = envfile.readlines()
+
+                # set KIMKIT_DATA_DIRECTORY to the new kimkit dir
+                for i, line in enumerate(data):
+                    if NOT_SET_LINE in line:
+                        line = line.split("=")[0] + "=" + kimkit_dir + "\n"
+                        data[i] = line
+
+            with open(kimkit_env_dest, "w") as outfile:
+                outfile.writelines(data)
+
         # supplement it with the default location's extra file
         for loc in ENVIRONMENT_LOCATIONS:
             if os.path.isfile(loc):
