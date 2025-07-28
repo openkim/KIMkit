@@ -19,7 +19,7 @@ setup(
 )
 
 # create a kimkit subdirectory in the user's home directory
-home_dir = os.path.dirname(os.path.realpath("~"))
+home_dir = os.path.expanduser("~")
 kimkit_dir = os.path.join(home_dir, "kimkit")
 os.makedirs(kimkit_dir, exist_ok=True)
 
