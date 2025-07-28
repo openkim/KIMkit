@@ -22,7 +22,7 @@ def tostr(cls):
 # =============================================================================
 ENVIRONMENT_FILE_NAME = "KIMkit-env"
 here = os.path.dirname(os.path.realpath(__file__))
-home_dir = os.path.dirname(os.path.realpath("~"))
+home_dir = os.path.expanduser("~")
 kimkit_dir = os.path.join(home_dir, "kimkit")
 ENVIRONMENT_LOCATIONS = [
     os.environ.get("KIMKIT_ENVIRONMENT_FILE", ""),
