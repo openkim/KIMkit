@@ -192,6 +192,13 @@ def add_self_as_user(name):
             f"User {name} already has a KIMkit UUID: {existing_uuid}, aborting."
         )
 
+    # automatically add the administrator as an editor
+    # if they aren't already
+    # when they register themselves as a user
+    if is_administrator():
+        if not is_editor():
+            add_editor(system_username, run_as_administrator=True)
+
     mongodb.insert_user(new_uuid_key, name, username=system_username)
 
     logger.info(
