@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import getpass
 from setuptools import setup, find_packages
 from distutils.command.install import INSTALL_SCHEMES
 
@@ -36,9 +35,10 @@ editors_file = os.path.join(settings_dir, "editors.txt")
 
 # copy settings files into kimkit directory
 shutil.copy(metadata_config_file, kimkit_dir)
-shutil.copy(editors_file, kimkit_dir)
 
 final_editors_file = os.path.join(kimkit_dir, "editors.txt")
+
+subprocess.check_output(args=["touch", f"{final_editors_file}"])
 
 # set user who installed as kimkit administrator
 # only they should have read/write permissions to editors.txt
