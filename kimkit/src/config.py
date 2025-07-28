@@ -141,7 +141,7 @@ class Configuration(object):
         # relative to this setup script
         here = os.path.dirname(os.path.realpath(__file__))
         kimkit_root = os.path.join(here, "../")
-        settings_dir = os.path.join(kimkit_root, "../settings")
+        settings_dir = os.path.join(kimkit_root, "settings")
 
         default_env_file = os.path.join(kimkit_root, "default-environment")
         metadata_config_file = os.path.join(settings_dir, "metadata_config.edn")
