@@ -8,7 +8,7 @@ for scheme in INSTALL_SCHEMES.values():
 
 setup(
     name="kimkit",
-    version="1.0.7",
+    version="1.0.8",
     author="Claire Waters",
     author_email="bwaters@umn.edu",
     include_package_data=True,

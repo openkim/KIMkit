@@ -147,8 +147,8 @@ class Configuration(object):
         metadata_config_file = os.path.join(settings_dir, "metadata_config.edn")
 
         # copy settings files into kimkit directory if not present
-        metadata_dest_file = os.path.join(kimkit_dir,"metadata_config.edn")
-        if not os.path.isfile(metadata_dest_file)):
+        metadata_dest_file = os.path.join(kimkit_dir, "metadata_config.edn")
+        if not os.path.isfile(metadata_dest_file):
             subprocess.check_output(["cp", f"{metadata_config_file}", f"{kimkit_dir}"])
 
         final_editors_file = os.path.join(kimkit_dir, "editors.txt")
