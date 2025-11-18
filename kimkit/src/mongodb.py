@@ -6,7 +6,7 @@ ID for each user.
 
 "items" stores all metadata fields associated with KIMkit items, to enable users
 to easily query for subsets of items with various properties.
-    """
+"""
 
 import pymongo
 import os
@@ -25,8 +25,23 @@ from .. import models
 
 logger = logging.getLogger("KIMkit")
 
-client = pymongo.MongoClient(host=cf.MONGODB_HOSTNAME)
-db = client[cf.MONGODB_DATABASE]
+try:
+
+    client = pymongo.MongoClient(host=cf.MONGODB_HOSTNAME)
+    db = client[cf.MONGODB_DATABASE]
+
+except Exception:
+
+    user = cf.MONGODB_USERNAME
+    password = cf.MONGODB_PASSWORD
+    host = cf.MONGODB_HOSTNAME
+    port = cf.MONGODB_PORT
+    db_name = cf.MONGODB_DATABASE
+    args = "ssl=true&tlsAllowInvalidCertificates=true"
+    db_uri = "mongodb://%s:%s@%s:%s/%s?%s" % (user, password, host, port, db_name, args)
+    client = pymongo.MongoClient(host=db_uri)
+    db = client[cf.MONGODB_DATABASE]
+
 
 BADKEYS = {"kimspec", "profiling", "inserted_on", "latest"}
 
@@ -309,11 +324,11 @@ def delete_one_database_entry(id_code, run_as_editor=False):
         this_entry = query_results[0]
         contributor = this_entry["contributor-id"]
         maintainer = this_entry["maintainer-id"]
-        
-    if this_user_uuid == contributor or this_user_uuid == maintainer:
-            can_delete = True
 
-    if users.is_editor() and can_delete==False:
+    if this_user_uuid == contributor or this_user_uuid == maintainer:
+        can_delete = True
+
+    if users.is_editor() and can_delete == False:
         if run_as_editor:
             can_delete = True
         else:
@@ -396,6 +411,7 @@ def list_drivers():
 
     return drivers
 
+
 def list_model_drivers():
     """List the kimcodes of all model drivers currently in this kimkit repository
 
@@ -414,6 +430,7 @@ def list_model_drivers():
 
     return drivers
 
+
 def list_test_drivers():
     """List the kimcodes of all test drivers currently in this kimkit repository
 
@@ -422,7 +439,7 @@ def list_test_drivers():
     """
 
     data = db.items.find(
-        filter={"kim-item-type":"test-driver"},
+        filter={"kim-item-type": "test-driver"},
         projection={"kimcode": 1, "_id": 0},
     )
 
@@ -431,6 +448,7 @@ def list_test_drivers():
         drivers.append(doc["kimcode"])
 
     return drivers
+
 
 def list_runners():
     """List the kimcodes of all runners currently in this kimkit repository
