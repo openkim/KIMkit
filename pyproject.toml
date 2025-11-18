@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kimkit"
-version = "1.0"
 authors = [{"name"="Claire Waters", "email"="bwaters@umn.edu"}]
 readme = "README.md"
 license = "Apache-2.0"
